@@ -1,66 +1,64 @@
-import js from '@eslint/js';
-import vue from 'eslint-plugin-vue';
-import globals from 'globals';
-import prettier from 'eslint-config-prettier';
+import js from "@eslint/js";
+import vue from "eslint-plugin-vue";
+import globals from "globals";
+import prettier from "eslint-config-prettier";
 
 export default [
   {
-    ignores: [
-      'dist/**',
-      'coverage/**',
-      'node_modules/**',
-    ],
+    ignores: ["dist/**", "coverage/**", "node_modules/**"],
   },
 
   js.configs.recommended,
-  ...vue.configs['flat/recommended'],
+  ...vue.configs["flat/recommended"],
 
   prettier,
 
   {
-    files: ['**/*.{js,mjs,cjs,vue}'],
+    files: ["**/*.{js,mjs,cjs,vue}"],
 
     languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
+      ecmaVersion: "latest",
+      sourceType: "module",
       globals: {
         ...globals.browser,
         ...globals.node,
+        $: "readonly",
+        jQuery: "readonly",
       },
     },
 
     rules: {
       // Variables
-      'no-unused-vars': [
-        'warn',
+      "no-unused-vars": [
+        "warn",
         {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
         },
       ],
 
       // Console logging
-      'no-console': 'off',
+      "no-console": "off",
 
       // General quality
-      eqeqeq: ['error', 'always'],
-      curly: ['error', 'all'],
+      eqeqeq: ["error", "always"],
+      curly: ["error", "all"],
 
       // Vue
-      'vue/multi-word-component-names': 'off',
-      'vue/html-self-closing': [
-        'error',
+      "vue/multi-word-component-names": "off",
+      "vue/html-self-closing": [
+        "error",
         {
           html: {
-            void: 'always',
-            normal: 'never',
-            component: 'always',
+            void: "always",
+            normal: "never",
+            component: "always",
           },
         },
       ],
 
       // Prefer warnings during migration
-      'vue/no-unused-components': 'warn',
+      "vue/no-unused-components": "warn",
     },
   },
 ];
