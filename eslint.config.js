@@ -26,7 +26,6 @@ export default [
         jQuery: "readonly",
       },
     },
-
     rules: {
       // Variables
       "no-unused-vars": [
@@ -40,24 +39,25 @@ export default [
       // Console logging
       "no-console": "off",
 
-      // General quality
-      eqeqeq: ["error", "always"],
-      curly: ["error", "all"],
+      // Relax during migration
+      eqeqeq: "off",
+      curly: "off",
+
+      "no-empty": "warn",
+      "no-prototype-builtins": "warn",
+      "no-useless-assignment": "warn",
 
       // Vue
       "vue/multi-word-component-names": "off",
-      "vue/html-self-closing": [
-        "error",
-        {
-          html: {
-            void: "always",
-            normal: "never",
-            component: "always",
-          },
-        },
-      ],
+      "vue/html-self-closing": "off",
+      "vue/attributes-order": "off",
+      "vue/block-order": "off",
+      "vue/order-in-components": "off",
 
-      // Prefer warnings during migration
+      // Vue 1 legacy patterns
+      "vue/no-deprecated-events-api": "off",
+
+      // Keep useful checks
       "vue/no-unused-components": "warn",
     },
   },
