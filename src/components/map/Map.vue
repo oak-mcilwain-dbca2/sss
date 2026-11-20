@@ -52,7 +52,7 @@ import gkScales from "./Scales.vue";
 import gkSearch from "./Search.vue";
 import gkFeaturedetail from "./Featuredetail.vue";
 import gkMeasure from "./Measure.vue";
-import gkWeatherforecast from "./Weatherforecast.vue";
+import gkWeatherforecast from "./WeatherForecast.vue";
 import gkToolbox from "./Toolbox.vue";
 
 export default {
