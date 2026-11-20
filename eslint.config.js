@@ -24,6 +24,7 @@ export default [
         ...globals.node,
         $: "readonly",
         jQuery: "readonly",
+        moment: "readonly",
       },
     },
     rules: {
