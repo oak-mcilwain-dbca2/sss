@@ -270,7 +270,7 @@ import { debounce } from "lodash-es";
 import ol from "ol";
 import turf from "@turf/turf";
 
-import gkDrawinglogs from "./drawinglogs.vue";
+import gkDrawinglogs from "./DrawingLogs.vue";
 
 var noteOffset = 0;
 var notePadding = 10;
