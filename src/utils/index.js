@@ -1,6 +1,17 @@
-export { FeatureTask, FeatureTaskManager } from "./featureTasks";
+export {
+  FeatureTask,
+  FeatureTaskManager,
+  SUCCEED,
+  FAILED,
+  WAITING,
+  RUNNING,
+  WARNING,
+  IGNORED,
+  MERGED,
+  FAIL_CONFIRMED,
+} from "./featureTasks";
 
-export { verifyDate, getDatetimes, getDateRange } from "./dates";
+export { verifyDate, getDatetimes, getDateRange, nextDate } from "./dates";
 
 export { getDateFormatPrecision } from "./dates";
 
