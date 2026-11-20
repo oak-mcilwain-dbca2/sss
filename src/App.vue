@@ -38,7 +38,7 @@
           </div>
           <div class="small-12" style="text-align: right">
             <img
-              src="/static/dist/static/images/question-mark.png"
+              :src="questionMark"
               style="height: 32px; width: 32px"
               @click="systemsetting.toggleShowHints()"
             />
@@ -50,9 +50,7 @@
           <li class="tabs-title side-button is-active" menu="layers">
             <a href="#menu-tab-layers" title="Map Layers">
               <svg class="icon">
-                <use
-                  xlink:href="/static/dist/static/images/iD-sprite.svg#icon-layers"
-                />
+                <use :href="`${spriteUrl}#icon-layers`" />
               </svg>
             </a>
           </li>
@@ -90,15 +88,18 @@
 </template>
 
 <script>
-import gkMap from "../components/map.vue";
-import gkLayers from "../components/layers.vue";
-import gkAnnotations from "../components/annotations.vue";
-import gkTracking from "../components/sss/tracking.vue";
-import gkThermal from "../components/sss/thermal.vue";
-import gkLoading from "../components/loading.vue";
-import gkSettings from "../components/settings.vue";
-import gkBfrs from "../components/sss/bfrs.vue";
-import gkDialog from "../components/dialog.vue";
+import gkMap from "@/components/map/Map.vue";
+import gkLayers from "@/components/layers/Layers.vue";
+import gkAnnotations from "@/components/annotations/Annotations.vue";
+import gkTracking from "@/components/sss/Tracking.vue";
+import gkThermal from "@/components/sss/Thermal.vue";
+import gkLoading from "@/components/loading/Loading.vue";
+import gkSettings from "@/components/settings/Settings.vue";
+import gkBfrs from "@/components/sss/BFRS.vue";
+import gkDialog from "@/components/dialog/Dialog.vue";
+
+import questionMark from "@/assets/images/question-mark.png";
+import spriteUrl from "@/assets/images/iD-sprite.svg";
 
 export default {
   store: {
@@ -118,7 +119,10 @@ export default {
     gkDialog,
   },
   data: function () {
-    return {};
+    return {
+      spriteUrl: spriteUrl,
+      questionMark: questionMark,
+    };
   },
   computed: {
     layers: function () {
