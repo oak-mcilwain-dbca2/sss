@@ -24,8 +24,8 @@
 </template>
 
 <script>
-import gkSystemsetting from "./systemsetting.vue";
-import gkWeatheroutlook from "./weatheroutlook.vue";
+import gkSystemsetting from "@components/settings/SystemSetting.vue";
+import gkWeatheroutlook from "@/components/weather/WeatherOutlook.vue";
 
 export default {
   store: {
