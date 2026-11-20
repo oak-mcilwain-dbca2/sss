@@ -323,7 +323,10 @@
 <script>
 import { debounce } from "lodash-es";
 
-import { ol, moment, utils } from "src/vendor.js"; //kjua is here for QR codes
+import ol from "ol";
+
+import { getDateRange } from "@utils";
+
 export default {
   store: {
     hotspotLabels: true, //boolean defining whether to show labels (can be later changed to use settings.
@@ -392,9 +395,6 @@ export default {
     },
     loading: function () {
       return this.$root.loading;
-    },
-    utils: function () {
-      return this.$root.utils;
     },
     selectedFeatures: function () {
       return this.annotations.getSelectedFeatures("thermal");
@@ -592,7 +592,7 @@ export default {
         //customized
         if (!this.thermalFromDate) {
           //fromDate is null, set to default value "Last 24 hours"
-          let range = utils.getDateRange(21024, "YYYY-MM-DD HH:mm");
+          let range = getDateRange(21024, "YYYY-MM-DD HH:mm");
           this.thermalFromDate = range[0] || "";
           if ((range[1] || "") !== this.thermalToDate) {
             this.thermalToDate = range[1] || "";
@@ -604,10 +604,7 @@ export default {
           this.changeThermalToDate();
         }
       } else {
-        let range = utils.getDateRange(
-          this.thermalDateRange,
-          "YYYY-MM-DD HH:mm",
-        );
+        let range = getDateRange(this.thermalDateRange, "YYYY-MM-DD HH:mm");
         this.thermalFromDate = range[0] || "";
         this.thermalToDate = range[1] || "";
       }
@@ -1550,7 +1547,7 @@ export default {
     },
   },
 
-  ready: function () {
+  mounted() {
     var vm = this;
     var thermalStatus = this.loading.register(
       "thermal",

@@ -43,14 +43,18 @@
 <script>
 import { getLayerId, getLayerUrl, isKbLayer } from "@/utils/layers";
 
-import { $, ol, proj4, moment, turf } from "src/vendor.js";
-import gkInfo from "./info.vue";
-import gkScales from "./scales.vue";
-import gkSearch from "./search.vue";
-import gkFeaturedetail from "./featuredetail.vue";
-import gkMeasure from "./measure.vue";
-import gkWeatherforecast from "./weatherforecast.vue";
-import gkToolbox from "./toolbox.vue";
+import ol from "ol";
+import proj4 from "proj4";
+import turf from "@turf/turf";
+
+import gkInfo from "./Info.vue";
+import gkScales from "./Scales.vue";
+import gkSearch from "./Search.vue";
+import gkFeaturedetail from "./Featuredetail.vue";
+import gkMeasure from "./Measure.vue";
+import gkWeatherforecast from "./Weatherforecast.vue";
+import gkToolbox from "./Toolbox.vue";
+
 export default {
   store: {
     fixedScales: "fixedScales",
@@ -3586,7 +3590,7 @@ export default {
       _getPosition(0);
     },
   },
-  ready: function () {
+  mounted() {
     var vm = this;
     var mapStatus = this.loading.register("olmap", "Open layer map Component");
     mapStatus.phaseBegin("initialize", 20, "Initialize");

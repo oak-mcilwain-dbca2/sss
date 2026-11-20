@@ -410,14 +410,13 @@ class="expanded secondary button" :class="{'selected': t.name == annotations.too
                   @click="toggleSelect(f)"
                 >
                   <div class="columns">
-                    <!--a v-if="whoami.editVehicle && ['tracplus','dfes'].indexOf(f.get('source_device_type')) < 0" @click.stop.prevent="utils.editResource($event)" title="Edit resource" href="{{env.resourceTrackingService}}/devices/{{ f.get('id') }}/update/" target="{{env.resourceTrackingService}}" class="button tiny secondary float-right"><i class="fa fa-pencil"></i></a-->
                     <a
                       v-if="
                         ['tracplus', 'dfes'].indexOf(
                           f.get('source_device_type'),
                         ) < 0
                       "
-                      @click.stop.prevent="utils.editResource($event)"
+                      @click.stop.prevent="editResource($event)"
                       title="Edit resource"
                       href="{{env.resourceTrackingService}}/devices/{{ f.get('id') }}/update/"
                       target="{{env.resourceTrackingService}}"
@@ -455,7 +454,9 @@ class="expanded secondary button" :class="{'selected': t.name == annotations.too
 <script>
 import { debounce } from "lodash-es";
 
-import { ol, moment, utils } from "src/vendor.js";
+import ol from "ol";
+
+import { editResource, getDateRange, nextDate, checkPermission } from "@utils";
 
 import env from "@/config/env";
 
@@ -692,6 +693,10 @@ export default {
     },
   },
   methods: {
+    editResource,
+    getDateRange,
+    nextDate,
+    checkPermission,
     adjustHeight: function () {
       if (this.activeMenu === "tracking") {
         $("#tracking-list").height(
@@ -708,7 +713,7 @@ export default {
         //customized
         if (!this.historyFromDate) {
           //fromDate is null, set to default value "Last hour"
-          var range = utils.getDateRange(21001, "YYYY-MM-DD HH:mm");
+          var range = getDateRange(21001, "YYYY-MM-DD HH:mm");
           this.historyFromDate = range[0] || "";
           if ((range[1] || "") !== this.historyToDate) {
             this.historyToDate = range[1] || "";
@@ -720,7 +725,7 @@ export default {
           this.changeHistoryToDate();
         }
       } else {
-        let range = utils.getDateRange(this.historyRange, "YYYY-MM-DD HH:mm");
+        let range = getDateRange(this.historyRange, "YYYY-MM-DD HH:mm");
         this.historyFromDate = range[0] || "";
         this.historyToDate = range[1] || "";
       }
@@ -793,8 +798,7 @@ export default {
             "seen BETWEEN '" +
             startDate.utc().format("YYYY-MM-DDTHH:mm:ssZ") +
             "' AND '" +
-            utils
-              .nextDate(endDate, "YYYY-MM-DD HH:mm")
+            nextDate(endDate, "YYYY-MM-DD HH:mm")
               .utc()
               .format("YYYY-MM-DDTHH:mm:ssZ") +
             "'"
@@ -807,8 +811,7 @@ export default {
       } else if (endDate) {
         return (
           "seen < '" +
-          utils
-            .nextDate(endDate, "YYYY-MM-DD HH:mm")
+          nextDate(endDate, "YYYY-MM-DD HH:mm")
             .utc()
             .format("YYYY-MM-DDTHH:mm:ssZ") +
           "'"
@@ -1198,7 +1201,7 @@ export default {
       this.annotations.selectable.splice(0, this.annotations.selectable.length);
     },
   },
-  ready: function () {
+  mounted() {
     var vm = this;
     var trackingStatus = this.loading.register(
       "tracking",
@@ -1568,7 +1571,7 @@ export default {
               return f.get("source_device_type") != "tracplus";
             });
             if (f) {
-              utils.checkPermission(
+              checkPermission(
                 vm.env.resourceTrackingService +
                   "/devices/" +
                   f.get("id") +

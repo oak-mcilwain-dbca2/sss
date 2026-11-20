@@ -13,7 +13,9 @@
 <style></style>
 
 <script>
-import { ol, $, utils } from "src/vendor.js";
+import ol from "ol";
+
+import { submitForm } from "@utils";
 
 import env from "@/config/env";
 
@@ -114,7 +116,7 @@ export default {
             forecast_url: env.weatherForecastUrl,
           };
           $("#weatherforecast_data").val(JSON.stringify(requestData));
-          utils.submitForm(
+          submitForm(
             "get_weatherforecast",
             {
               width: screen.width > 1890 ? 1890 : screen.width,
@@ -129,7 +131,7 @@ export default {
       });
     },
   },
-  ready: function () {
+  mounted() {
     var vm = this;
     this._weatherforecastStatus = vm.loading.register(
       "weatherforecast",

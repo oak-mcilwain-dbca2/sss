@@ -763,7 +763,17 @@ import { debounce } from "lodash-es";
 
 import Foundation from "foundation-sites";
 
-import { ol, $, moment, hash, turf, utils } from "src/vendor.js";
+import ol from "ol";
+import turf from "@turf/turf";
+import {
+  FeatureTask,
+  getDateRange,
+  nextDate,
+  submitForm,
+  getFeatureTaskManager,
+} from "@utils";
+
+import hash from "object-hash";
 
 import { getLayerId, getLayerUrl } from "@/utils/layers";
 
@@ -1153,7 +1163,7 @@ export default {
         this.endDate = "";
         this.startDate = "";
       } else {
-        var range = utils.getDateRange(this.dateRange, "YYYY-MM-DD HH:mm");
+        var range = getDateRange(this.dateRange, "YYYY-MM-DD HH:mm");
         this.startDate = range[0] || "";
         this.endDate = range[1] || "";
       }
@@ -1241,8 +1251,7 @@ export default {
             "fire_detected_or_created BETWEEN '" +
             startDate.utc().format("YYYY-MM-DDTHH:mm:ssZ") +
             "' AND '" +
-            utils
-              .nextDate(endDate, "YYYY-MM-DD HH:mm")
+            nextDate(endDate, "YYYY-MM-DD HH:mm")
               .utc()
               .format("YYYY-MM-DDTHH:mm:ssZ") +
             "'"
@@ -1257,8 +1266,7 @@ export default {
       } else if (endDate) {
         return (
           "fire_detected_or_created < '" +
-          utils
-            .nextDate(endDate, "YYYY-MM-DD HH:mm")
+          nextDate(endDate, "YYYY-MM-DD HH:mm")
             .utc()
             .format("YYYY-MM-DDTHH:mm:ssZ") +
           "'"
@@ -2209,7 +2217,7 @@ export default {
              *     spatialData["area"] = null
              *     var tenure_area_task = tasks.find(task => task.taskId === 'tenure_area');
              *     if (!tenure_area_task){
-             *         var tenure_area_task = vm._taskManager.addTask(feat,"getSpatialData","tenure_area","Calculate fire boundary areas",utils.WAITING)
+             *         var tenure_area_task = vm._taskManager.addTask(feat,"getSpatialData","tenure_area","Calculate fire boundary areas",FeatureTask.WAITING)
              *     }
              * }
              */
@@ -2224,7 +2232,7 @@ export default {
                   "getSpatialData",
                   "tenure_area",
                   "Calculate fire boundary areas",
-                  utils.WAITING,
+                  FeatureTask.WAITING,
                 );
               }
             }
@@ -2239,7 +2247,7 @@ export default {
                 if (result["status"]["failed"]) {
                   //failed
                   tenure_area_task.setStatus(
-                    utils.FAILED,
+                    FeatureTask.FAILED,
                     result["status"]["failed"],
                   );
                   vm._getSpatialDataCallback(
@@ -2336,12 +2344,14 @@ export default {
                                       process_overlap_func(result);
                                     } else {
                                       spatialData["area"] = result["data"];
-                                      tenure_area_task.setStatus(utils.SUCCEED);
+                                      tenure_area_task.setStatus(
+                                        FeatureTask.SUCCEED,
+                                      );
                                       vm.showProgress(vm.target_feature);
                                     }
                                   } else {
                                     tenure_area_task.setStatus(
-                                      utils.FAIL_CONFIRMED,
+                                      FeatureTask.FAIL_CONFIRMED,
                                       msg,
                                     );
                                     vm.showProgress(vm.target_feature);
@@ -2351,7 +2361,10 @@ export default {
                             });
                           }, 1);
                         } else {
-                          tenure_area_task.setStatus(utils.FAIL_CONFIRMED, msg);
+                          tenure_area_task.setStatus(
+                            FeatureTask.FAIL_CONFIRMED,
+                            msg,
+                          );
                           vm._getSpatialDataCallback(
                             feat,
                             caller,
@@ -2433,7 +2446,7 @@ export default {
                 } else {
                   result["data"]["fb_validation_req"] = null;
                   spatialData["area"] = result["data"];
-                  tenure_area_task.setStatus(utils.SUCCEED);
+                  tenure_area_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
                     caller,
@@ -2444,7 +2457,7 @@ export default {
                 }
               } else {
                 tenure_area_task.setStatus(
-                  utils.FAILED,
+                  FeatureTask.FAILED,
                   "Calculate area failed.",
                 );
                 vm._getSpatialDataCallback(
@@ -2478,7 +2491,7 @@ export default {
                     "getSpatialData",
                     "plantation",
                     "Find the plantations within 3kms",
-                    utils.WAITING,
+                    FeatureTask.WAITING,
                   );
                 }
               }
@@ -2493,7 +2506,7 @@ export default {
                   "getSpatialData",
                   "tenure_origin_point",
                   "Get the tenure of ignition point",
-                  utils.WAITING,
+                  FeatureTask.WAITING,
                 );
               }
               fire_position_task = tasks.find(
@@ -2505,7 +2518,7 @@ export default {
                   "getSpatialData",
                   "fire_position",
                   "Get the fire position",
-                  utils.WAITING,
+                  FeatureTask.WAITING,
                 );
               }
               originpoint_grid_task = tasks.find(
@@ -2517,7 +2530,7 @@ export default {
                   "getSpatialData",
                   "originpoint_grid",
                   "Get origin point's grid data",
-                  utils.WAITING,
+                  FeatureTask.WAITING,
                 );
               }
               if (["new", "initial"].indexOf(feat.get("status")) >= 0) {
@@ -2528,7 +2541,7 @@ export default {
                     "getSpatialData",
                     "region",
                     "Get bushfire's region",
-                    utils.WAITING,
+                    FeatureTask.WAITING,
                   );
                 }
                 district_task = tasks.find(
@@ -2540,7 +2553,7 @@ export default {
                     "getSpatialData",
                     "district",
                     "Get bushfire's district",
-                    utils.WAITING,
+                    FeatureTask.WAITING,
                   );
                 }
               }
@@ -2554,7 +2567,7 @@ export default {
               spatialData,
             );
             if (tenure_area_task) {
-              tenure_area_task.setStatus(utils.RUNNING);
+              tenure_area_task.setStatus(FeatureTask.RUNNING);
               vm._getValidationMessage =
                 vm._getValidationMessage ||
                 function (message) {
@@ -2627,10 +2640,10 @@ export default {
                             feature_area["fb_validation_req"] = null;
                           }
                           spatialData["area"] = feature_area;
-                          tenure_area_task.setStatus(utils.SUCCEED);
+                          tenure_area_task.setStatus(FeatureTask.SUCCEED);
                         } else {
                           tenure_area_task.setStatus(
-                            utils.FAIL_CONFIRMED,
+                            FeatureTask.FAIL_CONFIRMED,
                             "Cancelled",
                           );
                         }
@@ -2650,7 +2663,7 @@ export default {
                     feature_area["fb_validation_req"] = null;
                   }
                   spatialData["area"] = feature_area;
-                  tenure_area_task.setStatus(utils.SUCCEED);
+                  tenure_area_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
                     caller,
@@ -2733,7 +2746,9 @@ export default {
                                     process_overlap_func(result);
                                   } else {
                                     spatialData["area"] = result["data"];
-                                    tenure_area_task.setStatus(utils.SUCCEED);
+                                    tenure_area_task.setStatus(
+                                      FeatureTask.SUCCEED,
+                                    );
                                     vm._getSpatialDataCallback(
                                       feat,
                                       caller,
@@ -2744,7 +2759,7 @@ export default {
                                   }
                                 } else {
                                   tenure_area_task.setStatus(
-                                    utils.FAIL_CONFIRMED,
+                                    FeatureTask.FAIL_CONFIRMED,
                                     msg,
                                   );
                                   vm._getSpatialDataCallback(
@@ -2760,7 +2775,10 @@ export default {
                           });
                         }, 1);
                       } else {
-                        tenure_area_task.setStatus(utils.FAIL_CONFIRMED, msg);
+                        tenure_area_task.setStatus(
+                          FeatureTask.FAIL_CONFIRMED,
+                          msg,
+                        );
                         vm._getSpatialDataCallback(
                           feat,
                           caller,
@@ -2775,7 +2793,7 @@ export default {
                 } else if (caller === "batchimport") {
                   result["data"]["fb_validation_req"] = true;
                   spatialData["area"] = result["data"];
-                  tenure_area_task.setStatus(utils.SUCCEED);
+                  tenure_area_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
                     caller,
@@ -2784,7 +2802,7 @@ export default {
                     spatialData,
                   );
                 } else {
-                  tenure_area_task.setStatus(utils.FAILED, msg);
+                  tenure_area_task.setStatus(FeatureTask.FAILED, msg);
                   vm._getSpatialDataCallback(
                     feat,
                     caller,
@@ -2889,7 +2907,7 @@ export default {
                       (task) => task.taskId === "import",
                     );
                     if (import_task) {
-                      import_task.setStatus(utils.SUCCEED);
+                      import_task.setStatus(FeatureTask.SUCCEED);
                     }
                     vm.showProgress(feature);
                   } else {
@@ -2898,17 +2916,17 @@ export default {
                 },
                 error: function (xhr, status, message) {
                   alert(
-                    (utils.FAILED,
+                    (FeatureTask.FAILED,
                     xhr.status + " : " + (xhr.responseText || message)),
                   );
                   if (xhr.status === 490) {
                     tenure_area_task.setStatus(
-                      utils.FAILED,
+                      FeatureTask.FAILED,
                       vm._getValidationMessage(xhr.responseText || message),
                     );
                   } else {
                     tenure_area_task.setStatus(
-                      utils.FAILED,
+                      FeatureTask.FAILED,
                       xhr.status + " : " + (xhr.responseText || message),
                     );
                   }
@@ -2927,7 +2945,7 @@ export default {
             }
 
             if (tenure_origin_point_task) {
-              tenure_origin_point_task.setStatus(utils.RUNNING);
+              tenure_origin_point_task.setStatus(FeatureTask.RUNNING);
               let tenure_layers = [
                 {
                   id: env.stateForestPlantationDistributionLayer,
@@ -3017,7 +3035,7 @@ export default {
                 originPoint,
                 function (feature) {
                   spatialData["tenure_ignition_point"] = feature;
-                  tenure_origin_point_task.setStatus(utils.SUCCEED);
+                  tenure_origin_point_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
                     caller,
@@ -3027,7 +3045,7 @@ export default {
                   );
                 },
                 function (msg) {
-                  tenure_origin_point_task.setStatus(utils.FAILED, msg);
+                  tenure_origin_point_task.setStatus(FeatureTask.FAILED, msg);
                   //alert(tenure_origin_point_task.message)
                   vm._getSpatialDataCallback(
                     feat,
@@ -3041,12 +3059,12 @@ export default {
             }
 
             if (fire_position_task) {
-              fire_position_task.setStatus(utils.RUNNING);
+              fire_position_task.setStatus(FeatureTask.RUNNING);
               vm.map.getPosition(
                 originPoint,
                 function (position) {
                   spatialData["fire_position"] = position;
-                  fire_position_task.setStatus(utils.SUCCEED);
+                  fire_position_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
                     caller,
@@ -3056,7 +3074,7 @@ export default {
                   );
                 },
                 function (msg) {
-                  fire_position_task.setStatus(utils.FAILED, msg);
+                  fire_position_task.setStatus(FeatureTask.FAILED, msg);
                   //alert(fire_position_task.message)
                   vm._getSpatialDataCallback(
                     feat,
@@ -3069,12 +3087,12 @@ export default {
               );
             }
             if (originpoint_grid_task) {
-              originpoint_grid_task.setStatus(utils.RUNNING);
+              originpoint_grid_task.setStatus(FeatureTask.RUNNING);
               vm.map.getGridData(
                 originPoint,
                 function (grid_data) {
                   spatialData["origin_point_grid"] = grid_data;
-                  originpoint_grid_task.setStatus(utils.SUCCEED);
+                  originpoint_grid_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
                     caller,
@@ -3084,7 +3102,7 @@ export default {
                   );
                 },
                 function (msg) {
-                  originpoint_grid_task.setStatus(utils.FAILED, msg);
+                  originpoint_grid_task.setStatus(FeatureTask.FAILED, msg);
                   vm._getSpatialDataCallback(
                     feat,
                     caller,
@@ -3100,7 +3118,7 @@ export default {
               let url_prefix = getLayerUrl(getLayerId(env.regionLayer), env);
               var geom_name =
                 url_prefix === env.kbService ? "SHAPE" : "wkb_geometry";
-              region_task.setStatus(utils.RUNNING);
+              region_task.setStatus(FeatureTask.RUNNING);
               $.ajax({
                 url:
                   url_prefix +
@@ -3123,7 +3141,7 @@ export default {
                         ? response.features[0].properties["DRG_REGION_NAME"]
                         : response.features[0].properties["region"];
                   }
-                  region_task.setStatus(utils.SUCCEED);
+                  region_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
                     caller,
@@ -3134,7 +3152,7 @@ export default {
                 },
                 error: function (xhr, status, message) {
                   region_task.setStatus(
-                    utils.FAILED,
+                    FeatureTask.FAILED,
                     xhr.status + " : " + (xhr.responseText || message),
                   );
                   //alert(region_task.message)
@@ -3156,7 +3174,7 @@ export default {
               let url_prefix = getLayerUrl(getLayerId(env.districtLayer), env);
               geom_name =
                 url_prefix === env.kbService ? "SHAPE" : "wkb_geometry";
-              district_task.setStatus(utils.RUNNING);
+              district_task.setStatus(FeatureTask.RUNNING);
               $.ajax({
                 url:
                   url_prefix +
@@ -3179,7 +3197,7 @@ export default {
                         ? response.features[0].properties["ADMIN_ZONE"]
                         : response.features[0].properties["district"];
                   }
-                  district_task.setStatus(utils.SUCCEED);
+                  district_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
                     caller,
@@ -3190,7 +3208,7 @@ export default {
                 },
                 error: function (xhr, status, message) {
                   district_task.setStatus(
-                    utils.FAILED,
+                    FeatureTask.FAILED,
                     xhr.status + " : " + (xhr.responseText || message),
                   );
                   //alert(district_task.message)
@@ -3218,7 +3236,7 @@ export default {
           }
 
           if (plantation_task && caller !== "showprogress") {
-            plantation_task.setStatus(utils.RUNNING);
+            plantation_task.setStatus(FeatureTask.RUNNING);
             var point_buffer = turf.buffer(
               {
                 type: "Feature",
@@ -3274,7 +3292,7 @@ export default {
                     },
                   );
                 }
-                plantation_task.setStatus(utils.SUCCEED);
+                plantation_task.setStatus(FeatureTask.SUCCEED);
                 vm._getSpatialDataCallback(
                   feat,
                   caller,
@@ -3285,7 +3303,7 @@ export default {
               },
               error: function (xhr, status, message) {
                 plantation_task.setStatus(
-                  utils.FAILED,
+                  FeatureTask.FAILED,
                   xhr.status + " : " + (xhr.responseText || message),
                 );
                 vm._getSpatialDataCallback(
@@ -3318,12 +3336,12 @@ export default {
               "getSpatialData",
               "validate",
               "Validate bushfire",
-              utils.RUNNING,
+              FeatureTask.RUNNING,
             );
           }
           this.validateBushfire(feat, "getSpatialData", function (error) {
             if (error) {
-              validate_task.setStatus(utils.FAILED, error);
+              validate_task.setStatus(FeatureTask.FAILED, error);
               //alert(error)
               vm._getSpatialDataCallback(
                 feat,
@@ -3333,7 +3351,7 @@ export default {
                 {},
               );
             } else {
-              validate_task.setStatus(utils.SUCCEED);
+              validate_task.setStatus(FeatureTask.SUCCEED);
               vm._getSpatialData(feat, caller, callback, failedCallback);
             }
           });
@@ -3402,7 +3420,7 @@ export default {
             "save",
             "save",
             "Save spatial data",
-            utils.RUNNING,
+            FeatureTask.RUNNING,
           );
         }
         if (
@@ -3413,13 +3431,16 @@ export default {
         }
         if (!callback) {
           callback = function (feat, status, msg) {
-            if (status === utils.SUCCEED) {
+            if (status === FeatureTask.SUCCEED) {
               vm._taskManager.clearTasks(feat);
               vm.resetFeature(feat, false);
-            } else if (status === utils.WARNING || status === utils.FAILED) {
+            } else if (
+              status === FeatureTask.WARNING ||
+              status === FeatureTask.FAILED
+            ) {
               msg = vm._taskManager.errorMessages(feat).join("\r\n");
               if (msg) alert(msg);
-              if (status === utils.WARNING) {
+              if (status === FeatureTask.WARNING) {
                 vm.resetFeature(feat, false);
               }
             }
@@ -3442,10 +3463,10 @@ export default {
                   feat.set("id", response.id);
                 } else {
                   task.setStatus(
-                    utils.FAILED,
+                    FeatureTask.FAILED,
                     "The bushfire report is invalidated ,but the new fire_number and id are not returned.",
                   );
-                  callback(feat, utils.FAILED, task.message);
+                  callback(feat, FeatureTask.FAILED, task.message);
                 }
               }
               if (!vm.isFireboundaryDrawable(feat)) {
@@ -3467,7 +3488,7 @@ export default {
                         "postsave",
                         "check_originpoint",
                         "Check origin within fire shape",
-                        utils.RUNNING,
+                        FeatureTask.RUNNING,
                       );
                     }
                     originPoint = originPoint.getCoordinates();
@@ -3496,25 +3517,29 @@ export default {
                           response.firstChild.children.length === 0
                         ) {
                           checkTask.setStatus(
-                            utils.FAILED,
+                            FeatureTask.FAILED,
                             "Point of Origin is not inside fire boundary, please fix using the edit bushfire button",
                           );
-                          task.setStatus(utils.WARNING);
-                          callback(feat, utils.WARNING, checkTask.message);
+                          task.setStatus(FeatureTask.WARNING);
+                          callback(
+                            feat,
+                            FeatureTask.WARNING,
+                            checkTask.message,
+                          );
                         } else {
-                          checkTask.setStatus(utils.SUCCEED);
-                          task.setStatus(utils.SUCCEED);
+                          checkTask.setStatus(FeatureTask.SUCCEED);
+                          task.setStatus(FeatureTask.SUCCEED);
                           vm.clearQueue(false);
-                          callback(feat, utils.SUCCEED);
+                          callback(feat, FeatureTask.SUCCEED);
                         }
                       },
                       error: function (xhr, status, message) {
                         checkTask.setStatus(
-                          utils.FAILED,
+                          FeatureTask.FAILED,
                           xhr.status + " : " + (xhr.responseText || message),
                         );
-                        task.setStatus(utils.WARNING);
-                        callback(feat, utils.WARNING, checkTask.message);
+                        task.setStatus(FeatureTask.WARNING);
+                        callback(feat, FeatureTask.WARNING, checkTask.message);
                       },
                       xhrFields: {
                         withCredentials: true,
@@ -3525,16 +3550,16 @@ export default {
                 }
               }
 
-              task.setStatus(utils.SUCCEED);
+              task.setStatus(FeatureTask.SUCCEED);
               vm.clearQueue(false);
-              callback(feat, utils.SUCCEED);
+              callback(feat, FeatureTask.SUCCEED);
             },
             error: function (xhr, status, message) {
               task.setStatus(
-                utils.FAILED,
+                FeatureTask.FAILED,
                 xhr.status + " : " + (xhr.responseText || message),
               );
-              callback(feat, utils.FAILED, task.message);
+              callback(feat, FeatureTask.FAILED, task.message);
             },
             xhrFields: {
               withCredentials: true,
@@ -3669,8 +3694,8 @@ export default {
         }
         spatialData["sss_id"] = feat.get("sss_id");
         $("#sss_create").val(JSON.stringify(spatialData));
-        utils.submitForm("bushfire_create");
-        task.setStatus(utils.SUCCEED);
+        submitForm("bushfire_create");
+        task.setStatus(FeatureTask.SUCCEED);
         if (vm.taskDialog) {
           vm.taskDialog.close();
         }
@@ -3679,7 +3704,7 @@ export default {
       }
 
       function handleError(task) {
-        task.setStatus(utils.FAILED, "");
+        task.setStatus(FeatureTask.FAILED, "");
         var msg = vm._taskManager.errorMessages(feat).join("\r\n");
         if (msg) alert(msg);
       }
@@ -3707,7 +3732,7 @@ export default {
             "create",
             "create",
             "Open bushfire report form",
-            utils.RUNNING,
+            FeatureTask.RUNNING,
           );
           vm.showProgress(feat, "create");
           this.getSpatialData(
@@ -4468,7 +4493,7 @@ export default {
             var import_task = tasks.find((task) => task.taskId === "import");
 
             if (import_task) {
-              import_task.setStatus(utils.SUCCEED);
+              import_task.setStatus(FeatureTask.SUCCEED);
             }
 
             vm.last_uploaded_date = response["last_uploaded_date"];
@@ -4500,14 +4525,17 @@ export default {
             if (status === "Calculation Error") {
               vm.calculation_status = "calculation_error";
               if (response["error"]) {
-                tenure_area_task.setStatus(utils.FAILED, response["error"]);
+                tenure_area_task.setStatus(
+                  FeatureTask.FAILED,
+                  response["error"],
+                );
               } else {
-                tenure_area_task.setStatus(utils.FAILED);
+                tenure_area_task.setStatus(FeatureTask.FAILED);
               }
 
               tasks.forEach((task) => {
                 if (task.taskId !== "tenure_area" && task.status !== 3) {
-                  task.setStatus(utils.FAILED);
+                  task.setStatus(FeatureTask.FAILED);
                 }
               });
             }
@@ -4533,7 +4561,7 @@ export default {
                   retryForSpatialData = true;
                 } else {
                   vm.target_feature.spatial_data = parsedSpatialData;
-                  tenure_area_task.setStatus(utils.SUCCEED);
+                  tenure_area_task.setStatus(FeatureTask.SUCCEED);
 
                   tasks = vm.featureTasks(targetFeature);
                   var allTasksCompleted = true;
@@ -4617,13 +4645,13 @@ export default {
       var import_task = tasks.find((task) => task.taskId === "import");
       var featureImported = function (status, message) {
         if (!import_task) {
-          if (status === utils.SUCCEED) {
+          if (status === FeatureTask.SUCCEED) {
             vm.dialog.addSucceedTask();
-          } else if (status === utils.WARNING) {
+          } else if (status === FeatureTask.WARNING) {
             vm.dialog.addWarningTask();
-          } else if (status === utils.IGNORED) {
+          } else if (status === FeatureTask.IGNORED) {
             vm.dialog.addIgnoredTask();
-          } else if (status === utils.MERGED) {
+          } else if (status === FeatureTask.MERGED) {
             vm.dialog.addMergedTask();
           } else {
             vm.dialog.addFailedTask();
@@ -4651,10 +4679,10 @@ export default {
         if (import_task) {
           import_task.setStatus(status);
         }
-        if (status === utils.SUCCEED) {
+        if (status === FeatureTask.SUCCEED) {
           vm._taskManager.clearTasks(feat);
         }
-        if (status === utils.SUCCEED || status === utils.WARNING) {
+        if (status === FeatureTask.SUCCEED || status === FeatureTask.WARNING) {
           importedFinalFeatures += 1;
           selectedFeatures.push(feat);
         }
@@ -4764,7 +4792,7 @@ export default {
           "import",
           "import",
           "Import bushfire fire boundary",
-          utils.RUNNING,
+          FeatureTask.RUNNING,
         );
       }
       vm.dialog.show({
@@ -4804,13 +4832,13 @@ export default {
             }
             var featureImported = function (status, message) {
               if (!import_task) {
-                if (status === utils.SUCCEED) {
+                if (status === FeatureTask.SUCCEED) {
                   vm.dialog.addSucceedTask();
-                } else if (status === utils.WARNING) {
+                } else if (status === FeatureTask.WARNING) {
                   vm.dialog.addWarningTask();
-                } else if (status === utils.IGNORED) {
+                } else if (status === FeatureTask.IGNORED) {
                   vm.dialog.addIgnoredTask();
-                } else if (status === utils.MERGED) {
+                } else if (status === FeatureTask.MERGED) {
                   vm.dialog.addMergedTask();
                 } else {
                   vm.dialog.addFailedTask();
@@ -4859,12 +4887,12 @@ export default {
                 }
                 if (uploadType === "originpoint") {
                   features.splice(i, 1);
-                  featureImported(utils.IGNORED);
+                  featureImported(FeatureTask.IGNORED);
                   continue;
                 }
                 if (feature.getGeometry() instanceof ol.geom.Point) {
                   //feature.set('toolName','Spot Fire')
-                  featureImported(utils.IGNORED);
+                  featureImported(FeatureTask.IGNORED);
                   features.splice(i, 1);
                 } else if (
                   feature.getGeometry() instanceof ol.geom.LineString
@@ -4892,7 +4920,7 @@ export default {
                   });
                   feature.setGeometry(mp);
                 } else {
-                  featureImported(utils.IGNORED);
+                  featureImported(FeatureTask.IGNORED);
                   features.splice(i, 1);
                 }
               }
@@ -4962,26 +4990,26 @@ export default {
                 ) {
                   //not target feature, ignore
                   features.splice(i, 1);
-                  featureImported(utils.IGNORED);
+                  featureImported(FeatureTask.IGNORED);
                   continue;
                 } else if (targetOnly) {
                   targetFeatureFound = true;
                 }
                 if (feature.getGeometry() instanceof ol.geom.Point) {
                   if (uploadType === "fireboundary") {
-                    featureImported(utils.IGNORED);
+                    featureImported(FeatureTask.IGNORED);
                     features.splice(i, 1);
                   }
                 } else if (feature.getGeometry() instanceof ol.geom.Polygon) {
                   if (uploadType === "originpoint") {
-                    featureImported(utils.IGNORED);
+                    featureImported(FeatureTask.IGNORED);
                     features.splice(i, 1);
                   }
                 } else if (
                   feature.getGeometry() instanceof ol.geom.MultiPolygon
                 ) {
                   if (uploadType === "originpoint") {
-                    featureImported(utils.IGNORED);
+                    featureImported(FeatureTask.IGNORED);
                     features.splice(i, 1);
                   }
                 } else if (
@@ -5001,7 +5029,7 @@ export default {
                   });
                   vm.dialog.addTasks(geometries.length - 1);
                 } else {
-                  featureImported(utils.IGNORED);
+                  featureImported(FeatureTask.IGNORED);
                   features.splice(i, 1);
                 }
               }
@@ -5010,14 +5038,14 @@ export default {
               if (targetFeature) {
                 if (targetFeatureFound) {
                   import_task.setStatus(
-                    utils.WARNING,
+                    FeatureTask.WARNING,
                     "No suitable spataial data for Bushfire(" +
                       targetFeature.get("fire_number") +
                       ") in uploaded file.",
                   );
                 } else {
                   import_task.setStatus(
-                    utils.WARNING,
+                    FeatureTask.WARNING,
                     "Bushfire(" +
                       targetFeature.get("fire_number") +
                       ") not found",
@@ -5071,11 +5099,11 @@ export default {
                       );
                       mergeProperties(feat, features[i]);
                       features.splice(i, 1);
-                      featureImported(utils.MERGED);
+                      featureImported(FeatureTask.MERGED);
                     } else {
                       //already have a point, ignore the point
                       features.splice(i, 1);
-                      featureImported(utils.IGNORED);
+                      featureImported(FeatureTask.IGNORED);
                     }
                   } else if (
                     features[i].getGeometry() instanceof ol.geom.Polygon
@@ -5107,7 +5135,7 @@ export default {
                       mergeProperties(feat, features[i]);
                       features.splice(i, 1);
                     }
-                    featureImported(utils.MERGED);
+                    featureImported(FeatureTask.MERGED);
                   } else if (
                     features[i].getGeometry() instanceof ol.geom.MultiPolygon
                   ) {
@@ -5144,7 +5172,7 @@ export default {
                       mergeProperties(feat, features[i]);
                       features.splice(i, 1);
                     }
-                    featureImported(utils.MERGED);
+                    featureImported(FeatureTask.MERGED);
                   }
                 } else {
                   feat = features[i];
@@ -5233,7 +5261,7 @@ export default {
                     canUpload(feature, feat);
                     if (feat) {
                       if (!vm.isModifiable(feat)) {
-                        featureImported(utils.IGNORED);
+                        featureImported(FeatureTask.IGNORED);
                         return;
                       }
                       geometries = feat.getGeometry().getGeometriesArray();
@@ -5353,7 +5381,7 @@ export default {
                           !targetFeature &&
                           !vm._taskManager.initTasks(feat)
                         ) {
-                          featureImported(utils.IGNORED);
+                          featureImported(FeatureTask.IGNORED);
                           return;
                         }
                         feature.tasks = feat.tasks;
@@ -5369,12 +5397,12 @@ export default {
                             if (import_task) {
                               import_task.setStatus(status);
                             }
-                            if (status === utils.SUCCEED) {
+                            if (status === FeatureTask.SUCCEED) {
                               vm._taskManager.clearTasks(feat);
                             }
                             if (
-                              status === utils.SUCCEED ||
-                              status === utils.WARNING
+                              status === FeatureTask.SUCCEED ||
+                              status === FeatureTask.WARNING
                             ) {
                               importedFinalFeatures += 1;
                               selectedFeatures.push(feat);
@@ -5409,10 +5437,10 @@ export default {
                           vm.postModified(feat, modifyType);
                         }
                         if (import_task) {
-                          import_task.setStatus(utils.SUCCEED);
+                          import_task.setStatus(FeatureTask.SUCCEED);
                           vm._taskManager.clearTasks(feat);
                         }
-                        featureImported(utils.SUCCEED);
+                        featureImported(FeatureTask.SUCCEED);
                       }
                     } else if (
                       feature.get("id") < 0 &&
@@ -5435,17 +5463,17 @@ export default {
                         vm.newFeature(feature);
                         //vm.measure.remeasureFeature(feature)
                         selectedFeatures.push(feature);
-                        featureImported(utils.SUCCEED);
+                        featureImported(FeatureTask.SUCCEED);
                       } else {
-                        featureImported(utils.IGNORED);
+                        featureImported(FeatureTask.IGNORED);
                       }
                     } else {
                       //notFoundBushfires = notFoundBushfires || []
                       //notFoundBushfires.push(feature)
-                      featureImported(utils.IGNORED);
+                      featureImported(FeatureTask.IGNORED);
                     }
                   } catch (ex) {
-                    featureImported(utils.FAILED, ex.message || ex);
+                    featureImported(FeatureTask.FAILED, ex.message || ex);
                   }
                 }
               });
@@ -5469,12 +5497,12 @@ export default {
                       vm.newFeature(feature);
                       //vm.measure.remeasureFeature(feature)
                       selectedFeatures.push(feature);
-                      featureImported(utils.SUCCEED);
+                      featureImported(FeatureTask.SUCCEED);
                     } catch (ex) {
-                      featureImported(utils.FAILED, ex.message || ex);
+                      featureImported(FeatureTask.FAILED, ex.message || ex);
                     }
                   } else {
-                    featureImported(utils.IGNORED);
+                    featureImported(FeatureTask.IGNORED);
                   }
                 }
               });
@@ -5483,7 +5511,7 @@ export default {
                 import_task &&
                 vm._taskManager.getTasks(targetFeature).length === 1
               ) {
-                import_task.setStatus(utils.SUCCEED);
+                import_task.setStatus(FeatureTask.SUCCEED);
                 vm._taskManager.clearTasks(targetFeature);
               }
               /*
@@ -5494,7 +5522,7 @@ export default {
             }
           } catch (ex) {
             if (import_task) {
-              import_task.setStatus(utils.FAILED, ex.message || ex);
+              import_task.setStatus(FeatureTask.FAILED, ex.message || ex);
             }
             if (targetFeature) {
               vm._taskManager.clearTasks(targetFeature);
@@ -5507,7 +5535,7 @@ export default {
             alert(ex);
           }
           if (import_task) {
-            import_task.setStatus(utils.FAILED, ex.message || ex);
+            import_task.setStatus(FeatureTask.FAILED, ex.message || ex);
           }
           if (targetFeature) {
             vm._taskManager.clearTasks(targetFeature);
@@ -6034,21 +6062,21 @@ export default {
                     tasks.forEach((task) => {
                       var progress = null;
                       if (task.status === -1) {
-                        progress = utils.FAILED;
+                        progress = FeatureTask.FAILED;
                       } else if (task.status === -2) {
-                        progress = utils.FAIL_CONFIRMED;
+                        progress = FeatureTask.FAIL_CONFIRMED;
                       } else if (task.status === 1) {
-                        progress = utils.WAITING;
+                        progress = FeatureTask.WAITING;
                       } else if (task.status === 2) {
-                        progress = utils.RUNNING;
+                        progress = FeatureTask.RUNNING;
                       } else if (task.status === 3) {
-                        progress = utils.SUCCEED;
+                        progress = FeatureTask.SUCCEED;
                       } else if (task.status === 4) {
-                        progress = utils.WARNING;
+                        progress = FeatureTask.WARNING;
                       } else if (task.status === 5) {
-                        progress = utils.IGNORED;
+                        progress = FeatureTask.IGNORED;
                       } else if (task.status === 6) {
-                        progress = utils.MERGED;
+                        progress = FeatureTask.MERGED;
                       }
 
                       var taskCheck =
@@ -6065,7 +6093,7 @@ export default {
                           progress,
                         );
                         if (task.status === -1) {
-                          newTask.setStatus(utils.FAILED, task.message);
+                          newTask.setStatus(FeatureTask.FAILED, task.message);
                         }
                       }
                     });
@@ -6109,21 +6137,21 @@ export default {
                     tasks.forEach((task) => {
                       var progress = null;
                       if (task.status === -1) {
-                        progress = utils.FAILED;
+                        progress = FeatureTask.FAILED;
                       } else if (task.status === -2) {
-                        progress = utils.FAIL_CONFIRMED;
+                        progress = FeatureTask.FAIL_CONFIRMED;
                       } else if (task.status === 1) {
-                        progress = utils.WAITING;
+                        progress = FeatureTask.WAITING;
                       } else if (task.status === 2) {
-                        progress = utils.RUNNING;
+                        progress = FeatureTask.RUNNING;
                       } else if (task.status === 3) {
-                        progress = utils.SUCCEED;
+                        progress = FeatureTask.SUCCEED;
                       } else if (task.status === 4) {
-                        progress = utils.WARNING;
+                        progress = FeatureTask.WARNING;
                       } else if (task.status === 5) {
-                        progress = utils.IGNORED;
+                        progress = FeatureTask.IGNORED;
                       } else if (task.status === 6) {
-                        progress = utils.MERGED;
+                        progress = FeatureTask.MERGED;
                       }
 
                       var taskCheck =
@@ -6140,7 +6168,7 @@ export default {
                           progress,
                         );
                         if (task.status === -1) {
-                          newTask.setStatus(utils.FAILED, task.message);
+                          newTask.setStatus(FeatureTask.FAILED, task.message);
                         }
                       }
                     });
@@ -6244,7 +6272,7 @@ export default {
       this.annotations.selectable.splice(0, this.annotations.selectable.length);
     },
   },
-  ready: function () {
+  mounted() {
     var vm = this;
 
     this._download_cql_filter = "";
@@ -6267,7 +6295,7 @@ export default {
     };
 
     this._featurelist = new ol.Collection();
-    this._taskManager = utils.getFeatureTaskManager(function () {
+    this._taskManager = getFeatureTaskManager(function () {
       vm.revision++;
     });
     vm.taskDialog = new Foundation.Reveal($("#progressInfo"));

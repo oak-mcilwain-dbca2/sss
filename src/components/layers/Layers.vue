@@ -74,7 +74,7 @@ export default {
       this.menu = menu;
     },
   },
-  ready: function () {
+  mounted() {
     var vm = this;
     $("#layers-tabs").on("change.zf.tabs", function (target, selectedTab) {
       var menu = selectedTab.attr("menu");

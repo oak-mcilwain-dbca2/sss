@@ -48,7 +48,8 @@
 </style>
 
 <script>
-import { ol } from "src/vendor.js";
+import ol from "ol";
+
 export default {
   store: {
     hoverInfo: "settings.hoverInfo",
@@ -164,7 +165,7 @@ export default {
       return this._featureInfo;
     },
   },
-  ready: function () {
+  mounted() {
     var vm = this;
     var infoStatus = vm.loading.register("info", "Info Component");
     infoStatus.phaseBegin("gk-init", 80, "Listen 'gk-init' event", true, true);

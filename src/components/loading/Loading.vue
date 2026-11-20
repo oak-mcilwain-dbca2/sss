@@ -121,7 +121,6 @@
 </style>
 
 <script>
-import { $, Vue } from "src/vendor.js";
 export default {
   store: {
     screenHeight: "layout.screenHeight",
@@ -331,7 +330,7 @@ export default {
       return new vm.Status(componentId, componentName);
     },
   },
-  ready: function () {
+  mounted() {
     var vm = this;
     window.alert = (function () {
       let originAlert = window.alert;
@@ -403,14 +402,20 @@ export default {
         originFunc.apply(this, arguments);
       };
     })();
+
+    // TODO:
+    // Legacy code replaced Vue.config.errorHandler during component
+    // initialisation. In Vue 3 this should be configured centrally
+    // in main.js via app.config.errorHandler once application startup
+    // has been migrated.
     //customize vue error handler
-    Vue.config.errorHandler = (function () {
-      var originFunc = Vue.config.errorHandler;
-      return function (err, vm) {
-        addMessage(err);
-        return originFunc(err, vm);
-      };
-    })();
+    // Vue.config.errorHandler = (function () {
+    //   var originFunc = Vue.config.errorHandler;
+    //   return function (err, vm) {
+    //     addMessage(err);
+    //     return originFunc(err, vm);
+    //   };
+    // })();
     loadingStatus.phaseEnd("initialize");
   },
 };

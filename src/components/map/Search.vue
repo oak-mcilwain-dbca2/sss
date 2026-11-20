@@ -37,6 +37,7 @@
 
 <script>
 import ol from "ol";
+
 import { getLayerUrl } from "@/utils/layers";
 
 export default {
@@ -255,7 +256,7 @@ export default {
       });
     },
   },
-  ready: function () {
+  mounted() {
     var vm = this;
 
     vm.map.mapControls["search"] = {

@@ -267,7 +267,9 @@
 // It is currently using a mix of ES5 and ES6 syntax, which can lead to confusion and potential bugs.
 import { debounce } from "lodash-es";
 
-import { $, ol, turf } from "src/vendor.js";
+import ol from "ol";
+import turf from "@turf/turf";
+
 import gkDrawinglogs from "./drawinglogs.vue";
 
 var noteOffset = 0;
@@ -2587,7 +2589,7 @@ export default {
       }
     },
   },
-  ready: function () {
+  mounted() {
     // this.setup();
     //alert("annotations ready start")
     var vm = this;

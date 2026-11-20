@@ -82,7 +82,7 @@
 </style>
 
 <script>
-import { ol, $ } from "src/vendor.js";
+import ol from "ol";
 
 import env from "@/config/env";
 
@@ -214,7 +214,7 @@ export default {
         this.tool._component.clickAssistantButton(button);
     },
   },
-  ready: function () {
+  mounted() {
     var vm = this;
     this._toolboxStatus = vm.loading.register("toolbox", "Toolbox Component");
 

@@ -29,7 +29,7 @@
           <a
             v-if="messageType(message) === 'link'"
             href="{{message[0]}}"
-            @click.stop.prevent="utils.editResource($event)"
+            @click.stop.prevent="editResource($event)"
             target="{{messageAttr(message,'target')}}"
             >{{ message[0] }}</a
           >
@@ -142,7 +142,7 @@
         <a
           v-if="messageType(message) === 'link'"
           href="{{message[0]}}"
-          @click.stop.prevent="utils.editResource($event)"
+          @click.stop.prevent="editResource($event)"
           target="{{messageAttr(message,'target')}}"
           >{{ message[0] }}</a
         >
@@ -203,7 +203,8 @@
 </style>
 
 <script>
-import { $, utils } from "src/vendor.js";
+import { editResource, getHeight } from "@utils/index";
+
 export default {
   data: function () {
     return {
@@ -268,6 +269,9 @@ export default {
     // 3. array of array of string or [message(string), columns,type(link, radio, checkbox,input,text(default),img,button), {element properies,event handlers,classes}  ]
     //defaultOption: used if user close the dialog
     //callback: called if user click one button or have a defaultOption
+    editResource: function (event) {
+      editResource(event);
+    },
     show: function (options) {
       if (options === undefined) {
         $("#userdialog").foundation("open");
@@ -446,7 +450,7 @@ export default {
       }
     },
   },
-  ready: function () {
+  mounted() {
     var vm = this;
     this._messages = [];
     this._footer = [];
@@ -457,8 +461,7 @@ export default {
       $("#userdialog").css(
         "top",
         Math.floor(
-          ($("#userdialog").parent().height() -
-            utils.getHeight($("#userdialog"))) /
+          ($("#userdialog").parent().height() - getHeight($("#userdialog"))) /
             2,
         ) + "px",
       );

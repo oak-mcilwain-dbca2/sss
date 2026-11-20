@@ -160,7 +160,7 @@ export default {
       this.$root.menuChanged();
     },
   },
-  ready: function () {
+  mounted() {
     var vm = this;
     $("#menu-tabs").on("change.zf.tabs", function (target, selectedTab) {
       var menu = selectedTab.attr("menu");
