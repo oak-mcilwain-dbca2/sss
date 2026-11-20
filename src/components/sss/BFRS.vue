@@ -765,8 +765,7 @@ import Foundation from "foundation-sites";
 
 import { ol, $, moment, hash, turf, utils } from "src/vendor.js";
 
-import { getLayerId } from "@/utils/layerMapping";
-import { getLayerUrl } from "@/utils/layers";
+import { getLayerId, getLayerUrl } from "@/utils/layers";
 
 import env from "@/config/env";
 
