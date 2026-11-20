@@ -8,4 +8,10 @@ globalThis.$ = $;
 globalThis.jQuery = $;
 globalThis.moment = moment;
 
-createApp(App).mount("#app");
+const app = createApp(App).mount("#app");
+
+app.config.errorHandler = (err) => {
+  console.error(err);
+
+  // TODO integrate with Loading component's addMessage logic
+};
