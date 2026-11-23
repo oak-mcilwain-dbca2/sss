@@ -136,19 +136,19 @@
                       @click="setProp('size', 1)"
                       :class="{ selected: size == 1 }"
                       class="button"
-                      ><img src="/static/dist/static/images/thick-1.svg"
+                      ><img :src="thick1Svg"
                     /></a>
                     <a
                       @click="setProp('size', 2)"
                       :class="{ selected: size == 2 }"
                       class="button"
-                      ><img src="/static/dist/static/images/thick-2.svg"
+                      ><img :src="thick2Svg"
                     /></a>
                     <a
                       @click="setProp('size', 4)"
                       :class="{ selected: size == 4 }"
                       class="button"
-                      ><img src="/static/dist/static/images/thick-4.svg"
+                      ><img :src="thick4Svg"
                     /></a>
                   </div>
                 </div>
@@ -310,6 +310,10 @@ var noteStyles = {
   },
 };
 
+const thick1Svg = "@/assets/images/thick-1.svg";
+const thick2Svg = "@/assets/images/thick-2.svg";
+const thick4Svg = "@/assets/images/thick-4.svg";
+
 export default {
   store: {
     dpmm: "dpmm",
@@ -341,6 +345,9 @@ export default {
         colour: "#000000",
       },
       notes: {},
+      thick1Svg: thick1Svg,
+      thick2Svg: thick2Svg,
+      thick4Svg: thick4Svg,
       size: 2,
       colour: "#000000",
       colours: [
