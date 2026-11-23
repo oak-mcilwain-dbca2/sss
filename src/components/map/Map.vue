@@ -54,10 +54,20 @@ import MultiPolygon from "ol/geom/MultiPolygon";
 import GeometryCollection from "ol/geom/GeometryCollection";
 import LinearRing from "ol/geom/LinearRing";
 
-import DragPan from "ol/interactions/DragPan";
-import DoubleClickZoom from "ol/interactions/DoubleClickZoom";
-import KeyboardPan from "ol/interactions/KeyboardPan";
-import KeyboardZoom from "ol/interactions/KeyboardZoom";
+import DragPan from "ol/interaction/DragPan";
+import DoubleClickZoom from "ol/interaction/DoubleClickZoom";
+import KeyboardPan from "ol/interaction/KeyboardPan";
+import KeyboardZoom from "ol/interaction/KeyboardZoom";
+
+import Control from "ol/control/Control";
+import FullScreen from "ol/control/FullScreen";
+import Zoom from "ol/control/Zoom";
+import OverviewMap from "ol/control/OverviewMap";
+import ScaleLine from "ol/control/ScaleLine";
+import MousePosition from "ol/control/MousePosition";
+import Attribution from "ol/control/Attribution";
+
+import Stroke from "ol/style/Stroke";
 
 import proj4 from "proj4";
 import { bbox, buffer, point } from "@turf/turf";
@@ -95,7 +105,7 @@ export default {
       mapControls: {},
       graticule: new ol.layer.Graticule({
         map: this.olmap,
-        strokeStyle: new ol.style.Stroke({
+        strokeStyle: new Stroke({
           color: "rgba(0, 0, 0, 0.4)",
           width: 0.5,
           lineDash: null, // Solid line style
@@ -510,7 +520,7 @@ export default {
 
       // console.log ("enableControl");
       // console.log(control.controls);
-      // var mousePositionControl = new ol.control.MousePosition({
+      // var mousePositionControl = new MousePosition({
       //             coordinateFormat: function(coordinate) {
 
       //                 //console.log(this);
@@ -552,7 +562,7 @@ export default {
               element.className = "rotate-north ol-unselectable ol-control";
               element.appendChild(button);
 
-              new ol.control.Control({
+              new Control({
                 element: element,
               });
 
@@ -2866,7 +2876,7 @@ export default {
       );
 
       // bump search bar over if there's no fullscreen button
-      if (!ol.control.FullScreen.isFullScreenSupportedLegacy()) {
+      if (!FullScreen.isFullScreenSupportedLegacy()) {
         $("#map-search").addClass("noFullScreen");
         $("#map-search-button").addClass("noFullScreen");
       }
@@ -3101,14 +3111,14 @@ export default {
         zoom: {
           enabled: false,
           autoenable: false,
-          controls: new ol.control.Zoom({
+          controls: new Zoom({
             target: $("#external-controls").get(0),
           }),
         },
         overviewMap: {
           enabled: false,
           autoenable: false,
-          controls: new ol.control.OverviewMap({
+          controls: new OverviewMap({
             className: "ol-overviewmap ol-custom-overviewmap",
             layers: [],
             // source: new ol.source.WMTS({
@@ -3203,11 +3213,11 @@ export default {
         scaleLine: {
           enabled: false,
           autoenable: false,
-          controls: new ol.control.ScaleLine(),
+          controls: new ScaleLine(),
         },
         mousePosition: {
           enabled: false,
-          controls: new ol.control.MousePosition({
+          controls: new MousePosition({
             coordinateFormat: function (coordinate) {
               return (
                 vm.getDeg(coordinate) +
@@ -3221,7 +3231,7 @@ export default {
         },
         fullScreen: {
           enabled: false,
-          controls: new ol.control.FullScreen({
+          controls: new FullScreen({
             source: $("body").get(0),
             target: $("#external-controls").get(0),
             label: $("<i/>", {
@@ -3232,14 +3242,14 @@ export default {
         scale: {
           enabled: false,
           autoenable: false,
-          controls: new ol.control.Control({
+          controls: new Control({
             element: $("#menu-scale").get(0),
             target: $("#external-controls").get(0),
           }),
         },
         attribution: {
           enabled: false,
-          controls: new ol.control.Attribution(),
+          controls: new Attribution(),
         },
       });
 

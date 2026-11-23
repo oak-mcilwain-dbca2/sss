@@ -209,6 +209,8 @@ import env from "@/config/env";
 
 import * as ol from "ol";
 
+import OverviewMap from "ol/control/OverviewMap";
+
 import { getLayerId, getIndependentLayerId, checkPermission } from "@/utils";
 
 // TODO: Discard if unused (looks unused)
@@ -307,7 +309,7 @@ export default {
           return;
         }
         if (!l.preview) {
-          l.preview = new ol.control.OverviewMap({
+          l.preview = new OverviewMap({
             className: "ol-overviewmap ol-previewmap",
             layers: [
               this.$root.map["create" + l.type](

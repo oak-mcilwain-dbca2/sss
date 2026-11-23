@@ -15,7 +15,7 @@
 <script>
 import * as ol from "ol";
 
-import Draw from "ol/interactions/Draw";
+import Draw from "ol/interaction/Draw";
 
 import Point from "ol/geom/Point";
 
@@ -172,8 +172,8 @@ export default {
       vm._features.on("add", function (event) {
         vm.getWeatherForecast(event.element.getGeometry().getCoordinates());
       });
-      vm._style = new ol.style.Style({
-        image: new ol.style.Icon({
+      vm._style = new Style({
+        image: new Icon({
           src: pinSvg,
           anchorOrigin: "bottom-left",
           anchorXUnits: "pixels",

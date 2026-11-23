@@ -424,18 +424,18 @@ export default {
 
       return function () {
         const labelStyleFunc = function () {
-          return new ol.style.Style({
+          return new Style({
             text: new ol.style.Text({
               text: "o",
               font: "24px Calibri,sans-serif",
-              fill: new ol.style.Fill({ color: "#fff" }),
-              stroke: new ol.style.Stroke({
+              fill: new Fill({ color: "#fff" }),
+              stroke: new Stroke({
                 color: "#fff",
                 width: 2,
               }),
             }),
             image: new ol.style.Circle({
-              fill: new ol.style.Fill({
+              fill: new Fill({
                 color: [0, 0, 255],
               }),
               radius: 12,
@@ -463,8 +463,8 @@ export default {
     },
 
     footprintStyle: function () {
-      return new ol.style.Style({
-        stroke: new ol.style.Stroke({
+      return new Style({
+        stroke: new Stroke({
           width: 5,
           color: [0, 0, 255],
         }),
@@ -1619,15 +1619,15 @@ export default {
         vm.updateFeatureFilter(0);
         vm.features.extend(features.sort(vm.featureOrder));
         /*var s = function(hotspot_no) {
-				  return new ol.style.Style({
+				  return new Style({
 						  text: new ol.style.Text({
 							text: hotspot_no,
 							font: '16px Calibri,sans-serif',
-							fill: new ol.style.Fill({ color: '#fff' }),
-							stroke: new ol.style.Stroke({color: '#fff', width: 0.8})
+							fill: new Fill({ color: '#fff' }),
+							stroke: new Stroke({color: '#fff', width: 0.8})
 						  }),
 						  image : new ol.style.Circle({
-							  fill: new ol.style.Fill({color: [0, 0, 255]}),
+							  fill: new Fill({color: [0, 0, 255]}),
 							  radius: 15
 						  })
 					  })
@@ -1661,8 +1661,8 @@ export default {
 
         $.each(features, function (index, feature) {
           feature.setStyle(
-            new ol.style.Style({
-              stroke: new ol.style.Stroke({
+            new Style({
+              stroke: new Stroke({
                 width: 5,
                 color: [0, 0, 255],
               }),

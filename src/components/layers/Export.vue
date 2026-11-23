@@ -392,6 +392,8 @@ import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import * as ol from "ol";
 
+import ScaleLine from "ol/control/ScaleLine"
+
 import gkLegend from "./Legend.vue";
 import gkLayerlegends from "./LayerLegends.vue";
 
@@ -1094,7 +1096,7 @@ export default {
             this.printStatus.layout.scale) /
             newscale,
         );
-      const scaleLine = new ol.control.ScaleLine({
+      const scaleLine = new ScaleLine({
         bar: true,
         text: true,
         minWidth: 125,

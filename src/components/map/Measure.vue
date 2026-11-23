@@ -1428,18 +1428,18 @@ export default {
         vm.removeTooltip(event.element);
       }
     });
-    this.style = new ol.style.Style({
-      fill: new ol.style.Fill({
+    this.style = new Style({
+      fill: new Fill({
         color: "rgba(0,0,0, 0.25)",
       }),
-      stroke: new ol.style.Stroke({
+      stroke: new Stroke({
         color: "rgba(0, 0, 0, 0.5)",
         lineDash: [10, 10],
         width: 2,
       }),
       image: new ol.style.Circle({
         radius: 5,
-        fill: new ol.style.Fill({
+        fill: new Fill({
           color: "rgb(0, 153, 255)",
         }),
       }),

@@ -1272,8 +1272,8 @@ export default {
             if (!src) {
               return false;
             }
-            return new ol.style.Style({
-              image: new ol.style.Icon({
+            return new Style({
+              image: new Icon({
                 src: src,
                 scale: 0.5,
                 snapToPixel: true,
@@ -1282,12 +1282,12 @@ export default {
                 offsetX: 12,
                 textAlign: "left",
                 font: "12px Helvetica,Roboto,Arial,sans-serif",
-                stroke: new ol.style.Stroke({
+                stroke: new Stroke({
                   color: "#fff",
                   width: 4,
                 }),
               }),
-              stroke: new ol.style.Stroke({
+              stroke: new Stroke({
                 color: [52, 101, 164, 0.6],
                 width: 4.0,
               }),
@@ -1314,8 +1314,8 @@ export default {
             //style.getImage().setRotation( (heading + 90) / 180 * Math.PI )
             if (!vm.styleWithDirection) {
               vm.styleWithDirection = style.concat([
-                new ol.style.Style({
-                  image: new ol.style.Icon({
+                new Style({
+                  image: new Icon({
                     src: directionSvg,
                     scale: 1,
                     snapToPixel: true,

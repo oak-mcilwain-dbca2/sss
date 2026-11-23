@@ -82,7 +82,7 @@
 </style>
 
 <script>
-import * as ol from "ol";
+import Control from "ol/control/Control";
 
 import env from "@/config/env";
 
@@ -149,7 +149,7 @@ export default {
       // Computed properties should not mutate state. Revisit once the
       // application is running.
 
-      return new ol.control.Control({
+      return new Control({
         element: $("#toolbox_control").get(0),
         target: $("#external-controls").get(0),
       });

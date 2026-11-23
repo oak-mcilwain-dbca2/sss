@@ -241,13 +241,18 @@ import MultiLineString from "ol/geom/MultiLineString";
 import MultiPolygon from "ol/geom/MultiPolygon";
 import GeometryCollection from "ol/geom/GeometryCollection";
 
-import Snap from "ol/interactions/Snap";
-import Draw from "ol/interactions/Draw";
-import Translate from "ol/interactions/Translate";
-import DragBox from "ol/interactions/DragBox";
-import Select from "ol/interactions/Select";
-import Interaction from "ol/interactions/Interaction";
-import Modify from "ol/interactions/Modify";
+import Snap from "ol/interaction/Snap";
+import Draw from "ol/interaction/Draw";
+import Translate from "ol/interaction/Translate";
+import DragBox from "ol/interaction/DragBox";
+import Select from "ol/interaction/Select";
+import Interaction from "ol/interaction/Interaction";
+import Modify from "ol/interaction/Modify";
+
+import Style from "ol/style/Style";
+import Icon from "ol/style/Icon";
+import Fill from "ol/style/Fill";
+import Stroke from "ol/style/Stroke";
 
 import {
   intersect,
@@ -980,11 +985,11 @@ export default {
         vm._source4Selection = new ol.source.Vector({
           features: vm._features4Selection,
         });
-        vm._style4Selection = new ol.style.Style({
-          fill: new ol.style.Fill({
+        vm._style4Selection = new Style({
+          fill: new Fill({
             color: "rgba(0,0,0, 0.25)",
           }),
-          stroke: new ol.style.Stroke({
+          stroke: new Stroke({
             color: "rgba(0, 0, 0, 0.5)",
             lineDash: [5, 5],
             width: 2,
@@ -2126,8 +2131,8 @@ export default {
               }
               // console.log("SRC vm.map.cacheStyle 1" +src);
               // console.log(src);
-              style = new ol.style.Style({
-                image: new ol.style.Icon({
+              style = new Style({
+                image: new Icon({
                   src: src,
                   scale: 0.5,
                   rotation: rot,
@@ -2152,12 +2157,12 @@ export default {
               // console.log(src);
               style = [
                 style,
-                new ol.style.Style({
+                new Style({
                   geometry: function (f) {
                     return vm.getSelectedGeometry(f);
                   },
 
-                  image: new ol.style.Icon({
+                  image: new Icon({
                     src: src,
                     scale: 0.5,
                     rotation: rot,
@@ -2192,16 +2197,16 @@ export default {
           vm.getStyleProperty(f, "tint", "", tool) + ".textStroke";
         var fillTint = vm.getStyleProperty(f, "tint", "", tool) + ".textFill";
         var labelStyle = tool.labelStyle || {};
-        return new ol.style.Style({
+        return new Style({
           text: new ol.style.Text({
             offsetX: labelStyle.offsetX || 12,
             text: f.get(labelProperty),
             textAlign: "left",
             font: labelStyle.font || "12px Helvetica,Roboto,Arial,sans-serif",
-            fill: new ol.style.Fill({
+            fill: new Fill({
               color: tints[fillTint] || "#333",
             }),
-            stroke: new ol.style.Stroke({
+            stroke: new Stroke({
               color: tints[strokeTint],
               width: labelStyle.strokeWidth || 4,
             }),
@@ -2243,8 +2248,8 @@ export default {
           function (f) {
             if (selectMode === "partial") {
               return [
-                new ol.style.Style({
-                  fill: new ol.style.Fill({
+                new Style({
+                  fill: new Fill({
                     color: vm.getStyleProperty(
                       f,
                       "fillColour",
@@ -2252,7 +2257,7 @@ export default {
                       tool,
                     ),
                   }),
-                  stroke: new ol.style.Stroke({
+                  stroke: new Stroke({
                     color: vm.getStyleProperty(
                       f,
                       "colour",
@@ -2262,11 +2267,11 @@ export default {
                     width: 2 * vm.getStyleProperty(f, "size", 1, tool),
                   }),
                 }),
-                new ol.style.Style({
+                new Style({
                   geometry: function (f) {
                     return vm.getSelectedGeometry(f);
                   },
-                  fill: new ol.style.Fill({
+                  fill: new Fill({
                     color: vm.getStyleProperty(
                       f,
                       "selectedFillColour",
@@ -2274,7 +2279,7 @@ export default {
                       tool,
                     ),
                   }),
-                  stroke: new ol.style.Stroke({
+                  stroke: new Stroke({
                     color: vm.getStyleProperty(
                       f,
                       "selectedColour",
@@ -2284,12 +2289,12 @@ export default {
                     width: 2 * vm.getStyleProperty(f, "size", 1, tool) + 2,
                   }),
                 }),
-                new ol.style.Style({
+                new Style({
                   geometry: function (f) {
                     //console.log("===============" + f.get('label'))
                     return vm.getSelectedGeometry(f);
                   },
-                  stroke: new ol.style.Stroke({
+                  stroke: new Stroke({
                     color: "#ffffff",
                     width: 2 * vm.getStyleProperty(f, "size", 1, tool),
                   }),
@@ -2297,8 +2302,8 @@ export default {
               ];
             } else if (selectMode === "all") {
               return [
-                new ol.style.Style({
-                  fill: new ol.style.Fill({
+                new Style({
+                  fill: new Fill({
                     color: vm.getStyleProperty(
                       f,
                       "selectedFillColour",
@@ -2306,7 +2311,7 @@ export default {
                       tool,
                     ),
                   }),
-                  stroke: new ol.style.Stroke({
+                  stroke: new Stroke({
                     color: vm.getStyleProperty(
                       f,
                       "selectedColour",
@@ -2316,16 +2321,16 @@ export default {
                     width: 2 * vm.getStyleProperty(f, "size", 1, tool) + 2,
                   }),
                 }),
-                new ol.style.Style({
-                  stroke: new ol.style.Stroke({
+                new Style({
+                  stroke: new Stroke({
                     color: "#ffffff",
                     width: 2 * vm.getStyleProperty(f, "size", 1, tool),
                   }),
                 }),
               ];
             } else {
-              return new ol.style.Style({
-                fill: new ol.style.Fill({
+              return new Style({
+                fill: new Fill({
                   color: vm.getStyleProperty(
                     f,
                     "fillColour",
@@ -2333,7 +2338,7 @@ export default {
                     tool,
                   ),
                 }),
-                stroke: new ol.style.Stroke({
+                stroke: new Stroke({
                   color: vm.getStyleProperty(
                     f,
                     "colour",
@@ -2384,9 +2389,9 @@ export default {
 
               $.each(typeIconStyle, function (index, item) {
                 newStyle.push(
-                  new ol.style.Style({
+                  new Style({
                     geometry: item.getGeometry(),
-                    image: new ol.style.Icon({
+                    image: new Icon({
                       src: src,
                       rotation: item.getImage().getRotation(),
                       rotateWithView: item.getImage().getRotateWithView(),
@@ -2500,11 +2505,11 @@ export default {
             );
 
             typeIconStyle.push(
-              new ol.style.Style({
+              new Style({
                 geometry: new Point(
                   linestring.getCoordinateAt(symbolPercentage),
                 ),
-                image: new ol.style.Icon({
+                image: new Icon({
                   src: src,
                   rotation: metadata["segments"][segmentIndex]["rotation"],
                   rotateWithView: true,
@@ -2523,9 +2528,9 @@ export default {
                 segmentMetadata["position"] < i * symbolPercentage
               ) {
                 typeIconStyle.push(
-                  new ol.style.Style({
+                  new Style({
                     geometry: new MultiPoint(symbolPoints),
-                    image: new ol.style.Icon({
+                    image: new Icon({
                       src: src,
                       rotation: segmentMetadata["rotation"],
                       rotateWithView: true,
@@ -2749,8 +2754,8 @@ export default {
       }
       if (!noteStyleCache[url][tint]) {
         var color = tint == "selected" ? "#70BDF0" : undefined;
-        noteStyleCache[url][tint] = new ol.style.Style({
-          image: new ol.style.Icon({
+        noteStyleCache[url][tint] = new Style({
+          image: new Icon({
             anchorOrigin: "bottom-left",
             anchor: [0, 0],
             color: color,
@@ -2835,8 +2840,8 @@ export default {
               return false;
             }
             var rot = feat.get("rotation") || 0.0;
-            return new ol.style.Style({
-              image: new ol.style.Icon({
+            return new Style({
+              image: new Icon({
                 src: src,
                 scale: 0.5,
                 rotation: rot,

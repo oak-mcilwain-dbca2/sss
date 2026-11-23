@@ -921,10 +921,10 @@ export default {
         let selfIntersectionStyle = null;
 
         if (boundaryStyle && feat.intersectionPoints) {
-          selfIntersectionStyle = new ol.style.Style({
+          selfIntersectionStyle = new Style({
             geometry: feat.intersectionPoints,
             image: new ol.style.Circle({
-              fill: new ol.style.Fill({
+              fill: new Fill({
                 color: [255, 0, 0],
               }),
               radius: 4,

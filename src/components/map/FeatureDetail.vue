@@ -9,7 +9,7 @@
 // Consider moving to something like services/featureDetail.js
 import * as ol from "ol";
 
-import Interaction from "ol/interactions/Interaction";
+import Interaction from "ol/interaction/Interaction";
 
 import env from "@/config/env";
 

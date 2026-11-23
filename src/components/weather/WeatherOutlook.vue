@@ -492,7 +492,7 @@ import { saveAs } from "file-saver";
 
 import * as ol from "ol";
 
-import Draw from "ol/interactions/Draw";
+import Draw from "ol/interaction/Draw";
 
 import Point from "ol/geom/Point";
 
@@ -2128,8 +2128,8 @@ export default {
     this._features.on("add", function (event) {
       vm.getWeatherOutlook(event.element.getGeometry().getCoordinates());
     });
-    this._style = new ol.style.Style({
-      image: new ol.style.Icon({
+    this._style = new Style({
+      image: new Icon({
         src: pinSvg,
         anchorOrigin: "bottom-left",
         anchorXUnits: "pixels",

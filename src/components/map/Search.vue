@@ -38,6 +38,12 @@
 <script>
 import * as ol from "ol";
 
+import Control from "ol/control/Control";
+
+import Style from "ol/style/Style";
+import Fill from "ol/style/Fill";
+import Stroke from "ol/style/Stroke";
+
 import { getLayerUrl } from "@/utils";
 
 import Point from "ol/geom/Point";
@@ -264,11 +270,11 @@ export default {
     vm.map.mapControls["search"] = {
       enabled: false,
       controls: [
-        new ol.control.Control({
+        new Control({
           element: $("#map-search").get(0),
           target: $("#external-controls").get(0),
         }),
-        new ol.control.Control({
+        new Control({
           element: $("#map-search-button").get(0),
           target: $("#external-controls").get(0),
         }),
@@ -279,13 +285,13 @@ export default {
     this._wa_perth = [115.8605, -31.9527];
 
     this.style = function (feature) {
-      return new ol.style.Style({
+      return new Style({
         image: new ol.style.Circle({
           radius: 5,
-          fill: new ol.style.Fill({
+          fill: new Fill({
             color: "rgb(255, 255, 255)",
           }),
-          stroke: new ol.style.Stroke({
+          stroke: new Stroke({
             width: 2,
             color: "rgb(114, 193, 0)",
           }),
@@ -295,7 +301,7 @@ export default {
           text: feature.get("name"),
           textAlign: "left",
           font: "12px Helvetica,Roboto,Arial,sans-serif",
-          stroke: new ol.style.Stroke({
+          stroke: new Stroke({
             color: "#fff",
             width: 4,
           }),
