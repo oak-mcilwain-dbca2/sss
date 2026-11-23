@@ -492,6 +492,8 @@ import { saveAs } from "file-saver";
 
 import * as ol from "ol";
 
+import Point from "ol/geom/Point";
+
 import { getDatetimes, submitForm } from "@/utils";
 
 import pinSvg from "@/assets/images/pin.svg";
@@ -1953,9 +1955,7 @@ export default {
     },
     setPosition: function (coordinate) {
       this._features.clear();
-      this._features.push(
-        new ol.Feature({ geometry: new ol.geom.Point(coordinate) }),
-      );
+      this._features.push(new ol.Feature({ geometry: new Point(coordinate) }));
     },
     getWeatherOutlook: function (coordinate) {
       if (this.reportTimes.length === 0) {

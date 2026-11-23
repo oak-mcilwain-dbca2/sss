@@ -233,6 +233,8 @@ import { debounce } from "lodash-es";
 
 import * as ol from "ol";
 
+import Point from "ol/geom/Point";
+
 import {
   intersect,
   lineIntersect,
@@ -1963,7 +1965,7 @@ export default {
             return false;
           }
           feat = new ol.Feature({
-            geometry: new ol.geom.Point(coords),
+            geometry: new Point(coords),
           });
           vm.drawingSequence += 1;
           feat.set("id", vm.drawingSequence);
@@ -2496,7 +2498,7 @@ export default {
 
             typeIconStyle.push(
               new ol.style.Style({
-                geometry: new ol.geom.Point(
+                geometry: new Point(
                   linestring.getCoordinateAt(symbolPercentage),
                 ),
                 image: new ol.style.Icon({

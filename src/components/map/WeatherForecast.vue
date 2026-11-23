@@ -15,6 +15,8 @@
 <script>
 import * as ol from "ol";
 
+import Point from "ol/geom/Point";
+
 import { submitForm } from "@/utils";
 
 import env from "@/config/env";
@@ -110,9 +112,7 @@ export default {
     },
     setPosition: function (coordinate) {
       this._features.clear();
-      this._features.push(
-        new ol.Feature({ geometry: new ol.geom.Point(coordinate) }),
-      );
+      this._features.push(new ol.Feature({ geometry: new Point(coordinate) }));
     },
     getWeatherForecast: function (coordinate) {
       var vm = this;

@@ -44,6 +44,9 @@
 import { isKbLayer, getLayerId, getLayerUrl } from "@/utils";
 
 import * as ol from "ol";
+
+import Point from "ol/geom/Point";
+
 import proj4 from "proj4";
 import { bbox, buffer, point } from "@turf/turf";
 
@@ -3381,7 +3384,7 @@ export default {
         };
       }
       var vm = this;
-      var feat = new ol.Feature({ geometry: new ol.geom.Point(coordinate) });
+      var feat = new ol.Feature({ geometry: new Point(coordinate) });
       $.ajax({
         url: "/api/spatial",
         dataType: "json",

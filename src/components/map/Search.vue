@@ -40,6 +40,8 @@ import * as ol from "ol";
 
 import { getLayerUrl } from "@/utils";
 
+import Point from "ol/geom/Point";
+
 export default {
   store: ["resolutions"],
   data: function () {
@@ -110,7 +112,7 @@ export default {
           vm.features.clear();
           vm.features.push(
             new ol.Feature({
-              geometry: new ol.geom.Point(coords),
+              geometry: new Point(coords),
               name: name,
             }),
           );

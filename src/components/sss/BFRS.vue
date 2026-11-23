@@ -668,6 +668,9 @@ import { debounce } from "lodash-es";
 import Foundation from "foundation-sites";
 
 import * as ol from "ol";
+
+import Point from "ol/geom/Point";
+
 import { intersect, point, booleanPointInPolygon, buffer } from "@turf/turf";
 import {
   FeatureTask,
@@ -6145,17 +6148,15 @@ export default {
 
           var hasPoint =
             feat.getGeometry().getGeometriesArray().length > 0 &&
-            feat.getGeometry().getGeometriesArray()[0] instanceof ol.geom.Point;
+            feat.getGeometry().getGeometriesArray()[0] instanceof Point;
 
           if (hasPoint) {
-            feat.getGeometry().getGeometriesArray()[0] = new ol.geom.Point(
-              coords,
-            );
+            feat.getGeometry().getGeometriesArray()[0] = new Point(coords);
           } else {
             feat
               .getGeometry()
               .getGeometriesArray()
-              .splice(0, 0, new ol.geom.Point(coords));
+              .splice(0, 0, new Point(coords));
           }
           feat
             .getGeometry()
@@ -6173,7 +6174,7 @@ export default {
           feat
             .getGeometry()
             .getGeometriesArray()
-            .splice(0, 0, new ol.geom.Point(coords));
+            .splice(0, 0, new Point(coords));
           feat
             .getGeometry()
             .setGeometriesArray(feat.getGeometry().getGeometriesArray());
