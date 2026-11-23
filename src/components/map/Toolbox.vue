@@ -87,9 +87,16 @@ import ol from "ol";
 import env from "@/config/env";
 
 import toolBox from "@/assets/images/toolbox.png";
+import nonToolSvg from "@assets/non-tool.svg";
 
 export default {
   store: {},
+  setup() {
+    return {
+      toolBox,
+      nonToolSvg,
+    };
+  },
   data: function () {
     return {
       toolBox: toolBox,
@@ -234,7 +241,7 @@ export default {
       var nonTool = {
         toolid: "deselect-tool",
         title: "",
-        icon: "/static/dist/static/images/non-tool.svg",
+        icon: nonToolSvg,
         _component: vm,
         assistantButtons: [],
       };
