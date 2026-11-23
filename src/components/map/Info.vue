@@ -48,7 +48,7 @@
 </style>
 
 <script>
-import * as ol from "ol";
+import { toStringXY } from "ol/coordinate";
 
 export default {
   store: {
@@ -130,7 +130,7 @@ export default {
       });
       if (features.length > 0) {
         this.features = features;
-        this.coordinate = ol.coordinate.toStringXY(
+        this.coordinate = toStringXY(
           this.$root.map.olmap.getCoordinateFromPixel(pixel),
           3,
         );

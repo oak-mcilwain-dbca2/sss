@@ -454,7 +454,14 @@ class="expanded secondary button" :class="{'selected': t.name == annotations.too
 <script>
 import { debounce } from "lodash-es";
 
-import * as ol from "ol";
+import Feature from "ol/Feature";
+import Collection from "ol/Collection";
+
+import Style from "ol/style/Style";
+import Stroke from "ol/style/Stroke";
+import Icon from "ol/style/Icon";
+
+import { containsCoordinate } from "ol/extent";
 
 import Point from "ol/geom/Point";
 import LineString from "ol/geom/LineString";
@@ -508,7 +515,7 @@ export default {
         "contractor_details",
         "source_device_type",
       ],
-      features: new ol.Collection(),
+      features: new Collection(),
       extentFeaturesSize: 0,
       featureLabelDisabled: false,
       featureDirDisabled: false,
@@ -1154,7 +1161,7 @@ export default {
           vm.features.forEach(function (feat) {
             feat.inViewport =
               feat.getGeometry() &&
-              ol.extent.containsCoordinate(
+              containsCoordinate(
                 viewportExtent,
                 feat.getGeometry().getCoordinates(),
               );
@@ -1218,7 +1225,7 @@ export default {
       "tracking",
       "Resource Tracking Component",
     );
-    vm._featurelist = new ol.Collection();
+    vm._featurelist = new Collection();
 
     trackingStatus.phaseBegin("initialize", 20, "Initialize");
 
@@ -1278,7 +1285,7 @@ export default {
                 scale: 0.5,
                 snapToPixel: true,
               }),
-              text: new ol.style.Text({
+              text: new Text({
                 offsetX: 12,
                 textAlign: "left",
                 font: "12px Helvetica,Roboto,Arial,sans-serif",
@@ -1653,7 +1660,7 @@ export default {
             // create a new linestring
             var f = devices[device][0];
             var name = deviceLabel(f);
-            var feature = new ol.Feature({
+            var feature = new Feature({
               name: name + " path",
               icon: f.get("icon"),
               tint: f.get("tint"),

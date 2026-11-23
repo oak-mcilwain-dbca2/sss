@@ -43,7 +43,8 @@
 <script>
 import { isKbLayer, getLayerId, getLayerUrl } from "@/utils";
 
-import * as ol from "ol";
+import Feature from "ol/Feature";
+import View from "ol/View";
 
 import Point from "ol/geom/Point";
 import MultiPoint from "ol/geom/MultiPoint";
@@ -58,6 +59,7 @@ import DragPan from "ol/interaction/DragPan";
 import DoubleClickZoom from "ol/interaction/DoubleClickZoom";
 import KeyboardPan from "ol/interaction/KeyboardPan";
 import KeyboardZoom from "ol/interaction/KeyboardZoom";
+import { defaults as defaultInteractions } from "ol/interaction";
 
 import Control from "ol/control/Control";
 import FullScreen from "ol/control/FullScreen";
@@ -68,6 +70,31 @@ import MousePosition from "ol/control/MousePosition";
 import Attribution from "ol/control/Attribution";
 
 import Stroke from "ol/style/Stroke";
+
+import TileLayer from "ol/layer/Tile";
+import VectorLayer from "ol/layer/Vector";
+import Graticule from "ol/layer/Graticule";
+
+import VectorSource from "ol/source/Vector";
+import ImageWMS from "ol/source/ImageWMS";
+import TileWMS from "ol/source/TileWMS";
+
+import WMTS from "ol/source/WMTS";
+import WMTSTileGrid from "ol/tilegrid/WMTS";
+import TileGrid from "ol/tilegrid/TileGrid";
+
+import WMSCapabilities from "ol/format/WMSCapabilities";
+
+import { getDistance } from "ol/sphere";
+
+import { degreesToStringHDMS } from "ol/coordinate";
+import { noModifierKeys } from "ol/events/condition";
+
+import { extend, getTopLeft, getWidth, isEmpty, createEmpty } from "ol/extent";
+
+import Event from "ol/events/Event";
+
+import { get } from "ol/proj";
 
 import proj4 from "proj4";
 import { bbox, buffer, point } from "@turf/turf";
@@ -103,7 +130,7 @@ export default {
     return {
       scale: 0,
       mapControls: {},
-      graticule: new ol.layer.Graticule({
+      graticule: new Graticule({
         map: this.olmap,
         strokeStyle: new Stroke({
           color: "rgba(0, 0, 0, 0.4)",
@@ -133,7 +160,7 @@ export default {
           ) {
             return false;
           }
-          return ol.events.condition.noModifierKeys(mapBrowserEvent);
+          return noModifierKeys(mapBrowserEvent);
         },
       }),
       doubleClickZoomInter: new DoubleClickZoom(),
@@ -200,23 +227,16 @@ export default {
   },
   // methods callable from inside the template
   methods: {
-    createEvent: function (source, type, options) {
-      try {
-        return new this._event(type, options);
-      } catch {
-        this._event = function (type, options) {
-          // new ol.events.Event.call(this,type)
-          new ol.events.Event(this, type);
-          var ev = this;
-          if (options) {
-            $.each(options, function (k, v) {
-              ev[k] = v;
-            });
-          }
-        };
-        ol.inherits(this._event, ol.events.Event);
-        return new this._event(type, options);
+    createEvent(source, type, options) {
+      const event = new Event(type);
+
+      event.target = source;
+
+      if (options) {
+        Object.assign(event, options);
       }
+
+      return event;
     },
     clearFeatureProperties: function (feature) {
       $.each(feature.getKeys(), function (index, key) {
@@ -227,7 +247,7 @@ export default {
     },
     cloneFeature: function (feat, cloneGeometry, excludedProperties) {
       if (cloneGeometry === false) {
-        var feature = new ol.Feature();
+        var feature = new Feature();
         $.each(feat.getProperties(), function (key, value) {
           if (key === feat.getGeometryName()) {
             return;
@@ -896,7 +916,7 @@ export default {
           return style;
         }
       }
-      return new ol.layer.Vector().getStyleFunction()();
+      return new VectorLayer().getStyleFunction()();
     },
 
     animate: function (location) {
@@ -948,7 +968,7 @@ export default {
       // var extent_lat_lon = ol.proj.transform(extent, 'EPSG:3857', 'EPSG:4326')
 
       // var distance = this.$root.wgs84Sphere.haversineDistance([extent[0], center[1]], center) * 2
-      var distance = ol.sphere.getDistance([extent[0], center[1]], center) * 2;
+      var distance = getDistance([extent[0], center[1]], center) * 2;
       var scale = (distance * this.dpmm) / size[0];
       return isFinite(scale) ? scale : null;
     },
@@ -985,9 +1005,9 @@ export default {
     // get the DMS representation of some EPSG:4326 coordinates
     getDMS: function (coords) {
       return (
-        ol.coordinate.degreesToStringHDMS_(coords[0], "EW", 1) +
+        degreesToStringHDMS(coords[0], "EW", 1) +
         ", " +
-        ol.coordinate.degreesToStringHDMS_(coords[1], "NS", 1)
+        degreesToStringHDMS(coords[1], "NS", 1)
       );
     },
     // get the MGA representation of some EPSG:4326 coordinates
@@ -1475,16 +1495,16 @@ export default {
       // technically, we can specify a WMS source and a layer without
       // either the source URL or the layerID. which is good, because
       // we need to do that later on in a callback.
-      var tileSource = new ol.source.TileWMS({
+      var tileSource = new TileWMS({
         params: options.params,
-        tileGrid: new ol.tilegrid.TileGrid({
+        tileGrid: new TileGrid({
           extent: [-180, -90, 180, 90],
           resolutions: this.resolutions,
           tileSize: [1024, 1024],
         }),
       });
 
-      var tileLayer = new ol.layer.Tile({
+      var tileLayer = new TileLayer({
         opacity: options.opacity || 1,
         source: tileSource,
       });
@@ -1612,12 +1632,12 @@ export default {
           options.params || {},
         );
 
-        var vectorSource = new ol.source.Vector({
+        var vectorSource = new VectorSource({
           features: options.features || undefined,
           params: options.params,
         });
 
-        var vector = new ol.layer.Vector({
+        var vector = new VectorLayer({
           opacity: options.opacity || 1,
           source: vectorSource,
           style: options.style,
@@ -1763,7 +1783,7 @@ export default {
       // length = 1: single date
       // length = 2: start and end dates
       var vm = this;
-      var parser = new ol.format.WMSCapabilities();
+      var parser = new WMSCapabilities();
       var layerNames = []; // Will be used to hold names of all layers in geoserver hotspots.dbca.wa.gov.au
       var mosaicLayersString = ""; // Will be used to form string of layers passed in (mosaicLayers) which exist on geoserver
       // Fill layerNames (all geoserver layer names)
@@ -1825,7 +1845,7 @@ export default {
         // Create map layer NB this.env.hotSpotService does not work inside $get so URL is created from the GetCapabilities run above
         const layerId = "hotspots: flight_mosaics";
         const layerName = "Flight mosaics";
-        var imgSource = new ol.source.ImageWMS({
+        var imgSource = new ImageWMS({
           url: vm.env.hotspotsUrl + "/hotspots/wms",
           serverType: "geoserver",
           crossOrigin: "anonymous",
@@ -1835,7 +1855,7 @@ export default {
           projection: "EPSG:28350",
         });
 
-        var imgLayer = new ol.layer.Image({
+        var imgLayer = new Image({
           opacity: 1,
           source: imgSource,
           name: layerName,
@@ -1866,7 +1886,7 @@ export default {
       var vm = this;
       const layerId = "hotspots: " + flight_datetime + "_img_" + image_name;
       const layerName = "Hotspot image " + flight_datetime + " " + hotspot_no;
-      var imgSource = new ol.source.ImageWMS({
+      var imgSource = new ImageWMS({
         url: this.env.hotspotsUrl + "/wms",
         serverType: "geoserver",
         crossOrigin: "anonymous",
@@ -1875,7 +1895,7 @@ export default {
         },
         projection: "EPSG:28350",
       });
-      var imgLayer = new ol.layer.Image({
+      var imgLayer = new Image({
         opacity: 1,
         source: imgSource,
         name: layerName,
@@ -1898,7 +1918,7 @@ export default {
       // Added Nov/Dec 2020 to enable loading of hotspot imagery
       //position is the position within the map layers array in which the mosaic layers should be loaded (immediately below hotspots and footprints)
       var vm = this;
-      var imgSource = new ol.source.ImageWMS({
+      var imgSource = new ImageWMS({
         url: this.env.hotspotsUrl + "/wms",
         serverType: "geoserver",
         crossOrigin: "anonymous",
@@ -1908,7 +1928,7 @@ export default {
         },
         projection: "EPSG:4326",
       });
-      var imgLayer = new ol.layer.Image({
+      var imgLayer = new Image({
         opacity: 1,
         source: imgSource,
         name: "Thermal Imaging Hotspots",
@@ -1959,7 +1979,7 @@ export default {
       // var projection2 = ol.proj.get("EPSG:4326");
       // //var projectionExtent = projection.getExtent();
       // var projectionExtent2 = projection2.getExtent();
-      // var s = ol.extent.getWidth(projectionExtent2) / 256;
+      // var s = getWidth(projectionExtent2) / 256;
       // var matrixIds = new Array(21);
       // var resolutions = new Array(21);
       // for (var c = 0; c < 21; ++c)
@@ -1968,14 +1988,14 @@ export default {
 
       // var resolutions2 = new Array(21);
       // var matrixIds2 = new Array(21);
-      // var tileGrid = new ol.tilegrid.WMTS({
-      //     origin: ol.extent.getTopLeft(projectionExtent2),
+      // var tileGrid = new WMTSTileGrid({
+      //     origin: getTopLeft(projectionExtent2),
       //     resolutions: resolutions,
       //     matrixIds: matrixIds2,
       //     tileSize: 1024
       // });
-      // var tileGrid = new ol.tilegrid.WMTS({
-      //   origin: ol.extent.getTopLeft(projectionExtent),
+      // var tileGrid = new WMTSTileGrid({
+      //   origin: getTopLeft(projectionExtent),
       //   resolutions: resolutions,
       //   matrixIds: matrixIds
       //   //tileSize: layer.tileSize
@@ -1992,7 +2012,7 @@ export default {
       // }
 
       // create a tile source
-      // var tileSource = new ol.source.WMTS({
+      // var tileSource = new WMTS({
       //   url: layer.wmts_url,
       //   format: "image/png",
       //   layer: getLayerId(layer.id),
@@ -2005,28 +2025,28 @@ export default {
       //   tileSize: 256
       // })
 
-      // var tileLayer = new ol.layer.Tile({
+      // var tileLayer = new Tile({
       //   opacity: layer.opacity || 1,
       //   source: tileSource
       // })
-      var projection = ol.proj.get("EPSG:4326");
+      var projection = get("EPSG:4326");
       var projectionExtent = projection.getExtent();
 
-      var s = ol.extent.getWidth(projectionExtent) / 1024;
+      var s = getWidth(projectionExtent) / 1024;
       var matrixSet = "mercator";
       var resolutions = new Array(21);
       var matrixIds = new Array(21);
       for (var c = 0; c < 21; ++c)
         ((resolutions[c] = s / Math.pow(2, c)),
           (matrixIds[c] = matrixSet + ":" + c));
-      var m = new ol.tilegrid.WMTS({
-        origin: ol.extent.getTopLeft(projectionExtent),
+      var m = new WMTSTileGrid({
+        origin: getTopLeft(projectionExtent),
         resolutions: resolutions,
         matrixIds: matrixIds,
         tileSize: [1024, 1024],
       });
 
-      // var tileSource = new ol.source.WMTS({
+      // var tileSource = new WMTS({
       //      // url: "https://kmi.dpaw.wa.gov.au/geoserver/gwc/service/wmts",
       //       url: options.map_server_url+ "/gwc/service/wmts",
       //       format: "image/png",
@@ -2039,7 +2059,7 @@ export default {
 
       var wmsVersion = options.service_type_version || "1.1.1";
 
-      var tileSource = new ol.source.TileWMS({
+      var tileSource = new TileWMS({
         url: layerUrl + "/gwc/service/wms",
         params: {
           FORMAT: "image/png",
@@ -2051,13 +2071,13 @@ export default {
         tileGrid: m,
       });
 
-      var tileLayer = new ol.layer.Tile({
+      var tileLayer = new TileLayer({
         //name: "street",
         name: options.title,
         canDelete: "no",
         visible: !0,
         source: tileSource,
-        // source: new ol.source.WMTS({
+        // source: new WMTS({
         //     url: "https://kmi.dpaw.wa.gov.au/geoserver/gwc/service/wmts",
         //     format: "image/png",
         //     layer: "public:mapbox-streets",
@@ -2084,19 +2104,18 @@ export default {
         if (event.key === "timeIndex") {
           if (options.timeline && options.timeline.length > 0) {
             if (!options.timeline[event.target.get(event.key)][2]) {
-              options.timeline[event.target.get(event.key)][2] =
-                new ol.source.WMTS({
-                  url: layer.wmts_url,
-                  layer: getLayerId(
-                    options.timeline[event.target.get(event.key)][1],
-                  ),
-                  matrixSet: matrixSet.name,
-                  format: layer.format,
-                  style: layer.style,
-                  projection: layer.projection,
-                  wrapX: true,
-                  tileGrid: vm.tileGrid,
-                });
+              options.timeline[event.target.get(event.key)][2] = new WMTS({
+                url: layer.wmts_url,
+                layer: getLayerId(
+                  options.timeline[event.target.get(event.key)][1],
+                ),
+                matrixSet: matrixSet.name,
+                format: layer.format,
+                style: layer.style,
+                projection: layer.projection,
+                wrapX: true,
+                tileGrid: vm.tileGrid,
+              });
               options.timeline[
                 event.target.get(event.key)
               ][2].setTileLoadFunction(
@@ -2230,7 +2249,7 @@ export default {
       // var projection2 = ol.proj.get("EPSG:4326");
       // //var projectionExtent = projection.getExtent();
       // var projectionExtent2 = projection2.getExtent();
-      // var s = ol.extent.getWidth(projectionExtent2) / 256;
+      // var s = getWidth(projectionExtent2) / 256;
       // var matrixIds = new Array(21);
       // var resolutions = new Array(21);
       // for (var c = 0; c < 21; ++c)
@@ -2239,14 +2258,14 @@ export default {
 
       // var resolutions2 = new Array(21);
       // var matrixIds2 = new Array(21);
-      // var tileGrid = new ol.tilegrid.WMTS({
-      //     origin: ol.extent.getTopLeft(projectionExtent2),
+      // var tileGrid = new WMTSTileGrid({
+      //     origin: getTopLeft(projectionExtent2),
       //     resolutions: resolutions,
       //     matrixIds: matrixIds2,
       //     tileSize: 1024
       // });
-      // var tileGrid = new ol.tilegrid.WMTS({
-      //   origin: ol.extent.getTopLeft(projectionExtent),
+      // var tileGrid = new WMTSTileGrid({
+      //   origin: getTopLeft(projectionExtent),
       //   resolutions: resolutions,
       //   matrixIds: matrixIds
       //   //tileSize: layer.tileSize
@@ -2264,23 +2283,23 @@ export default {
 
       // var projection = ol.proj.get("EPSG:3857");
       // var projectionExtent = projection.getExtent();
-      // var s = ol.extent.getWidth(projectionExtent) / 256;
+      // var s = getWidth(projectionExtent) / 256;
       // var matrixSet = "mercator";
       // var resolutions = new Array(21);
       // var matrixIds = new Array(21);
       // for (var c = 0; c < 21; ++c)
       //     resolutions[c] = s / Math.pow(2, c),
       //     matrixIds[c] = matrixSet + ":" + c;
-      // var m = new ol.tilegrid.WMTS({
-      //       origin: ol.extent.getTopLeft(projectionExtent),
+      // var m = new WMTSTileGrid({
+      //       origin: getTopLeft(projectionExtent),
       //       resolutions: resolutions,
       //       matrixIds: matrixIds
       // });
 
       // create a tile grid using the stock KMI resolutions
       var matrixSet = this.matrixSets[layer.projection][layer.tileSize];
-      var tileGrid = new ol.tilegrid.WMTS({
-        origin: ol.extent.getTopLeft([-180, -90, 180, 90]),
+      var tileGrid = new WMTSTileGrid({
+        origin: getTopLeft([-180, -90, 180, 90]),
         resolutions: this.resolutions,
         matrixIds: matrixSet.matrixIds,
         tileSize: layer.tileSize,
@@ -2296,7 +2315,7 @@ export default {
         return tileGrid.origGetZForResolution(resolution * 1.4, -1);
       };
 
-      var tileSource = new ol.source.WMTS({
+      var tileSource = new WMTS({
         url: layer.wmts_url,
         layer: getLayerId(layer.identifier || layer.id),
         matrixSet: matrixSet.name,
@@ -2307,7 +2326,7 @@ export default {
         tileGrid: tileGrid,
       });
 
-      var tileLayer = new ol.layer.Tile({
+      var tileLayer = new TileLayer({
         //name: "street",
         name: options.title,
         canDelete: "no",
@@ -2333,19 +2352,18 @@ export default {
         if (event.key === "timeIndex") {
           if (options.timeline && options.timeline.length > 0) {
             if (!options.timeline[event.target.get(event.key)][2]) {
-              options.timeline[event.target.get(event.key)][2] =
-                new ol.source.WMTS({
-                  url: layer.wmts_url,
-                  layer: getLayerId(
-                    options.timeline[event.target.get(event.key)][1],
-                  ),
-                  matrixSet: matrixSet.name,
-                  format: layer.format,
-                  style: layer.style,
-                  projection: layer.projection,
-                  wrapX: true,
-                  tileGrid: tileGrid,
-                });
+              options.timeline[event.target.get(event.key)][2] = new WMTS({
+                url: layer.wmts_url,
+                layer: getLayerId(
+                  options.timeline[event.target.get(event.key)][1],
+                ),
+                matrixSet: matrixSet.name,
+                format: layer.format,
+                style: layer.style,
+                projection: layer.projection,
+                wrapX: true,
+                tileGrid: tileGrid,
+              });
               options.timeline[
                 event.target.get(event.key)
               ][2].setTileLoadFunction(
@@ -2481,8 +2499,8 @@ export default {
       // wmts_url: this.env.kmiService+ "/gwc/service/wmts"
       // create a tile grid using the stock KMI resolutions
       var matrixSet = this.matrixSets[layer.projection][layer.tileSize];
-      var tileGrid = new ol.tilegrid.WMTS({
-        origin: ol.extent.getTopLeft([-180, -90, 180, 90]),
+      var tileGrid = new WMTSTileGrid({
+        origin: getTopLeft([-180, -90, 180, 90]),
         resolutions: this.resolutions,
         matrixIds: matrixSet.matrixIds,
         tileSize: layer.tileSize,
@@ -2499,7 +2517,7 @@ export default {
       };
 
       // create a tile source
-      var tileSource = new ol.source.WMTS({
+      var tileSource = new WMTS({
         url: layer.wmts_url,
         layer: getLayerId(layer.identifier || layer.id),
         matrixSet: matrixSet.name,
@@ -2510,7 +2528,7 @@ export default {
         tileGrid: tileGrid,
       });
 
-      var tileLayer = new ol.layer.Tile({
+      var tileLayer = new TileLayer({
         opacity: layer.opacity || 1,
         source: tileSource,
       });
@@ -2533,19 +2551,18 @@ export default {
         if (event.key === "timeIndex") {
           if (options.timeline && options.timeline.length > 0) {
             if (!options.timeline[event.target.get(event.key)][2]) {
-              options.timeline[event.target.get(event.key)][2] =
-                new ol.source.WMTS({
-                  url: layer.wmts_url,
-                  layer: getLayerId(
-                    options.timeline[event.target.get(event.key)][1],
-                  ),
-                  matrixSet: matrixSet.name,
-                  format: layer.format,
-                  style: layer.style,
-                  projection: layer.projection,
-                  wrapX: true,
-                  tileGrid: tileGrid,
-                });
+              options.timeline[event.target.get(event.key)][2] = new WMTS({
+                url: layer.wmts_url,
+                layer: getLayerId(
+                  options.timeline[event.target.get(event.key)][1],
+                ),
+                matrixSet: matrixSet.name,
+                format: layer.format,
+                style: layer.style,
+                projection: layer.projection,
+                wrapX: true,
+                tileGrid: tileGrid,
+              });
               options.timeline[
                 event.target.get(event.key)
               ][2].setTileLoadFunction(
@@ -2682,7 +2699,7 @@ export default {
         layer.wms_url = url + "/wms";
       }
       // create a tile source
-      var imgSource = new ol.source.ImageWMS({
+      var imgSource = new ImageWMS({
         url: layer.wms_url,
         crossOrigin: "use-credentials",
         serverType: "geoserver",
@@ -2693,7 +2710,7 @@ export default {
         projection: layer.projection,
       });
 
-      var imgLayer = new ol.layer.Image({
+      var imgLayer = new Image({
         opacity: layer.opacity || 1,
         source: imgSource,
       });
@@ -2881,11 +2898,11 @@ export default {
         $("#map-search-button").addClass("noFullScreen");
       }
 
-      this.olmap = new ol.Map({
+      this.olmap = new Map({
         logo: false,
         renderer: "canvas",
         target: "map",
-        view: new ol.View({
+        view: new View({
           projection: "EPSG:4326",
           center: vm.view.center,
           // center: [118, -33],
@@ -2894,7 +2911,7 @@ export default {
           minZoom: 5,
         }),
         controls: [],
-        interactions: ol.interaction.defaults({
+        interactions: defaultInteractions({
           altShiftDragRotate: false,
           pinchRotate: false,
           dragPan: false,
@@ -3090,9 +3107,9 @@ export default {
       });
       //enable controls
       // ADD FROM V3 START
-      var projection = ol.proj.get("EPSG:3857");
+      var projection = get("EPSG:3857");
       var projectionExtent = projection.getExtent();
-      var s = ol.extent.getWidth(projectionExtent) / 256;
+      var s = getWidth(projectionExtent) / 256;
 
       var matrixSet = "mercator";
       var resolutions = new Array(21);
@@ -3100,8 +3117,8 @@ export default {
       for (var c = 0; c < 21; ++c)
         ((resolutions[c] = s / Math.pow(2, c)),
           (matrixIds[c] = matrixSet + ":" + c));
-      new ol.tilegrid.WMTS({
-        origin: ol.extent.getTopLeft(projectionExtent),
+      new WMTS({
+        origin: getTopLeft(projectionExtent),
         resolutions: resolutions,
         matrixIds: matrixIds,
       });
@@ -3121,7 +3138,7 @@ export default {
           controls: new OverviewMap({
             className: "ol-overviewmap ol-custom-overviewmap",
             layers: [],
-            // source: new ol.source.WMTS({
+            // source: new WMTS({
             //         url: "https://kmi.dpaw.wa.gov.au/geoserver/gwc/service/wmts",
             //         format: "image/png",
             //         // layer: "public:mapbox-streets",
@@ -3134,7 +3151,7 @@ export default {
             collapseLabel: "\u00BB",
             label: "\u00AB",
             collapsed: false,
-            view: new ol.View({
+            view: new View({
               projection: "EPSG:4326",
             }),
           }),
@@ -3270,16 +3287,14 @@ export default {
           extent = getExtent
             ? getExtent(selectedFeatures.item(0))
             : selectedFeatures.item(0).getGeometry().getExtent();
-          extent = ol.extent.isEmpty(extent) ? null : extent;
+          extent = isEmpty(extent) ? null : extent;
         } else {
           selectedFeatures.forEach(function (f) {
             if (
-              !ol.extent.isEmpty(
-                getExtent ? getExtent(f) : f.getGeometry().getExtent(),
-              )
+              !isEmpty(getExtent ? getExtent(f) : f.getGeometry().getExtent())
             ) {
-              extent = extent || ol.extent.createEmpty();
-              ol.extent.extend(
+              extent = extent || createEmpty();
+              extend(
                 extent,
                 getExtent ? getExtent(f) : f.getGeometry().getExtent(),
               );
@@ -3394,7 +3409,7 @@ export default {
         };
       }
       var vm = this;
-      var feat = new ol.Feature({ geometry: new Point(coordinate) });
+      var feat = new Feature({ geometry: new Point(coordinate) });
       $.ajax({
         url: "/api/spatial",
         dataType: "json",

@@ -390,9 +390,14 @@ import hash from "object-hash";
 import kjua from "kjua";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
-import * as ol from "ol";
 
-import ScaleLine from "ol/control/ScaleLine"
+import { getPointResolution } from "ol/proj";
+
+import { unByKey } from "ol/Observable";
+
+import GeoJSON from "ol/format/GeoJSON";
+
+import ScaleLine from "ol/control/ScaleLine";
 
 import gkLegend from "./Legend.vue";
 import gkLayerlegends from "./LayerLegends.vue";
@@ -813,10 +818,9 @@ export default {
           var reader = new window.FileReader();
           reader.onload = function (e) {
             try {
-              var features = new ol.format.GeoJSON().readFeatures(
-                e.target.result,
-                { dataProjection: "EPSG:4326" },
-              );
+              var features = new GeoJSON().readFeatures(e.target.result, {
+                dataProjection: "EPSG:4326",
+              });
               if (features && features.length) {
                 callback(features, fileFormat[0]);
               }
@@ -961,10 +965,9 @@ export default {
                 alert(req.response);
               }
             } else {
-              var features = new ol.format.GeoJSON().readFeatures(
-                req.response,
-                { dataProjection: "EPSG:4326" },
-              );
+              var features = GeoJSON().readFeatures(req.response, {
+                dataProjection: "EPSG:4326",
+              });
               if (features && features.length) {
                 features.forEach((feature) => {
                   feature.set("crs", selectedLayer.crs);
@@ -1078,7 +1081,7 @@ export default {
         }
       }
       // Add scale line to the printed map
-      const resolution = ol.proj.getPointResolution(
+      const resolution = getPointResolution(
         "EPSG:4326",
         this.olmap.getView().getResolution(),
         this.olmap.getView().getCenter(),
@@ -1287,9 +1290,9 @@ export default {
         timer && clearTimeout(timer);
         timer = setTimeout(function () {
           // remove composing watcher
-          ol.Observable.unByKey(whiteout);
-          ol.Observable.unByKey(mainmap_composing);
-          ol.Observable.unByKey(overviewmap_composing);
+          unByKey(whiteout);
+          unByKey(mainmap_composing);
+          unByKey(overviewmap_composing);
           var ctx = canvas.getContext("2d");
 
           var img = new window.Image();

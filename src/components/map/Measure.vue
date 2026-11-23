@@ -30,7 +30,32 @@
 </style>
 
 <script>
-import * as ol from "ol";
+import Collection from "ol/Collection";
+import Overlay from "ol/Overlay";
+
+import Point from "ol/geom/Point";
+import MultiPoint from "ol/geom/MultiPoint";
+import Polygon from "ol/geom/Polygon";
+import LineString from "ol/geom/LineString";
+import MultiLineString from "ol/geom/MultiLineString";
+import MultiPolygon from "ol/geom/MultiPolygon";
+import GeometryCollection from "ol/geom/GeometryCollection";
+
+import Style from "ol/style/Style";
+import Fill from "ol/style/Fill";
+import Stroke from "ol/style/Stroke";
+import Circle from "ol/style/Circle";
+
+import Draw from "ol/interaction/Draw";
+import Snap from "ol/interaction/Snap";
+import Translate from "ol/interaction/Translate";
+import Modify from "ol/interaction/Modify";
+import VectorSource from "ol/source/Vector";
+import VectorLayer from "ol/layer/Vector";
+
+import { getDistance, getArea } from "ol/sphere";
+
+import { transform } from "ol/proj";
 
 export default {
   store: ["settings"],
@@ -355,7 +380,7 @@ export default {
           this.removeTooltip(feat, true);
           feat.unset("measurement", true);
         };
-      if (feature instanceof ol.Collection) {
+      if (feature instanceof Collection) {
         feature.forEach(function (feat) {
           vm._clearFeatureMeasurement(feat);
         });
@@ -403,7 +428,7 @@ export default {
             "show",
           );
         };
-      if (feature instanceof ol.Collection) {
+      if (feature instanceof Collection) {
         feature.forEach(function (feat) {
           vm._remeasureFeature(feat);
         });
@@ -830,7 +855,7 @@ export default {
             }
           }
         };
-      if (feature instanceof ol.Collection) {
+      if (feature instanceof Collection) {
         $.each(feature.getArray(), function (index, f) {
           if (vm._showTooltip(f.tooltip, show) === false) {
             return false;
@@ -1007,7 +1032,7 @@ export default {
             });
             return tooltips;
           } else {
-            var measureTooltip = new ol.Overlay({
+            var measureTooltip = new Overlay({
               element: tooltipElement.get(0),
               offset: [0, -15],
               stopEvent: false,
@@ -1155,7 +1180,7 @@ export default {
         const polygon = new Polygon([coordinates]);
         // TODO: Why
         // const transformedPolygon = polygon.transform("EPSG:4326", "EPSG:3857");
-        return Math.abs(ol.sphere.getArea(polygon));
+        return Math.abs(getArea(polygon));
       }
       if (Array.isArray(polygon)) {
         //coodinates array
@@ -1207,10 +1232,10 @@ export default {
       var length = 0;
       var sourceProj = this.$root.map.olmap.getView().getProjection();
       for (var i = 0, ii = coordinates.length - 1; i < ii; ++i) {
-        var c1 = ol.proj.transform(coordinates[i], sourceProj, "EPSG:4326");
-        var c2 = ol.proj.transform(coordinates[i + 1], sourceProj, "EPSG:4326");
+        var c1 = transform(coordinates[i], sourceProj, "EPSG:4326");
+        var c2 = transform(coordinates[i + 1], sourceProj, "EPSG:4326");
         //   length += this.wgs84Sphere.haversineDistance(c1, c2)
-        length += ol.sphere.getDistance(c1, c2, 6378137);
+        length += getDistance(c1, c2, 6378137);
       }
       return length;
     },
@@ -1399,7 +1424,7 @@ export default {
     },
     featureChanged: function (feature) {
       var vm = this;
-      if (feature instanceof ol.Collection) {
+      if (feature instanceof Collection) {
         feature.forEach(function (feat) {
           vm._featureChanged(feat);
         });
@@ -1421,7 +1446,7 @@ export default {
     measureStatus.phaseBegin("initialize", 30, "Initialize");
 
     //initialize the overlay and interactions
-    this.features = new ol.Collection();
+    this.features = new Collection();
     this.features.on("remove", function (event) {
       if (event.element["tooltipElement"]) {
         //console.log("Remove measured tooltip")
@@ -1437,17 +1462,17 @@ export default {
         lineDash: [10, 10],
         width: 2,
       }),
-      image: new ol.style.Circle({
+      image: new Circle({
         radius: 5,
         fill: new Fill({
           color: "rgb(0, 153, 255)",
         }),
       }),
     });
-    this.source = new ol.source.Vector({
+    this.source = new VectorSource({
       features: this.features,
     });
-    this.overlay = new ol.layer.Vector({
+    this.overlay = new VectorLayer({
       source: this.source,
       style: this.style,
     });
@@ -1655,7 +1680,6 @@ export default {
 
     this.annotations.tools.push(measureArea);
 
-    //this.wgs84Sphere = new ol.sphere(6378137);
     measureStatus.phaseEnd("initialize");
 
     measureStatus.phaseBegin(

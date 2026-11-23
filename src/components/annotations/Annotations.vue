@@ -206,6 +206,7 @@
                     @click="updateNote(true)"
                     @mouseup="updateNote(false)"
                     v-model="note.text"
+                    :style="{ backgroundImage: `url(${boxresizeSvg})` }"
                   ></textarea>
                 </div>
               </div>
@@ -233,6 +234,11 @@ import { debounce } from "lodash-es";
 
 import * as ol from "ol";
 
+import EventType from "ol/events/EventType";
+
+import Collection from "ol/Collection";
+import Feature from "ol/Feature";
+
 import Point from "ol/geom/Point";
 import MultiPoint from "ol/geom/MultiPoint";
 import Polygon from "ol/geom/Polygon";
@@ -240,6 +246,8 @@ import LineString from "ol/geom/LineString";
 import MultiLineString from "ol/geom/MultiLineString";
 import MultiPolygon from "ol/geom/MultiPolygon";
 import GeometryCollection from "ol/geom/GeometryCollection";
+
+import { intersects } from "ol/extent";
 
 import Snap from "ol/interaction/Snap";
 import Draw from "ol/interaction/Draw";
@@ -253,6 +261,22 @@ import Style from "ol/style/Style";
 import Icon from "ol/style/Icon";
 import Fill from "ol/style/Fill";
 import Stroke from "ol/style/Stroke";
+import Text from "ol/style/Text";
+
+import VectorLayer from "ol/layer/Vector";
+import VectorSource from "ol/source/Vector";
+
+import { squaredDistanceToSegment } from "ol/coordinate";
+
+import GeoJSON from "ol/format/GeoJSON";
+
+import {
+  singleClick,
+  mouseActionButton,
+  mouseOnly,
+  noModifierKeys,
+  platformModifierKeyOnly,
+} from "ol/events/condition";
 
 import {
   intersect,
@@ -339,8 +363,8 @@ export default {
       tool: {},
       tools: [],
       annotationTools: [],
-      features: new ol.Collection(),
-      selectedFeatures: new ol.Collection(),
+      features: new Collection(),
+      selectedFeatures: new Collection(),
       // array of layers that are selectable
       selectable: [],
       featureOverlay: {},
@@ -512,7 +536,7 @@ export default {
   },
   watch: {
     featureEditing: function (val) {
-      if (val && val instanceof ol.Feature && val.get) {
+      if (val && val instanceof Feature && val.get) {
         if (val.get("note")) {
           //it is a text note
           this.note = val.get("note");
@@ -555,7 +579,7 @@ export default {
 
       const vm = this;
 
-      selectedFeatures = new ol.Collection();
+      selectedFeatures = new Collection();
 
       this._cachedSelectedFeatures = this._cachedSelectedFeatures || {};
       this._cachedSelectedFeatures[key] = selectedFeatures;
@@ -681,7 +705,7 @@ export default {
 
                 //split MultiPoint to multiple point feature
                 $.each(geometries, function (index, geometry) {
-                  f = new ol.Feature({ geometry: geometry });
+                  f = new Feature({ geometry: geometry });
                   features.splice(i, 0, f);
                   i += 1;
                 });
@@ -745,8 +769,8 @@ export default {
       // sort segments by ascending distance from point
       segments.sort(function (a, b) {
         return (
-          ol.coordinate.squaredDistanceToSegment(coords, a) -
-          ol.coordinate.squaredDistanceToSegment(coords, b)
+          squaredDistanceToSegment(coords, a) -
+          squaredDistanceToSegment(coords, b)
         );
       });
 
@@ -847,12 +871,6 @@ export default {
             options.listeners.drawend(ev);
         });
 
-        // const source = new ol.source.Vector({wrapX: false});
-        // draw = new Draw({
-        //   source: source,
-        //   type: "Polygon",
-        // });
-        // draw.events = (options && options.events)||{}
         return draw;
       };
     },
@@ -861,14 +879,13 @@ export default {
       return function (tool) {
         var sketchStyle = undefined;
         if (tool && tool.sketchStyle) {
-          var defaultFeat = new ol.Feature(
+          var defaultFeat = new Feature(
             $.extend({ toolName: tool.name }, options || {}),
           );
           sketchStyle = function (res) {
             return tool.sketchStyle.apply(defaultFeat, res);
           };
         }
-        //const source = new ol.source.Vector();
 
         var draw = new Draw(
           $.extend(
@@ -922,7 +939,7 @@ export default {
             if (
               (!vm._toolStatus["selectTool"] ||
                 vm._toolStatus["selectTool"] === this) &&
-              ol.events.condition.noModifierKeys(ev)
+              noModifierKeys(ev)
             ) {
               return _func.call(this, ev);
             } else {
@@ -980,9 +997,9 @@ export default {
     polygonSelectInterFactory: function (options) {
       var vm = this;
       if (!vm._features4Selection) {
-        vm._features4Selection = new ol.Collection();
+        vm._features4Selection = new Collection();
         vm._listener4Selection = null;
-        vm._source4Selection = new ol.source.Vector({
+        vm._source4Selection = new VectorSource({
           features: vm._features4Selection,
         });
         vm._style4Selection = new Style({
@@ -995,7 +1012,7 @@ export default {
             width: 2,
           }),
         });
-        vm._overlay4Selection = new ol.layer.Vector({
+        vm._overlay4Selection = new VectorLayer({
           source: vm._source4Selection,
           style: vm._style4Selection,
         });
@@ -1061,15 +1078,16 @@ export default {
           freehandCondition: function (mapBrowserEvent) {
             //ctrl and shift key
             var originalEvent = mapBrowserEvent.originalEvent;
+            const isMac = navigator.platform.toUpperCase().includes("MAC");
             return (
               (!vm._toolStatus["selectTool"] ||
                 vm._toolStatus["selectTool"] === this) &&
               !originalEvent.altKey &&
-              (ol.has.MAC ? originalEvent.metaKey : originalEvent.ctrlKey) &&
+              (isMac ? originalEvent.metaKey : originalEvent.ctrlKey) &&
               originalEvent.shiftKey
             );
           },
-          condition: ol.events.condition.platformModifierKeyOnly,
+          condition: platformModifierKeyOnly,
         });
 
         drawInter.startDrawing_ = (function () {
@@ -1212,7 +1230,7 @@ export default {
             return (
               (!vm._toolStatus["selectTool"] ||
                 vm._toolStatus["selectTool"] === this) &&
-              ol.events.condition.noModifierKeys(ev)
+              noModifierKeys(ev)
             );
           },
           boxEndCondition: function (mapBrowserEvent) {
@@ -1221,9 +1239,9 @@ export default {
             }
             // Use default box end condition from DragBox class
             return (
-              ol.events.condition.mouseOnly(mapBrowserEvent) &&
-              ol.events.condition.mouseActionButton(mapBrowserEvent) &&
-              ol.events.condition.noModifierKeys(mapBrowserEvent)
+              mouseOnly(mapBrowserEvent) &&
+              mouseActionButton(mapBrowserEvent) &&
+              noModifierKeys(mapBrowserEvent)
             );
           },
         });
@@ -1260,7 +1278,7 @@ export default {
                   return false;
                 }
                 if (feature.get("note")) {
-                  if (ol.extent.intersects(extent, vm.getNoteExtent(feature))) {
+                  if (intersects(extent, vm.getNoteExtent(feature))) {
                     selectedFeatures.push(feature);
                     return multi;
                   }
@@ -1462,7 +1480,7 @@ export default {
               var originalEvent = ev.originalEvent;
               return (
                 !vm._toolStatus["selectTool"] &&
-                ol.events.condition.singleClick(ev) &&
+                singleClick(ev) &&
                 !originalEvent.altKey &&
                 !(originalEvent.metaKey || originalEvent.ctrlKey)
               );
@@ -1558,7 +1576,7 @@ export default {
         var keyboardInter = new Interaction({
           handleEvent: function (mapBrowserEvent) {
             var stopEvent = false;
-            if (mapBrowserEvent.type === ol.events.EventType.KEYDOWN) {
+            if (mapBrowserEvent.type === EventType.KEYDOWN) {
               var keyEvent = mapBrowserEvent.originalEvent;
               switch (keyEvent.keyCode) {
                 case 65: // a
@@ -1638,7 +1656,7 @@ export default {
           });
         });
         modifyInter.on("modifyend", function (ev) {
-          var modifiedFeatures = new ol.Collection(
+          var modifiedFeatures = new Collection(
             ev.features.getArray().filter(function (feature) {
               //console.log("Modifyend : " + feature.get('label') + "\t" + feature.geometryRevision + "\t" + feature.getGeometry().getRevision())
               return (
@@ -1724,7 +1742,7 @@ export default {
       this[prop] = value;
       //note's property will be set by updateNote
       if (
-        this.featureEditing instanceof ol.Feature &&
+        this.featureEditing instanceof Feature &&
         !this.featureEditing.get("note")
       ) {
         this.featureEditing.set(prop, value);
@@ -1974,7 +1992,7 @@ export default {
             //already have a annotation point at that coordinate
             return false;
           }
-          feat = new ol.Feature({
+          feat = new Feature({
             geometry: new Point(coords),
           });
           vm.drawingSequence += 1;
@@ -2198,7 +2216,7 @@ export default {
         var fillTint = vm.getStyleProperty(f, "tint", "", tool) + ".textFill";
         var labelStyle = tool.labelStyle || {};
         return new Style({
-          text: new ol.style.Text({
+          text: new Text({
             offsetX: labelStyle.offsetX || 12,
             text: f.get(labelProperty),
             textAlign: "left",
@@ -2611,14 +2629,9 @@ export default {
       vm._rotateAll();
     });
 
-    //var featureSource = new ol.source.Vector({
-    //features: this.features
-    //})
-    //featureSource.addFeatures(this.features)
-    // layer/source for modifying annotation features
-    this.featureOverlay = new ol.layer.Vector({
-      format: new ol.format.GeoJSON(),
-      source: new ol.source.Vector({
+    this.featureOverlay = new VectorLayer({
+      format: GeoJSON(),
+      source: new VectorSource({
         features: this.features,
       }),
       //source: featureSource
@@ -3018,7 +3031,6 @@ export default {
   width: 100%;
   height: 100px;
   resize: both;
-  background-image: url(boxresizeSvg);
   background-repeat: no-repeat;
   background-position: right bottom;
 }

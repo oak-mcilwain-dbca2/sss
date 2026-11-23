@@ -25,7 +25,11 @@
 }
 </style>
 <script>
-import * as ol from "ol";
+import Interaction from "ol/interaction/Interaction";
+
+import Collection from "ol/Collection";
+
+import EventType from "ol/events/EventType";
 
 export default {
   store: ["drawingLogs", "redoPointer", "settings"],
@@ -199,7 +203,7 @@ export default {
         new Interaction({
           handleEvent: function (mapBrowserEvent) {
             var stopEvent = false;
-            if (mapBrowserEvent.type === ol.events.EventType.KEYDOWN) {
+            if (mapBrowserEvent.type === EventType.KEYDOWN) {
               var keyEvent = mapBrowserEvent.originalEvent;
               switch (keyEvent.keyCode) {
                 case 90: // z
@@ -287,7 +291,7 @@ export default {
       vm.settings.undoLimit = -1;
     },
     addFeatures: function (features) {
-      if (features instanceof ol.Collection) {
+      if (features instanceof Collection) {
         features = features.getArray();
       } else if (!Array.isArray(features)) {
         features = [features];
@@ -299,7 +303,7 @@ export default {
       ]);
     },
     removeFeatures: function (features) {
-      if (features instanceof ol.Collection) {
+      if (features instanceof Collection) {
         features = features.getArray();
       } else if (!Array.isArray(features)) {
         features = [features];
@@ -311,7 +315,7 @@ export default {
     },
     modifyFeatures: function (features) {
       var vm = this;
-      if (features instanceof ol.Collection) {
+      if (features instanceof Collection) {
         features = features.getArray();
       } else if (!Array.isArray(features)) {
         features = [features];
@@ -330,7 +334,7 @@ export default {
       this._modifyingFeatureIds = {};
     },
     modifyFeaturesProperty: function (features, property, oldValue, newValue) {
-      if (features instanceof ol.Collection) {
+      if (features instanceof Collection) {
         features = features.getArray();
       } else if (!Array.isArray(features)) {
         features = [features];
@@ -444,7 +448,7 @@ export default {
                 "change",
                 vm._eventHandlers["geometry:change"](f, feature.get("id")),
               );
-              var modifiedFeatures = new ol.Collection([f]);
+              var modifiedFeatures = new Collection([f]);
               var event = {
                 type: "featuresmodified",
                 features: modifiedFeatures,
@@ -562,7 +566,7 @@ export default {
                 vm._eventHandlers["geometry:change"](f, feature.get("id")),
               );
 
-              var modifiedFeatures = new ol.Collection([f]);
+              var modifiedFeatures = new Collection([f]);
               var event = {
                 type: "featuresmodified",
                 features: modifiedFeatures,

@@ -232,7 +232,7 @@ export default {
 
         var featuredetailInter = new Interaction({
           handleEvent: function (browserEvent) {
-            if (!ol.events.condition.click(browserEvent)) {
+            if (!click(browserEvent)) {
               return true;
             }
             if (vm.layer.id === null) {

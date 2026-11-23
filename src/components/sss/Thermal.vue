@@ -350,9 +350,9 @@ export default {
       groupFilter: "",
       tools: [],
       thermalDateRange: "21024",
-      features: new ol.Collection(),
+      features: new Collection(),
       extentFeaturesSize: 0,
-      footprints: new ol.Collection(),
+      footprints: new Collection(),
       imagesShow: {},
       emailList: [],
       featureLabelDisabled: false,
@@ -425,7 +425,7 @@ export default {
       return function () {
         const labelStyleFunc = function () {
           return new Style({
-            text: new ol.style.Text({
+            text: new Text({
               text: "o",
               font: "24px Calibri,sans-serif",
               fill: new Fill({ color: "#fff" }),
@@ -434,7 +434,7 @@ export default {
                 width: 2,
               }),
             }),
-            image: new ol.style.Circle({
+            image: new Circle({
               fill: new Fill({
                 color: [0, 0, 255],
               }),
@@ -1086,7 +1086,7 @@ export default {
           if (!vm.showFlightFootprint) {
             var extent = list[0].getGeometry().getExtent(); //.slice(0)
             list.forEach(function (feature) {
-              ol.extent.extend(extent, feature.getGeometry().getExtent());
+              extend(extent, feature.getGeometry().getExtent());
             });
             vm.$root.map.olmap
               .getView()
@@ -1170,7 +1170,7 @@ export default {
           //get extent of filtered features and set extent of map to this
           var extent = list[0].getGeometry().getExtent(); //.slice(0)
           list.forEach(function (feature) {
-            ol.extent.extend(extent, feature.getGeometry().getExtent());
+            extend(extent, feature.getGeometry().getExtent());
           });
           vm.$root.map.olmap
             .getView()
@@ -1479,7 +1479,7 @@ export default {
           vm.features.forEach(function (feat) {
             feat.inViewport =
               feat.getGeometry() &&
-              ol.extent.containsCoordinate(
+              containsCoordinate(
                 viewportExtent,
                 feat.getGeometry().getCoordinates(),
               );
@@ -1508,7 +1508,7 @@ export default {
           vm.features.forEach(function (feat) {
             feat.inViewport =
               feat.getGeometry() &&
-              ol.extent.containsCoordinate(
+              containsCoordinate(
                 viewportExtent,
                 feat.getGeometry().getCoordinates(),
               );
@@ -1554,8 +1554,8 @@ export default {
       "thermal",
       "Thermal Imaging Component",
     );
-    vm._featurelist = new ol.Collection();
-    vm._footprintlist = new ol.Collection();
+    vm._featurelist = new Collection();
+    vm._footprintlist = new Collection();
 
     thermalStatus.phaseBegin("initialize", 20, "Initialize");
 
@@ -1620,13 +1620,13 @@ export default {
         vm.features.extend(features.sort(vm.featureOrder));
         /*var s = function(hotspot_no) {
 				  return new Style({
-						  text: new ol.style.Text({
+						  text: new Text({
 							text: hotspot_no,
 							font: '16px Calibri,sans-serif',
 							fill: new Fill({ color: '#fff' }),
 							stroke: new Stroke({color: '#fff', width: 0.8})
 						  }),
-						  image : new ol.style.Circle({
+						  image : new Circle({
 							  fill: new Fill({color: [0, 0, 255]}),
 							  radius: 15
 						  })

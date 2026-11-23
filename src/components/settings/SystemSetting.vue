@@ -117,7 +117,7 @@
             <div class="small-8">
               <select name="areaUnit" v-model="areaUnit" @change="saveState()">
                 <option value="ha">Hectare</option>
-                <option value="km2">km<sup>2</sup></option>
+                <option value="km2">km²</option>
               </select>
             </div>
           </div>

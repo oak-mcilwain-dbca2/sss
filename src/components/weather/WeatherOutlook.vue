@@ -494,7 +494,14 @@ import * as ol from "ol";
 
 import Draw from "ol/interaction/Draw";
 
+import Style from "ol/style/Style";
+import Icon from "ol/style/Icon";
+
 import Point from "ol/geom/Point";
+
+import VectorSource from "ol/source/Vector";
+
+import VectorLayer from "ol/layer/Vector";
 
 import { getDatetimes, submitForm } from "@/utils";
 
@@ -1957,7 +1964,7 @@ export default {
     },
     setPosition: function (coordinate) {
       this._features.clear();
-      this._features.push(new ol.Feature({ geometry: new Point(coordinate) }));
+      this._features.push(new Feature({ geometry: new Point(coordinate) }));
     },
     getWeatherOutlook: function (coordinate) {
       if (this.reportTimes.length === 0) {
@@ -2124,7 +2131,7 @@ export default {
 
     this.loadDatasources();
 
-    this._features = new ol.Collection();
+    this._features = new Collection();
     this._features.on("add", function (event) {
       vm.getWeatherOutlook(event.element.getGeometry().getCoordinates());
     });
@@ -2137,10 +2144,10 @@ export default {
         anchor: [8, 0],
       }),
     });
-    this._source = new ol.source.Vector({
+    this._source = new VectorSource({
       features: this._features,
     });
-    this._overlay = new ol.layer.Vector({
+    this._overlay = new VectorLayer({
       source: this._source,
       style: this._style,
     });

@@ -13,7 +13,14 @@
 <style></style>
 
 <script>
-import * as ol from "ol";
+import Feature from "ol/Feature";
+import Collection from "ol/Collection";
+
+import VectorSource from "ol/source/Vector";
+import VectorLayer from "ol/layer/Vector";
+
+import Style from "ol/style/Style";
+import Icon from "ol/style/Icon";
 
 import Draw from "ol/interaction/Draw";
 
@@ -114,7 +121,7 @@ export default {
     },
     setPosition: function (coordinate) {
       this._features.clear();
-      this._features.push(new ol.Feature({ geometry: new Point(coordinate) }));
+      this._features.push(new Feature({ geometry: new Point(coordinate) }));
     },
     getWeatherForecast: function (coordinate) {
       var vm = this;
@@ -168,7 +175,7 @@ export default {
         false,
       );
 
-      vm._features = new ol.Collection();
+      vm._features = new Collection();
       vm._features.on("add", function (event) {
         vm.getWeatherForecast(event.element.getGeometry().getCoordinates());
       });
@@ -181,10 +188,10 @@ export default {
           anchor: [8, 0],
         }),
       });
-      vm._source = new ol.source.Vector({
+      vm._source = new VectorSource({
         features: vm._features,
       });
-      vm._overlay = new ol.layer.Vector({
+      vm._overlay = new VectorLayer({
         source: vm._source,
         style: vm._style,
       });

@@ -36,7 +36,7 @@
 </style>
 
 <script>
-import * as ol from "ol";
+import Feature from "ol/Feature";
 
 import Control from "ol/control/Control";
 
@@ -100,14 +100,14 @@ export default {
         if (
           vm.$root.weatheroutlook &&
           vm.annotations.tool &&
-          vm.annotations.tool.name === "WeatherOutlook"
+          vm.annotations.toname === "WeatherOutlook"
         ) {
           //weather outlook tool is activated.
           vm.$root.weatheroutlook.setPosition(coords);
         } else if (
           vm.$root.weatherforecast &&
           vm.annotations.tool &&
-          vm.annotations.tool.name === "WeatherForecast"
+          vm.annotations.toname === "WeatherForecast"
         ) {
           //weather forecast tool is activated.
           vm.$root.weatherforecast.setPosition(coords);
@@ -117,7 +117,7 @@ export default {
         ) {
           vm.features.clear();
           vm.features.push(
-            new ol.Feature({
+            new Feature({
               geometry: new Point(coords),
               name: name,
             }),
@@ -224,7 +224,7 @@ export default {
     queryGeocode: function (geoStr, victory, failure) {
       var vm = this;
       var center = this.$root.map.getCenter();
-      if (!ol.extent.containsCoordinate(this._wa_bbox, center)) {
+      if (!containsCoordinate(this._wa_bbox, center)) {
         center = this._wa_perth;
       }
       $.ajax({
@@ -243,7 +243,7 @@ export default {
             var feature = null;
             //get the first place in wa bbox or get the first feature
             $.each(data.features, function (index, f) {
-              if (ol.extent.containsCoordinate(vm._wa_bbox, f.center)) {
+              if (containsCoordinate(vm._wa_bbox, f.center)) {
                 feature = f;
                 return false;
               } else if (!feature) {
@@ -286,7 +286,7 @@ export default {
 
     this.style = function (feature) {
       return new Style({
-        image: new ol.style.Circle({
+        image: new style.Circle({
           radius: 5,
           fill: new Fill({
             color: "rgb(255, 255, 255)",
@@ -296,7 +296,7 @@ export default {
             color: "rgb(114, 193, 0)",
           }),
         }),
-        text: new ol.style.Text({
+        text: new style.Text({
           offsetX: 12,
           text: feature.get("name"),
           textAlign: "left",
@@ -309,11 +309,11 @@ export default {
       });
     };
 
-    this.features = new ol.Collection();
-    this.source = new ol.source.Vector({
+    this.features = new Collection();
+    this.source = new source.Vector({
       features: this.features,
     });
-    this.overlay = new ol.layer.Vector({
+    this.overlay = new Vector({
       source: this.source,
       style: this.style,
     });

@@ -207,7 +207,9 @@ div.ol-previewmap.ol-uncollapsible {
 <script>
 import env from "@/config/env";
 
-import * as ol from "ol";
+import Collection from "ol/Collection";
+
+import View from "ol/View";
 
 import OverviewMap from "ol/control/OverviewMap";
 
@@ -230,7 +232,7 @@ export default {
   data: function () {
     return {
       layer: {},
-      catalogue: new ol.Collection(),
+      catalogue: new Collection(),
       swapBaseLayers: true,
       search: "",
       searchAttrs: ["name"],
@@ -320,7 +322,7 @@ export default {
             collapsible: false,
             min_ratio: 1,
             max_ratio: 1,
-            view: new ol.View({
+            view: new View({
               projection: "EPSG:4326",
             }),
           });

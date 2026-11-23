@@ -41,7 +41,7 @@
                     <a
                       v-for="(t, index) in tools"
                       class="button button-tool"
-                      :class="{ selected: t.name == annotations.tool.name }"
+                      :class="{ selected: t.name == annotations.toname }"
                       :key="index"
                       @click="annotations.setTool(t)"
                       :title="t.label"
@@ -558,37 +558,39 @@
                     border: none;
                   "
                 >
-                  <tr>
-                    <td style="text-align: left; background-color: #ededed">
-                      <b>Last Uploaded: </b>{{ last_uploaded_date }}
-                    </td>
-                    <td style="text-align: left; background-color: #ededed">
-                      <b>Submitted By: </b>{{ submitter }}
-                    </td>
-                    <td style="text-align: left; background-color: #ededed">
-                      <b>Status: </b>
-                      <span
-                        v-if="calculation_status === 'waiting'"
-                        class="badge bg-primary"
-                        >Waiting</span
-                      >
-                      <span
-                        v-if="calculation_status === 'calculating'"
-                        class="badge bg-warning"
-                        >Calculating</span
-                      >
-                      <span
-                        v-if="calculation_status === 'calculation_error'"
-                        class="badge bg-danger"
-                        >Failed</span
-                      >
-                      <span
-                        v-if="calculation_status === 'calculation_completed'"
-                        class="badge bg-success"
-                        >Completed</span
-                      >
-                    </td>
-                  </tr>
+                  <tbody>
+                    <tr>
+                      <td style="text-align: left; background-color: #ededed">
+                        <b>Last Uploaded: </b>{{ last_uploaded_date }}
+                      </td>
+                      <td style="text-align: left; background-color: #ededed">
+                        <b>Submitted By: </b>{{ submitter }}
+                      </td>
+                      <td style="text-align: left; background-color: #ededed">
+                        <b>Status: </b>
+                        <span
+                          v-if="calculation_status === 'waiting'"
+                          class="badge bg-primary"
+                          >Waiting</span
+                        >
+                        <span
+                          v-if="calculation_status === 'calculating'"
+                          class="badge bg-warning"
+                          >Calculating</span
+                        >
+                        <span
+                          v-if="calculation_status === 'calculation_error'"
+                          class="badge bg-danger"
+                          >Failed</span
+                        >
+                        <span
+                          v-if="calculation_status === 'calculation_completed'"
+                          class="badge bg-success"
+                          >Completed</span
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
                 </table>
                 <div v-for="(index, task) in feature_tasks" :key="index">
                   <div class="small-12 columns">
@@ -743,8 +745,8 @@ export default {
       isFeatureListLoading: true,
       //sorted fields list (column,true?ascend:descend)
       sortedFields: [["fire_detected_or_created", false]],
-      drawings: new ol.Collection(),
-      features: new ol.Collection(),
+      drawings: new Collection(),
+      features: new Collection(),
       clippedFeatures: [],
       showFilters: false,
       taskDialog: null,
@@ -923,7 +925,7 @@ export default {
         if (boundaryStyle && feat.intersectionPoints) {
           selfIntersectionStyle = new Style({
             geometry: feat.intersectionPoints,
-            image: new ol.style.Circle({
+            image: new style.Circle({
               fill: new Fill({
                 color: [255, 0, 0],
               }),
@@ -1300,7 +1302,7 @@ export default {
     featureExtent: function (feat) {
       if (feat.get("fire_boundary")) {
         if (feat.getGeometry()) {
-          return ol.extent.extend(
+          return extend(
             feat.getGeometry().getExtent(),
             feat.get("fire_boundary"),
           );
@@ -1648,10 +1650,7 @@ export default {
               } else {
                 //during modifing,check agaist the bbox of fire boundary
                 if (
-                  ol.extent.containsCoordinate(
-                    feat.get("fire_boundary"),
-                    originPoint,
-                  )
+                  containsCoordinate(feat.get("fire_boundary"), originPoint)
                 ) {
                   vm._validateBushfireCallback(null, callback);
                 } else {
@@ -3528,7 +3527,7 @@ export default {
         feat.set("fillColour", this.tints["new.fillColour"], true);
         feat.set("colour", this.tints["new.colour"], true);
         if (feat.getGeometry()) {
-          feat.inViewport = ol.extent.containsCoordinate(
+          feat.inViewport = containsCoordinate(
             vm.map.extent,
             vm.originpointCoordinate(feat),
           );
@@ -3536,7 +3535,7 @@ export default {
           feat.inViewport = false;
         }
       } else {
-        feat = new ol.Feature({
+        feat = new Feature({
           geometry: new GeometryCollection([]),
           status: "new",
           tint: "new",
@@ -3741,7 +3740,7 @@ export default {
           }
           if (features && features.length) {
             vm.initBushfire(features[0]);
-            features[0].inViewport = ol.extent.containsCoordinate(
+            features[0].inViewport = containsCoordinate(
               vm.map.extent,
               vm.originpointCoordinate(features[0]),
             );
@@ -3896,7 +3895,7 @@ export default {
             "Bfrs Origin Point",
             "Bfrs Edit Geometry",
             "Bfrs Fire Boundary",
-          ].indexOf(this.annotations.tool.name) >= 0
+          ].indexOf(this.annotations.toname) >= 0
         ) {
           //Only one bushfire can be choosed in edit mode
           this.selectedFeatures.clear();
@@ -4945,7 +4944,7 @@ export default {
 
                   //split MultiPoint to multiple point feature
                   $.each(geometries, function (index, geometry) {
-                    f = new ol.Feature({ geometry: geometry });
+                    f = new Feature({ geometry: geometry });
                     features.splice(i, 0, f);
                     i += 1;
                   });
@@ -5699,7 +5698,7 @@ export default {
         vm._updateViewport = debounce(function () {
           var viewportExtent = vm.map.extent;
           vm.features.forEach(function (feat) {
-            feat.inViewport = ol.extent.containsCoordinate(
+            feat.inViewport = containsCoordinate(
               viewportExtent,
               vm.originpointCoordinate(feat),
             );
@@ -6119,7 +6118,7 @@ export default {
         }
         if (
           vm.annotations.tool &&
-          vm.annotations.tool.name === "Bfrs Edit Geometry"
+          vm.annotations.toname === "Bfrs Edit Geometry"
         ) {
           var feat =
             vm.selectedFeatures.getLength() === 1
@@ -6155,7 +6154,7 @@ export default {
           return true;
         } else if (
           vm.annotations.tool &&
-          vm.annotations.tool.name === "Bfrs Origin Point"
+          vm.annotations.toname === "Bfrs Origin Point"
         ) {
           feat = vm.newFeature();
           feat
@@ -6202,7 +6201,7 @@ export default {
       fire_not_found: ["fire_not_found=1", "fire_not_found='Yes'"],
     };
 
-    this._featurelist = new ol.Collection();
+    this._featurelist = new Collection();
     this._taskManager = getFeatureTaskManager(function () {
       vm.revision++;
     });
@@ -6515,7 +6514,7 @@ export default {
     })(toolConfig);
     vm.ui.geometrySelectInter = vm.annotations.selectInterFactory({
       condition: function (event) {
-        var result = ol.events.condition.singleClick(event);
+        var result = singleClick(event);
         if (result) {
           if (vm.bushfireMapLayer && vm.selectedFeatures.getLength() === 1) {
             result =
@@ -6595,14 +6594,14 @@ export default {
       },
       listeners: {
         drawstart: function () {
-          $.each(vm.ui.modifyTool.interactions, function (index, interaction) {
+          $.each(vm.ui.modifyTointeractions, function (index, interaction) {
             if (interaction !== vm.ui.fireboundaryDraw) {
               interaction.setActive(false);
             }
           });
         },
         drawend: function () {
-          $.each(vm.ui.modifyTool.interactions, function (index, interaction) {
+          $.each(vm.ui.modifyTointeractions, function (index, interaction) {
             if (interaction !== vm.ui.fireboundaryDraw) {
               interaction.setActive(true);
             }
@@ -6611,14 +6610,14 @@ export default {
       },
       drawOptions: {
         freehandCondition: function (ev) {
-          var result = ol.events.condition.shiftKeyOnly(ev);
+          var result = shiftKeyOnly(ev);
           if (result) {
             return canDrawFireboundary(ev);
           }
           return result;
         },
         condition: function (ev) {
-          var result = ol.events.condition.noModifierKeys(ev);
+          var result = noModifierKeys(ev);
           if (result) {
             return canDrawFireboundary(ev);
           }
@@ -6633,7 +6632,7 @@ export default {
       features: vm.drawings,
     });
     vm.drawings.on("add", function (ev) {
-      if (vm.annotations.tool.name === "Bfrs Edit Geometry") {
+      if (vm.annotations.toname === "Bfrs Edit Geometry") {
         if (vm.selectedFeatures.getLength() === 1) {
           var f = vm.selectedFeatures.item(0);
           var indexes;
@@ -6894,16 +6893,16 @@ export default {
     });
 
     vm.ui.modifyTool = vm.annotations.tools.find(function (tool) {
-      return tool.name === "Bfrs Edit Geometry";
+      return toname === "Bfrs Edit Geometry";
     });
     vm.ui.originPointTool = vm.annotations.tools.find(function (tool) {
-      return tool.name === "Bfrs Origin Point";
+      return toname === "Bfrs Origin Point";
     });
     vm.ui.panTool = vm.annotations.tools.find(function (tool) {
-      return tool.name === "Pan";
+      return toname === "Pan";
     });
     vm.ui.selectTool = vm.annotations.tools.find(function (tool) {
-      return tool.name === "Bfrs Select";
+      return toname === "Bfrs Select";
     });
 
     this.$root.fixedLayers.push({
@@ -7138,7 +7137,7 @@ export default {
       });
 
       vm.selectedFeatures.on("add", function (event) {
-        if (vm.annotations.tool.selectMode === "geometry") {
+        if (vm.annotations.toselectMode === "geometry") {
           if (event.element["selectedIndex"] === undefined) {
             vm.selectDefaultGeometry(event.element);
           }
