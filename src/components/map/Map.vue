@@ -50,7 +50,7 @@ import turf from "@turf/turf";
 import gkInfo from "./Info.vue";
 import gkScales from "./Scales.vue";
 import gkSearch from "./Search.vue";
-import gkFeaturedetail from "./Featuredetail.vue";
+import gkFeaturedetail from "./FeatureDetail.vue";
 import gkMeasure from "./Measure.vue";
 import gkWeatherforecast from "./WeatherForecast.vue";
 import gkToolbox from "./Toolbox.vue";
