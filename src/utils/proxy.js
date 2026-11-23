@@ -23,18 +23,14 @@ export function proxy(classname, object, attrs) {
         this._objectPrototype = Object.getPrototypeOf(this._object);
         for (var i = 0; i < properties.length; i++) {
           key = properties[i];
-          eval(
-            'Object.defineProperty(this,"' +
-              key +
-              '",{ \
-                        get:function(){return this._object["' +
-              key +
-              '"]}, \
-                        set:function(value){this._object["' +
-              key +
-              '"] = value}, \
-                    })',
-          );
+          Object.defineProperty(this, key, {
+            get() {
+              return this._object[key];
+            },
+            set(value) {
+              this._object[key] = value;
+            },
+          });
         }
       };
     } else {
@@ -48,43 +44,25 @@ export function proxy(classname, object, attrs) {
     };
     for (let key in Object.getPrototypeOf(object)) {
       if (["constructor"].indexOf(key) < 0 && (!attrs || !(key in attrs))) {
-        eval(
-          'ProxyClass.prototype["' +
-            key +
-            '"] = function() { \
-                    return this._objectPrototype["' +
-            key +
-            '"].apply(this._object,arguments); \
-                }',
-        );
+        ProxyClass.prototype[key] = function (...args) {
+          return this._objectPrototype[key].apply(this._object, args);
+        };
       }
     }
 
     for (var i = 0; i < methods.length; i++) {
       key = methods[i];
-      eval(
-        'ProxyClass.prototype["' +
-          key +
-          '"] = function() { \
-                return this._object["' +
-          key +
-          '"]?this._object["' +
-          key +
-          '"].apply(this._object,arguments) : undefined; \
-            }',
-      );
+      ProxyClass.prototype[key] = function (...args) {
+        return this._object[key]
+          ? this._object[key].apply(this._object, args)
+          : undefined;
+      };
     }
 
     for (let key in attrs) {
-      eval(
-        'ProxyClass.prototype["' +
-          key +
-          '"] = function() { \
-                return attrs["' +
-          key +
-          '"].apply(this._object,arguments); \
-            }',
-      );
+      ProxyClass.prototype[key] = function (...args) {
+        return attrs[key].apply(this._object, args);
+      };
     }
 
     ProxyClass.prototype.constructor = ProxyClass;
