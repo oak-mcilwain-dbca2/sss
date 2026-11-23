@@ -345,7 +345,7 @@
                     @click="zoomToSelected()"
                     ><img
                       style="width: 13px; height: 13px"
-                      src="/static/dist/static/images/zoom-to-selected.svg"
+                      :src="zoomToSelectedSvg"
                     /><br />Zoom To<br />Selected</a
                   >
                   <a
@@ -462,9 +462,7 @@
                       class="button tiny secondary float-right action"
                     >
                       <svg class="editicon">
-                        <use
-                          xlink:href="/static/dist/static/images/iD-sprite.svg#icon-area"
-                        ></use>
+                        <use :href="iDSpriteSvg" />
                       </svg>
                     </a>
                     <a
@@ -511,7 +509,7 @@
                       v-if="f.get('status') === 'merged'"
                       style="float: right"
                     >
-                      <img src="/static/dist/static/images/merge.svg" />
+                      <img :src="mergeSvg" />
                       {{ f.get("linked_bushfire_number") }}
                     </div>
                   </div>
@@ -663,101 +661,7 @@
     </form>
   </div>
 </template>
-<style>
-.reportname {
-  font-style: italic;
-  padding-left: 24px;
-  color: #6dd8ef;
-  font-size: 14px;
-}
 
-.button-group .bfrsbutton {
-  padding-left: 5px;
-  padding-right: 5px;
-  font-size: 0.8rem;
-}
-.actionicon {
-  width: 9px;
-  height: 9px;
-}
-.editicon {
-  width: 16px;
-  height: 16px;
-  margin-top: -3px;
-  margin-bottom: -4px;
-  margin-left: -2px;
-  margin-right: -2px;
-}
-.task_message {
-  font-style: italic;
-  font-weight: normal;
-  color: red;
-  font-size: 12px;
-  white-space: pre-wrap;
-}
-.task_name {
-  font-style: normal;
-  font-weight: bold;
-  font-size: 14px;
-}
-#bfrsStartDate,
-#bfrsEndDate {
-  font-size: 13px;
-  width: 118px;
-  display: inline;
-  cursor: pointer;
-  padding-left: 4px;
-  padding-right: 4px;
-}
-.alert-container {
-  padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid #004085;
-  border-radius: 6px;
-  margin-top: -10px;
-  position: relative;
-  color: #004085;
-}
-
-.blue-alert {
-  background-color: #cce5ff;
-  border-color: #b8daff;
-  color: #004085;
-}
-
-.green-alert {
-  background-color: #d4edda;
-  border-color: #c3e6cb;
-  color: #155724;
-}
-.badge {
-  display: inline-block;
-  padding: 0.4em 0.8em;
-  font-size: 85%;
-  font-weight: 700;
-  line-height: 1.1;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: 0.5rem;
-}
-.bg-primary {
-  background-color: #2199e8;
-  color: white;
-}
-.bg-warning {
-  background-color: #ffc107;
-  color: #212529;
-}
-.bg-danger {
-  background-color: #dc3545;
-  color: white;
-}
-.bg-success {
-  background-color: #28a745;
-  color: white;
-}
-</style>
 <script>
 import { debounce } from "lodash-es";
 
@@ -779,6 +683,10 @@ import { getLayerId, getLayerUrl } from "@/utils/layers";
 
 import env from "@/config/env";
 
+import zoomToSelectedSvg from "@/assets/images/zoom-to-selected.svg";
+import iDSpriteSvg from "@assets/images/iD-sprite.svg#icon-area";
+import mergeSvg from "@assets/images/merge.svg";
+
 export default {
   store: {
     bushfireLabels: "settings.bfrs.bushfireLabels",
@@ -789,6 +697,13 @@ export default {
     activeMenu: "activeMenu",
     hints: "hints",
     whoami: "whoami",
+  },
+  setup() {
+    return {
+      zoomToSelectedSvg,
+      iDSpriteSvg,
+      mergeSvg,
+    };
   },
   data: function () {
     return {
@@ -7301,3 +7216,99 @@ export default {
   },
 };
 </script>
+
+<style>
+.reportname {
+  font-style: italic;
+  padding-left: 24px;
+  color: #6dd8ef;
+  font-size: 14px;
+}
+
+.button-group .bfrsbutton {
+  padding-left: 5px;
+  padding-right: 5px;
+  font-size: 0.8rem;
+}
+.actionicon {
+  width: 9px;
+  height: 9px;
+}
+.editicon {
+  width: 16px;
+  height: 16px;
+  margin-top: -3px;
+  margin-bottom: -4px;
+  margin-left: -2px;
+  margin-right: -2px;
+}
+.task_message {
+  font-style: italic;
+  font-weight: normal;
+  color: red;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+.task_name {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 14px;
+}
+#bfrsStartDate,
+#bfrsEndDate {
+  font-size: 13px;
+  width: 118px;
+  display: inline;
+  cursor: pointer;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+.alert-container {
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #004085;
+  border-radius: 6px;
+  margin-top: -10px;
+  position: relative;
+  color: #004085;
+}
+
+.blue-alert {
+  background-color: #cce5ff;
+  border-color: #b8daff;
+  color: #004085;
+}
+
+.green-alert {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+.badge {
+  display: inline-block;
+  padding: 0.4em 0.8em;
+  font-size: 85%;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.5rem;
+}
+.bg-primary {
+  background-color: #2199e8;
+  color: white;
+}
+.bg-warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+.bg-danger {
+  background-color: #dc3545;
+  color: white;
+}
+.bg-success {
+  background-color: #28a745;
+  color: white;
+}
+</style>
