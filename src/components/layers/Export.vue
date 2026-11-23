@@ -1,0 +1,1622 @@
+<template>
+  <div class="tabs-panel" id="layers-export" v-cloak>
+    <div id="map-export-controls">
+      <div id="settings-fixpart">
+        <!--div class="tool-slice row collapse">
+        <div class="small-3">
+          <label class="tool-label">Vector format:</label>
+        </div>
+        <div class="small-9">
+          <select name="select" v-model="vectorFormat">
+            <option value="json" selected>GeoJSON (web GIS)</option> 
+            <option value="kml">KML (Google Earth)</option>
+            <option value="geopkg">Geopackage (high performance)</option>
+            <option value="shapefile">Shapefile (legacy desktop GIS)</option>
+            <option value="csv">CSV (Spreadsheet/Excel)</option>
+          </select>
+        </div>
+      </div-->
+        <div class="tool-slice row collapse">
+          <div class="small-3">
+            <label class="tool-label">Name:</label>
+          </div>
+          <div class="small-9">
+            <input
+              id="export-name"
+              type="text"
+              v-model="title"
+              placeholder="Map Name"
+            />
+          </div>
+        </div>
+        <div class="tool-slice row collapse">
+          <div class="small-3">
+            <label class="tool-label">Paper size:</label>
+          </div>
+          <div class="small-9">
+            <select v-model="paperSize">
+              <option
+                v-for="(size, index) in paperSizes"
+                :value="$key"
+                :key="index"
+              >
+                {{ $key }} ({{ size[0] }}mm &times; {{ size[1] }}mm)
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="tool-slice row collapse">
+          <div class="small-3">
+            <label class="tool-label">Download:</label>
+          </div>
+          <div class="small-9">
+            <div class="expanded button-group">
+              <a
+                class="button"
+                title="JPG for quick and easy printing"
+                @click="print('jpg')"
+                ><i class="fa fa-file-image-o"></i><br />JPG</a
+              >
+              <a
+                class="button"
+                title="Geospatial PDF for use in PDF Maps and Adobe Reader"
+                @click="print('pdf')"
+                ><i class="fa fa-print"></i><br />PDF</a
+              >
+              <a
+                class="button"
+                title="GeoTIFF for use in QGIS on the desktop"
+                @click="print('tif')"
+                ><i class="fa fa-picture-o"></i><br />GeoTIFF</a
+              >
+              <a
+                class="button"
+                title="Legends of active layers"
+                @click="layerlegends.toggleLegends()"
+                ><i class="fa fa-file-pdf-o"></i><br />Legend</a
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-slice row collapse">
+          <div class="small-3">
+            <div class="switch tiny">
+              <input
+                class="switch-input"
+                id="toggleRetainBoundingbox"
+                type="checkbox"
+                :checked="settings.print.retainBoundingbox"
+                @change="toggleRetainBoundingbox"
+              />
+              <label class="switch-paddle" for="toggleRetainBoundingbox">
+                <span class="show-for-sr">Fit to screen bounding box</span>
+              </label>
+            </div>
+          </div>
+          <div class="small-9">
+            <label for="toggleRetainBoundingbox"
+              >Fit to screen bounding box</label
+            >
+          </div>
+        </div>
+
+        <div class="tool-slice row collapse">
+          <div class="small-3">
+            <div class="switch tiny">
+              <input
+                class="switch-input"
+                id="toggleSnapToFixedScale"
+                type="checkbox"
+                :checked="settings.print.snapToFixedScale"
+                @change="toggleSnapToFixedScale"
+              />
+              <label class="switch-paddle" for="toggleSnapToFixedScale">
+                <span class="show-for-sr">Snap to nearest fixed scale</span>
+              </label>
+            </div>
+          </div>
+          <div class="small-9">
+            <label for="toggleSnapToFixedScale"
+              >Snap to nearest fixed scale</label
+            >
+          </div>
+        </div>
+
+        <hr class="row" />
+        <div class="tool-slice row collapse">
+          <div class="small-3">
+            <label class="tool-label">Info:</label>
+          </div>
+          <div class="small-9 columns">
+            <div class="expanded button-group">
+              <label
+                class="button expanded"
+                for="spatialInfo"
+                title="{{utils.importSpatialFileTypeDesc}}"
+              >
+                <i class="fa fa-info"></i> Spatial Info
+              </label>
+              <input
+                type="file"
+                id="spatialInfo"
+                class="show-for-sr"
+                name="spatialinfofile"
+                v-el:spatialinfofile
+                @change="getSpatialInfo()"
+                accept="{{utils.importSpatialFileTypes}}"
+              />
+            </div>
+          </div>
+
+          <div class="small-3">
+            <label class="tool-label">Transform:</label>
+          </div>
+          <div class="small-9 columns">
+            <div class="expanded button-group">
+              <label
+                class="button expanded convertbutton"
+                for="togeojson"
+                title="{{utils.importSpatialFileTypeDesc}}"
+              >
+                <i class="fa fa-exchange"></i><br />Transform<br />(geojson)
+              </label>
+              <input
+                type="file"
+                id="togeojson"
+                class="show-for-sr"
+                name="convertfile"
+                v-el:togeojson
+                @change="convertFormat('geojson', $event)"
+                accept="{{utils.importSpatialFileTypes}}"
+              />
+
+              <label
+                class="button expanded convertbutton"
+                for="togpkg"
+                title="{{utils.importSpatialFileTypeDesc}}"
+              >
+                <i class="fa fa-exchange"></i><br />Transform<br />(gpkg)
+              </label>
+              <input
+                type="file"
+                id="togpkg"
+                class="show-for-sr"
+                name="convertfile"
+                v-el:togpkg
+                @change="convertFormat('gpkg', $event)"
+                accept="{{utils.importSpatialFileTypes}}"
+              />
+
+              <label
+                class="button expanded convertbutton"
+                for="toshp"
+                title="{{utils.importSpatialFileTypeDesc}}"
+              >
+                <i class="fa fa-exchange"></i><br />Transform<br />(shp)
+              </label>
+              <input
+                type="file"
+                id="toshp"
+                class="show-for-sr"
+                name="convertfile"
+                v-el:toshp
+                @change="convertFormat('shp', $event)"
+                accept="{{utils.importSpatialFileTypes}}"
+              />
+
+              <label
+                class="button expanded convertbutton"
+                for="tocsv"
+                title="{{utils.importSpatialFileTypeDesc}}"
+              >
+                <i class="fa fa-exchange"></i><br />Transform<br />(csv)
+              </label>
+              <input
+                type="file"
+                id="tocsv"
+                class="show-for-sr"
+                name="convertfile"
+                v-el:tocsv
+                @change="convertFormat('csv', $event)"
+                accept="{{utils.importSpatialFileTypes}}"
+              />
+            </div>
+          </div>
+        </div>
+
+        <hr class="row" />
+        <div class="tool-slice row collapse">
+          <div class="small-3">
+            <label class="tool-label">Save view:</label>
+          </div>
+          <div class="small-9 columns">
+            <div class="input-group">
+              <input
+                v-el:savestatename
+                class="input-group-field"
+                type="text"
+                placeholder="Name for saved view"
+              />
+              <div class="input-group-button">
+                <a class="button" @click="saveStateButton()">Save</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tool-slice row collapse">
+          <div class="small-3">
+            <label class="tool-label">Export view:</label>
+          </div>
+          <div class="small-9 columns">
+            <div class="expanded button-group">
+              <a class="button expanded" @click="download()"
+                ><i class="fa fa-download"></i> Download current view</a
+              >
+            </div>
+          </div>
+        </div>
+        <div class="tool-slice row collapse">
+          <div class="small-3">
+            <label class="tool-label">Load view:</label>
+          </div>
+          <div class="small-9 columns">
+            <div class="expanded button-group">
+              <label class="button expanded" for="uploadFile"
+                ><i class="fa fa-upload"></i> Upload view file</label
+              ><input
+                type="file"
+                id="uploadFile"
+                class="show-for-sr"
+                name="statefile"
+                accept="application/json"
+                ref="statefile"
+                @change="load()"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-slice row collapse scroller" id="settings-flexible">
+        <div class="small-3">
+          <label class="tool-label"></label>
+        </div>
+        <div class="small-9 columns">
+          <div
+            v-for="(state, index) in states"
+            class="feature-row"
+            style="overflow: hidden"
+            :key="index"
+          >
+            <div class="float-right button-group small">
+              <a class="button" title="Open view" @click="open(state)"
+                ><i class="fa fa-folder-open"></i
+              ></a>
+              <a class="button" title="Download view" @click="download(state)"
+                ><i class="fa fa-download"></i
+              ></a>
+              <a class="button alert" title="Delete view" @click="remove(state)"
+                >✕</a
+              >
+            </div>
+            {{ state }}
+          </div>
+          <div v-if="states.length == 0" class="feature-row">
+            No saved views yet
+          </div>
+        </div>
+      </div>
+
+      <div class="hide" v-el:legendsvg>
+        <gk-legend></gk-legend>
+      </div>
+
+      <img
+        id="map-disclaimer"
+        class="hide"
+        src="/static/dist/static/images/map-disclaimer.svg"
+      />
+
+      <gk-layerlegends v-ref:layerlegends></gk-layerlegends>
+    </div>
+
+    <div
+      class="small reveal"
+      id="spatialInfoDialog"
+      data-reveal
+      data-close-on-click="false"
+    >
+      <h3>{{ spatialInfo.title }}</h3>
+      <div class="row feature-row">
+        <div class="small-5 columns">Layer</div>
+        <div class="small-2 columns">SRS</div>
+        <div class="small-2 columns">Geometry</div>
+        <div class="small-2 columns">Features</div>
+        <div class="small-1 columns"></div>
+      </div>
+      <template
+        v-for="(dslayers, index) in spatialInfo['datasources']"
+        :key="index"
+      >
+        <div class="row" v-if="spatialInfo['datasourceCount'] > 1">
+          <div class="small-12 columns datasource">
+            <a>{{ dslayers["datasource"] }}</a>
+          </div>
+        </div>
+        <div
+          v-for="(l, innerIndex) in dslayers['layers']"
+          class="row feature-row"
+          :key="innerIndex"
+        >
+          <div class="small-5 columns">{{ l.layer }}</div>
+          <div class="small-2 columns">{{ l.srs }}</div>
+          <div class="small-2 columns">{{ l.geometry }}</div>
+          <div class="small-2 columns">{{ l.features }}</div>
+          <div class="small-1 columns">
+            <a
+              class="button tiny secondary float-right"
+              v-if="spatialInfo.upload"
+              @click="importLayer(dslayers['datasource'], l)"
+              ><i class="fa fa-upload"></i
+            ></a>
+          </div>
+        </div>
+      </template>
+
+      <button
+        class="close-button"
+        data-close
+        aria-label="Close modal"
+        type="button"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  </div>
+</template>
+<style>
+.datasource {
+  font-size: 18px;
+  font-weight: bold;
+  font-style: italic;
+  background-color: #266f78;
+}
+.convertbutton {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+</style>
+<script>
+import { kjua, saveAs, moment, $, localforage, hash } from "src/vendor.js";
+
+import ol from "ol";
+
+import gkLegend from "./legend.vue";
+import gkLayerlegends from "./layerlegends.vue";
+import html2canvas from "html2canvas";
+export default {
+  store: {
+    whoami: "whoami",
+    dpmm: "dpmm",
+    view: "view",
+    mmPerInch: "mmPerInch",
+    settings: "settings",
+    displayResolution: "displayResolution",
+    activeMenu: "activeMenu",
+    activeSubmenu: "activeSubmenu",
+    screenHeight: "layout.screenHeight",
+    hintsHeight: "layout.hintsHeight",
+    leftPanelHeadHeight: "layout.leftPanelHeadHeight",
+  },
+  components: { gkLegend, gkLayerlegends },
+  data: function () {
+    return {
+      spatialInfo: {},
+      minDPI: 150,
+      chunkSize: 200,
+      paperSizes: {
+        A0: [1189, 841],
+        A1: [841, 594],
+        A2: [594, 420],
+        A3: [420, 297],
+        A4: [297, 210],
+      },
+      paperSize: "A3",
+      printStatus: {
+        oldLayout: {},
+        layout: {},
+        overviewMap: {},
+        jobs: 0,
+      },
+      title: "",
+      vectorFormat: "geojson",
+      states: [],
+      vectorFormats: [
+        { format: "geojson", title: "GeoJSON (web GIS)", name: "GeoJSON" },
+        { format: "sqlite", title: "SQLite", name: "SQLite" },
+        { format: "gpkg", title: "GeoPackage", name: "GeoPackage" },
+        { format: "csv", title: "CSV (Spreadsheet/Excel)", name: "CSV" },
+      ],
+    };
+  },
+  // parts of the template to be computed live
+  computed: {
+    loading: function () {
+      return this.$root.loading;
+    },
+    env: function () {
+      return this.$root.env;
+    },
+    annotations: function () {
+      return this.$root.annotations;
+    },
+    utils: function () {
+      return this.$root.utils;
+    },
+    layerlegends: function () {
+      return this.$refs.layerlegends;
+    },
+    map: function () {
+      return this.$root.map;
+    },
+    olmap: function () {
+      return this.$root.map.olmap;
+    },
+    shortUrl: {
+      cache: false,
+      get: function () {
+        if (!this.olmap) {
+          return;
+        }
+        var lonlat = this.olmap.getView().getCenter();
+        return $.param({
+          lon: lonlat[0],
+          lat: lonlat[1],
+          scale: Math.round(this.$root.map.getScale() * 1000),
+        });
+      },
+    },
+    finalTitle: function () {
+      return this.title.length == 0 ? "Quick Print" : this.title.trim();
+    },
+    hashKey: function () {
+      return hash.MD5({
+        extent: this.printStatus.layout.extent.join(" "),
+        author: this.legendInfo().author,
+        filename: this.finalTitle,
+        time: Date.now(),
+      });
+    },
+  },
+  // methods callable from inside the template
+  methods: {
+    adjustHeight: function () {
+      if (this.activeMenu === "layers" && this.activeSubmenu === "export") {
+        //console.log("screenHeight=" + this.screenHeight)
+        //console.log("fixedHeight=" + $("#settings-fixpart").height() )
+        $("#settings-flexible").height(
+          this.screenHeight -
+            this.leftPanelHeadHeight -
+            16 -
+            $("#settings-fixpart").height() -
+            this.hintsHeight,
+        );
+      }
+    },
+    toggleRetainBoundingbox: function () {
+      this.settings.print.retainBoundingbox =
+        !this.settings.print.retainBoundingbox;
+      this.saveState();
+    },
+    toggleSnapToFixedScale: function () {
+      this.settings.print.snapToFixedScale =
+        !this.settings.print.snapToFixedScale;
+      this.saveState();
+    },
+    // info for the legend block on the print raster
+    legendInfo: function () {
+      if (!this.$root.map || !this.$root.map.olmap) {
+        return {};
+      }
+      var result = {
+        title: this.finalTitle,
+        author: "Produced by the Department of Parks and Wildlife", //this.whoami.email,
+        date: "Map last amended " + moment().toLocaleString(),
+      };
+      if (this.$root.map) {
+        result.km = (
+          Math.round(this.$root.map.getScale() * 40) / 1000
+        ).toLocaleString();
+        result.scale = this.paperSize + " " + this.$root.scales.scaleString;
+      }
+      return result;
+    },
+    exportVector: function (features, name, format) {
+      //add applicaiton name and timestamp
+      const filename =
+        (name || "") +
+        "." +
+        this.$root.profile.name +
+        "_export_" +
+        moment().format("YYYYMMDD_HHmmss");
+      var result = this.$root.geojson.writeFeatures(features);
+      format = format || this.vectorFormat;
+      if (format === "geojson") {
+        var blob = new window.Blob([result], {
+          type: "application/json;charset=utf-8",
+        });
+        saveAs(blob, filename + ".geojson");
+      } else {
+        this.downloadVector(format, {
+          filename: filename,
+          datasources: {
+            parameter: "features",
+            default_geometry_type: "auto",
+            default_srs: "EPSG:4326",
+          },
+          features: result,
+          srs: "EPSG:4326",
+        });
+      }
+    },
+    getFileFormat: function (filename) {
+      return this._fileformats.find(function (f) {
+        return (
+          filename.substring(filename.length - f[1].length).toLowerCase() ===
+          f[1]
+        );
+      });
+    },
+    convertFormat: function (format, ev) {
+      var file =
+        ev.currentTarget.files.length > 0 ? ev.currentTarget.files[0] : null;
+      ev.currentTarget.value = null;
+      if (!file) {
+        return;
+      }
+
+      var fileFormat = this.getFileFormat(file.name);
+      if (!fileFormat) {
+        alert("Unsupported file format(" + file.name + ")");
+        return;
+      }
+      if (fileFormat[0] === format) {
+        alert("Target format is the same as source format.");
+        return;
+      }
+
+      this.downloadVector(format, {
+        datasources: {
+          parameter: "datafile",
+          default_geometry_type: "auto",
+        },
+        files: {
+          datafile: file,
+        },
+        srs: "EPSG:4326",
+      });
+    },
+    downloadVector: function (format, options, callback) {
+      var vm = this;
+      var formData = new window.FormData();
+      var tasks = 1;
+      var defaultFileName = null;
+      if (!callback) {
+        callback = function (status, msg) {
+          if (msg) {
+            alert(msg);
+          }
+        };
+      }
+      var sendRequest = function () {
+        if (tasks > 0) {
+          return;
+        }
+        try {
+          var req = new window.XMLHttpRequest();
+          req.open("POST", "/download/" + format);
+          req.responseType = "blob";
+          req.withCredentials = true;
+          req.onload = function () {
+            try {
+              if (req.status >= 400) {
+                var reader = new FileReader();
+                reader.addEventListener("loadend", function (e) {
+                  callback(false, e.target.result);
+                });
+                reader.readAsText(req.response);
+              } else {
+                var filename = null;
+                if (req.getResponseHeader("Content-Disposition")) {
+                  var matches = vm._filename_re.exec(
+                    req.getResponseHeader("Content-Disposition"),
+                  );
+                  filename = matches && matches[1] ? matches[1] : null;
+                }
+                if (!filename) {
+                  // TODO: Legacy code referenced undefined variables
+                  // "files" and "fileFormat" here.
+                  // Determine intended fallback filename.
+                  filename = "download." + format;
+                  //   filename =
+                  //     files[0].name.substring(
+                  //       0,
+                  //       files[0].name.length - fileFormat[1].length,
+                  //     ) +
+                  //     "." +
+                  //     format;
+                }
+                if (!filename) {
+                  filename = "download." + format;
+                }
+                saveAs(req.response, filename);
+                callback(true);
+              }
+            } catch (ex) {
+              callback(false, ex.message || ex);
+            }
+          };
+          req.send(formData);
+        } catch (ex) {
+          callback(false, ex.message || ex);
+        }
+      };
+      try {
+        $.each(options, function (key, value) {
+          if (key === "layers") {
+            formData.append("layers", JSON.stringify(options["layers"]));
+          } else if (key === "datasources") {
+            formData.append(
+              "datasources",
+              JSON.stringify(options["datasources"]),
+            );
+          } else if (key === "files") {
+            $.each(value, function (name, file) {
+              tasks += 1;
+              var fileFormat = vm.getFileFormat(file.name);
+              if (!fileFormat) {
+                throw "Unsupported file format(" + file.name + ")";
+              }
+              if (!defaultFileName) {
+                defaultFileName =
+                  file.name.substring(
+                    0,
+                    file.name.length - fileFormat[1].length,
+                  ) +
+                  "." +
+                  format;
+              }
+
+              var reader = new window.FileReader();
+              reader.onload = (function () {
+                var parameter = name;
+                var fmt = fileFormat[2];
+                var filename = file.name;
+                return function (e) {
+                  formData.append(
+                    parameter,
+                    new window.Blob([e.target.result], { type: fmt }),
+                    filename,
+                  );
+                  tasks -= 1;
+                  sendRequest();
+                };
+              })();
+              reader.readAsArrayBuffer(file);
+            });
+          } else {
+            formData.append(key, value);
+          }
+        });
+
+        tasks -= 1;
+        sendRequest();
+      } catch (ex) {
+        callback(false, ex.message || ex);
+      }
+    },
+    getSpatialInfo: function () {
+      var file =
+        this.$els.spatialinfofile.files.length > 0
+          ? this.$els.spatialinfofile.files[0]
+          : null;
+      this.$els.spatialinfofile.value = null;
+      if (!file) {
+        return;
+      }
+      var fileFormat = this.getFileFormat(file.name);
+      if (!fileFormat) {
+        alert("Unsupported file format(" + file.name + ")");
+        return;
+      }
+      var vm = this;
+      var reader = new window.FileReader();
+      reader.onload = function (e) {
+        try {
+          var formData = new window.FormData();
+          formData.append(
+            "datasource",
+            new window.Blob([e.target.result], { type: fileFormat[2] }),
+            file.name,
+          );
+          var req = new window.XMLHttpRequest();
+          req.open("POST", "/ogrinfo");
+          req.responseType = "blob";
+          req.withCredentials = true;
+          req.onload = function () {
+            try {
+              if (req.status >= 400) {
+                var reader = new FileReader();
+                reader.readAsText(req.response);
+                reader.addEventListener("loadend", function (e) {
+                  alert(e.target.result);
+                });
+                delete vm._importData;
+              } else {
+                reader = new FileReader();
+                reader.readAsText(req.response);
+                reader.addEventListener("loadend", function (e) {
+                  if (!e.target.result) {
+                    alert("No spatial data");
+                    return;
+                  }
+                  var spatialInfo = JSON.parse(e.target.result);
+                  if (!spatialInfo || !spatialInfo["layerCount"]) {
+                    alert("No spatial data");
+                    return;
+                  } else {
+                    vm.spatialInfo = spatialInfo;
+                    vm.spatialInfo.title = file.name;
+                    vm.spatialInfo.upload = false;
+                    $("#spatialInfoDialog").foundation("open");
+                  }
+                });
+              }
+            } catch (ex) {
+              alert(ex.message || ex);
+            }
+          };
+          req.send(formData);
+        } catch (ex) {
+          alert(ex.message || ex);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    },
+    importVector: function (file, callback, failedCallback, crsValidation) {
+      crsValidation = crsValidation || false;
+      // upload vector
+      var vm = this;
+      var fileFormat = this.getFileFormat(file.name);
+      if (!fileFormat) {
+        var msg = "Unsupported file format(" + file.name + ")";
+        if (failedCallback) {
+          failedCallback(msg);
+        } else {
+          alert(msg);
+        }
+        return;
+      }
+
+      try {
+        if (fileFormat[0] === "geojson" || fileFormat[0] === "json") {
+          var reader = new window.FileReader();
+          reader.onload = function (e) {
+            try {
+              var features = new ol.format.GeoJSON().readFeatures(
+                e.target.result,
+                { dataProjection: "EPSG:4326" },
+              );
+              if (features && features.length) {
+                callback(features, fileFormat[0]);
+              }
+            } catch (ex) {
+              if (failedCallback) failedCallback(ex.message || ex);
+            }
+          };
+          reader.readAsText(file);
+        } else {
+          reader = new window.FileReader();
+          reader.onload = function (e) {
+            try {
+              vm._importData = {
+                formData: new window.FormData(),
+                callback: callback,
+                failedCallback: failedCallback,
+              };
+              vm._importData.formData.append(
+                "datasource",
+                new window.Blob([e.target.result], { type: fileFormat[2] }),
+                file.name,
+              );
+              if (crsValidation) {
+                vm._importData.formData.append("crs_validation", crsValidation);
+              }
+              var req = new window.XMLHttpRequest();
+              req.open("POST", "/ogrinfo");
+              req.responseType = "blob";
+              req.withCredentials = true;
+              req.onload = function () {
+                try {
+                  if (req.status >= 400) {
+                    let reader = new FileReader();
+                    reader.readAsText(req.response);
+                    reader.addEventListener("loadend", function (e) {
+                      if (failedCallback) {
+                        failedCallback(e.target.result);
+                      } else {
+                        alert(e.target.result);
+                      }
+                    });
+                    delete vm._importData;
+                  } else {
+                    let reader = new FileReader();
+                    reader.readAsText(req.response);
+                    reader.addEventListener("loadend", function (e) {
+                      if (!e.target.result) {
+                        if (failedCallback) failedCallback("No spatial data");
+                        return;
+                      }
+                      var spatialInfo = JSON.parse(e.target.result);
+                      if (!spatialInfo || !spatialInfo["layerCount"]) {
+                        callback([], "geojson");
+                        return;
+                      } else if (spatialInfo["layerCount"] === 1) {
+                        vm.importLayer(
+                          spatialInfo["datasources"][0]["datasource"],
+                          spatialInfo["datasources"][0]["layers"][0],
+                          true,
+                        );
+                      } else {
+                        vm.spatialInfo = spatialInfo;
+                        vm.spatialInfo.title =
+                          "Please choose the layer to import";
+                        vm.spatialInfo.upload = true;
+                        $("#spatialInfoDialog").foundation("open");
+                      }
+                    });
+                  }
+                } catch (ex) {
+                  if (failedCallback) {
+                    failedCallback(ex.message || ex);
+                  } else {
+                    alert(ex.message || ex);
+                  }
+                }
+              };
+              req.send(vm._importData.formData);
+            } catch (ex) {
+              if (failedCallback) failedCallback(ex.message || ex);
+            }
+          };
+          reader.readAsArrayBuffer(file);
+        }
+      } catch (ex) {
+        if (failedCallback) failedCallback(ex.message || ex);
+      }
+    },
+    importLayer: function (datasource, selectedLayer, autoChoose) {
+      const fileFormat = this.getFileFormat(datasource);
+      const importData = this._importData;
+
+      try {
+        if (!importData) {
+          alert("Import data is missing.");
+          return;
+        }
+        if (!fileFormat) {
+          let msg = "Unsupported file format(" + datasource + ")";
+          if (importData.failedCallback) {
+            importData.failedCallback(msg);
+          } else {
+            alert(msg);
+          }
+          return;
+        }
+        if (!selectedLayer) {
+          let msg = "Please choose import layer.";
+          if (importData.failedCallback) {
+            importData.failedCallback(msg);
+          } else {
+            alert(msg);
+          }
+          return;
+        }
+        if (selectedLayer.featureCount <= 0) {
+          importData.callback([], "geojson");
+          return;
+        }
+        var layers = {
+          default_geometry_type: "POINT",
+          layer: selectedLayer.layer,
+          srs: "EPSG:4326",
+          sourcelayers: {
+            parameter: "datasource",
+            datasource: datasource,
+            layer: selectedLayer.layer,
+            //default_srs:"EPSG:4326"
+          },
+        };
+        importData.formData.append("layers", JSON.stringify(layers));
+        var req = new window.XMLHttpRequest();
+        req.open("POST", "/download/geojson");
+        req.responseType = "text";
+        req.withCredentials = true;
+        req.onload = function () {
+          try {
+            if (req.status >= 400) {
+              if (importData.failedCallback) {
+                importData.failedCallback(req.response);
+              } else {
+                alert(req.response);
+              }
+            } else {
+              var features = new ol.format.GeoJSON().readFeatures(
+                req.response,
+                { dataProjection: "EPSG:4326" },
+              );
+              if (features && features.length) {
+                features.forEach((feature) => {
+                  feature.set("crs", selectedLayer.crs);
+                });
+                importData.callback(features, fileFormat[0]);
+              }
+            }
+          } catch (ex) {
+            if (importData.failedCallback) {
+              importData.failedCallback(ex.message || ex);
+            } else {
+              alert(ex.message || ex);
+            }
+          }
+        };
+        req.send(importData.formData);
+      } catch (ex) {
+        if (importData.failedCallback) {
+          importData.failedCallback(ex.message || ex);
+        } else {
+          alert(ex.message || ex);
+        }
+      } finally {
+        delete this._importData;
+        if (!autoChoose) {
+          $("#spatialInfoDialog").foundation("close");
+        }
+      }
+    },
+    // resize map to page dimensions (in mm) for printing, save layout
+    prepareMapForPrinting: function () {
+      var vm = this;
+      $("body").css("cursor", "progress");
+      if (this.printStatus.jobs <= 0) {
+        //save overviewMap status and enable overviewMap if not enabled
+        this.printStatus.overviewMap.enabled =
+          this.map.isControlEnabled("overviewMap");
+        this.printStatus.overviewMap.collapsed = this.map
+          .getControl("overviewMap")
+          .getCollapsed();
+        if (this.printStatus.overviewMap.collapsed) {
+          this.map.getControl("overviewMap").setCollapsed(false);
+        }
+        if (!this.printStatus.overviewMap.enabled) {
+          this.map.enableControl("overviewMap", true);
+        }
+
+        //no print job is processing, get the map size and scale for recovering.
+        this.printStatus.oldLayout.size = this.olmap.getSize();
+        this.printStatus.oldLayout.scale = this.$root.map.getScale();
+        this.printStatus.oldLayout.extent = this.olmap
+          .getView()
+          .calculateExtent(this.olmap.getSize());
+
+        this.printStatus.dpmm = this.minDPI / this.mmPerInch;
+
+        //disable the interactions to prevent the user from operating the map
+        this.printStatus.interactions = this.olmap
+          .getInteractions()
+          .getArray()
+          .slice(0);
+        $.each(this.printStatus.interactions, function (index, interact) {
+          vm.olmap.removeInteraction(interact);
+        });
+
+        //disable the controls to prevent the user from operating the map
+        this.printStatus.controls = [];
+        $.each(this.map.mapControls, function (key, control) {
+          if (key === "overviewMap") {
+            //overviewMap has been processed, ignore here
+            return;
+          }
+          if (control.enabled) {
+            vm.printStatus.controls.push(key);
+            vm.map.enableControl(key, false);
+          }
+        });
+
+        this.printStatus.startTime = new Date();
+      }
+
+      this.printStatus.layout.width = this.paperSizes[this.paperSize][0];
+      this.printStatus.layout.height = this.paperSizes[this.paperSize][1];
+      //adjust the map for printing.
+      if (this.settings.print.retainBoundingbox) {
+        this.printStatus.layout.size = [
+          this.dpmm * this.printStatus.layout.width,
+          this.dpmm * this.printStatus.layout.height,
+        ];
+        this.olmap.setSize(this.printStatus.layout.size);
+        this.olmap
+          .getView()
+          .fit(this.printStatus.oldLayout.extent, this.olmap.getSize());
+        this.printStatus.layout.scale = this.settings.print.snapToFixedScale
+          ? this.$root.map.getFixedScale()
+          : this.$root.map.getScale();
+        if (this.settings.print.snapToFixedScale) {
+          this.$root.map.setScale(this.printStatus.layout.scale);
+        }
+      } else {
+        this.printStatus.layout.scale = this.settings.print.snapToFixedScale
+          ? this.$root.map.getFixedScale(this.printStatus.oldLayout.scale)
+          : this.printStatus.oldLayout.scale;
+        this.printStatus.layout.size = [
+          this.dpmm * this.printStatus.layout.width,
+          this.dpmm * this.printStatus.layout.height,
+        ];
+        this.olmap.setSize(this.printStatus.layout.size);
+        if (this.settings.print.snapToFixedScale) {
+          this.$root.map.setScale(this.printStatus.layout.scale);
+        }
+      }
+      // Add scale line to the printed map
+      const resolution = ol.proj.getPointResolution(
+        "EPSG:4326",
+        this.olmap.getView().getResolution(),
+        this.olmap.getView().getCenter(),
+        "m",
+      );
+      const dpi = 96;
+      const inchesPerMeter = 1000 / 25.4;
+      const newscale = (resolution * inchesPerMeter * dpi) / 1000;
+
+      //resolution adjusted according to the printed map
+      vm.olmap
+        .getView()
+        .setResolution(
+          (this.olmap.getView().getResolution() *
+            this.printStatus.layout.scale) /
+            newscale,
+        );
+      const scaleLine = new ol.control.ScaleLine({
+        bar: true,
+        text: true,
+        minWidth: 125,
+      });
+      scaleLine.setDpi(this.dpmm * 25.4);
+      vm.olmap.addControl(scaleLine);
+
+      //extent is changed because the scale is adjusted to the closest fixed scale, recalculated the extent again
+      this.printStatus.layout.extent = this.olmap
+        .getView()
+        .calculateExtent(this.olmap.getSize());
+
+      /*
+        var  msg = (this.settings.print.retainBoundingbox)?"Retain boundingbox":"Retain scale"
+        msg += (this.settings.print.snapToFixedScale)?" and snap to fixed scale":""
+        msg += " : old extent = " + this.printStatus.oldLayout.extent + "\t new extent = " + this.printStatus.layout.extent + "\told scale = " + this.printStatus.oldLayout.scale + "\texpected scale = " + this.printStatus.layout.scale + "\t new scale=" + this.$root.map.getScale()  + "\t old size =" + this.printStatus.oldLayout.size + "\texpected size = " + this.printStatus.layout.size + "\t new size = " + this.olmap.getSize()
+        console.log(msg)
+        */
+
+      this.printStatus.jobs =
+        this.printStatus.jobs >= 0 ? this.printStatus.jobs + 1 : 1;
+    },
+    // restore map to viewport dimensions
+    restoreMapFromPrinting: function () {
+      var vm = this;
+      this.printStatus.jobs -= 1;
+      if (this.printStatus.jobs <= 0) {
+        //all print jobs are done
+        //restore overview map
+        if (this.printStatus.overviewMap.collapsed) {
+          this.map.getControl("overviewMap").setCollapsed(true);
+        }
+        if (!this.printStatus.overviewMap.enabled) {
+          this.map.enableControl("overviewMap", false);
+        }
+        //restore the map size and map scale
+        this.olmap.setSize(this.printStatus.oldLayout.size);
+        this.$root.map.setScale(this.printStatus.oldLayout.scale);
+        //restore the interactions
+        $.each(this.printStatus.interactions, function (index, interact) {
+          vm.olmap.addInteraction(interact);
+        });
+        //restore controls
+        $.each(this.printStatus.controls, function (index, controlKey) {
+          vm.map.enableControl(controlKey, true);
+        });
+        const scaleWrapper = document.getElementById("scaleWrapper");
+        const scaleElement = document.querySelector(".ol-scale-bar");
+        if (scaleWrapper) {
+          scaleWrapper.remove(); // Removes the element from the DOM
+        }
+        if (scaleElement) {
+          scaleWrapper.remove();
+        }
+        this.printStatus.endTime = new Date();
+        $("body").css("cursor", "default");
+      }
+    },
+    // generate legend block, scale ruler is 40mm wide
+    renderLegend: function (hashKey) {
+      var qrcanvas = hashKey
+        ? kjua({
+            text: this.env.s3Service + "/download/" + hashKey + ".pdf",
+            render: "canvas",
+            size: 100,
+          })
+        : null;
+      return [
+        "data:image/svg+xml;utf8," +
+          encodeURIComponent(this.$els.legendsvg.innerHTML),
+        qrcanvas,
+      ];
+    },
+    // POST a generated JPG to the gokart server backend to convert to GeoPDF
+    blobGDAL: function (blob, name, format, hashKey) {
+      var vm = this;
+      var _func = function (legendData) {
+        try {
+          // Function to split the Blob into chunks and send each chunk
+          var sendChunk = function (start, uploadId) {
+            var end = Math.min(start + vm.chunkSize * 1024, blob.size); // 200KB
+            var chunk = blob.slice(start, end);
+
+            var formData = new window.FormData();
+            formData.append("extent", vm.printStatus.layout.extent.join(" "));
+            formData.append("chunk", chunk, name + ".chunk");
+            formData.append("start", start);
+            formData.append("end", end);
+            formData.append("totalSize", blob.size);
+            formData.append("upload_id", uploadId);
+
+            if (format === "pdf" && legendData) {
+              formData.append("legends", legendData, name + ".legend.pdf");
+            }
+            formData.append(
+              "dpi",
+              Math.round(vm.printStatus.layout.canvasPxPerMM * 25.4),
+            );
+            formData.append("title", vm.finalTitle);
+            formData.append("author", vm.legendInfo().author);
+            if (hashKey) {
+              formData.append("hash_key", hashKey);
+            }
+
+            var req = new window.XMLHttpRequest();
+            req.open("POST", "/gdal/" + format);
+            req.withCredentials = true;
+            req.responseType = "blob";
+
+            req.onload = function () {
+              if (req.status >= 200 && req.status < 300) {
+                if (end < blob.size) {
+                  // Send the next chunk
+                  sendChunk(end, uploadId);
+                } else {
+                  saveAs(req.response, name + "." + format);
+                }
+              } else {
+                var reader = new FileReader();
+                reader.onload = function () {
+                  try {
+                    var response = JSON.parse(reader.result);
+                    if (response.error) {
+                      alert("Error: " + response.error);
+                    } else {
+                      alert("An error occurred. Please try again.");
+                    }
+                  } catch {
+                    alert("An error occurred. Please try again.");
+                  }
+                };
+                reader.readAsText(req.response);
+              }
+            };
+
+            req.onerror = function () {
+              alert("Request failed. Please try again.");
+            };
+
+            req.send(formData);
+          };
+
+          var uploadId = ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(
+            /[018]/g,
+            (c) =>
+              (
+                c ^
+                (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+              ).toString(16),
+          );
+          // Start sending chunks
+          sendChunk(0, uploadId);
+        } catch (error) {
+          alert("An error occurred: " + error.message);
+        }
+      };
+      if (format === "pdf") {
+        vm.layerlegends.getLegendBlob(true, true, function (legendData) {
+          _func(legendData);
+        });
+      } else {
+        _func();
+      }
+    },
+    // make a printable raster from the map
+
+    print: function (format) {
+      // rig the viewport to have printing dimensions
+      this.prepareMapForPrinting();
+      var timer;
+      var vm = this;
+      // wait until map is rendered before continuing
+      var whiteout = vm.olmap.on("precompose", function () {
+        var mapElement = document.getElementById("map");
+        var canvas = mapElement.querySelector("canvas");
+        var ctx = canvas.getContext("2d");
+        ctx.beginPath();
+        ctx.rect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.fill();
+      });
+      var mainmap_composing = null;
+      var overviewmap_composing = null;
+      var mapElement = document.getElementById("map");
+      var canvas = mapElement.querySelector("canvas");
+      var overviewmap_canvas = null;
+      var postcomposeFunc = function () {
+        timer && clearTimeout(timer);
+        timer = setTimeout(function () {
+          // remove composing watcher
+          ol.Observable.unByKey(whiteout);
+          ol.Observable.unByKey(mainmap_composing);
+          ol.Observable.unByKey(overviewmap_composing);
+          var ctx = canvas.getContext("2d");
+
+          var img = new window.Image();
+          var hashKey = format !== "jpg" ? vm.hashKey : null;
+          var legend = vm.renderLegend(format === "pdf" ? hashKey : null);
+          var url = legend[0];
+          var qrcanvas = legend[1];
+          // wait until legend is rendered
+          img.onerror = function (err) {
+            window.alert(JSON.stringify(err));
+            vm.restoreMapFromPrinting();
+          };
+          img.onload = function () {
+            // Add Scale bar to the canvas
+            const scaleElement = document.querySelector(".ol-scale-bar");
+            const scaleWrapper = document.createElement("div");
+
+            scaleWrapper.id = "scaleWrapper";
+            scaleWrapper.style.border = "2px solid black";
+            scaleWrapper.style.position = "relative";
+            scaleWrapper.style.display = "inline-block";
+            scaleWrapper.style.width = `${scaleElement.offsetWidth + 40}px`;
+            scaleWrapper.style.padding = "40px";
+            scaleWrapper.style.paddingTop = "15px";
+            scaleWrapper.style.background = "rgba(255, 255, 255, 0.8)";
+
+            // Wrap the scaleElement inside the new wrapper
+            scaleElement.parentNode.insertBefore(scaleWrapper, scaleElement);
+            scaleWrapper.appendChild(scaleElement);
+            // Capture the wrapper instead of the element itself
+            html2canvas(scaleWrapper, {
+              logging: true,
+              backgroundColor: null,
+            }).then(function (scaleCanvas) {
+              //draw scale bar
+              ctx.drawImage(scaleCanvas, canvas.width - scaleCanvas.width, 0);
+
+              //draw overview map
+              ctx.drawImage(
+                overviewmap_canvas,
+                canvas.width - overviewmap_canvas.width - 2,
+                2,
+                overviewmap_canvas.width,
+                overviewmap_canvas.height,
+              );
+              //draw overview map rectangle
+              var box = $(".ol-custom-overviewmap").find(".ol-overviewmap-box");
+              if (box.length) {
+                var width = box.width() * vm.displayResolution[0];
+                let height = box.height() * vm.displayResolution[1];
+                var x = box.parent().position().left * vm.displayResolution[0];
+                var y = box.parent().position().top * vm.displayResolution[1];
+                ctx.beginPath();
+                ctx.rect(
+                  canvas.width - overviewmap_canvas.width - 2 + x,
+                  2 + y,
+                  width,
+                  height,
+                );
+                ctx.strokeStyle = "red";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+              }
+              //draw overview map border
+              ctx.beginPath();
+              ctx.rect(
+                canvas.width - overviewmap_canvas.width - 4,
+                0,
+                overviewmap_canvas.width + 4,
+                overviewmap_canvas.height + 4,
+              );
+              ctx.strokeStyle = "black";
+              ctx.lineWidth = 2;
+              ctx.stroke();
+              // legend is 12cm wide
+              vm.printStatus.layout.canvasPxPerMM =
+                canvas.width / vm.printStatus.layout.width;
+              let height =
+                (120 * vm.printStatus.layout.canvasPxPerMM * img.height) /
+                img.width;
+              ctx.drawImage(
+                img,
+                0,
+                0,
+                120 * vm.printStatus.layout.canvasPxPerMM,
+                height,
+              );
+
+              var disclaimerImg = $("#map-disclaimer").get(0);
+              height = disclaimerImg.height;
+              ctx.drawImage(
+                disclaimerImg,
+                canvas.width - disclaimerImg.width,
+                canvas.height - height,
+                disclaimerImg.width,
+                height,
+              );
+
+              //draw qr code
+              if (qrcanvas) {
+                ctx.drawImage(qrcanvas, 2, canvas.height - qrcanvas.height - 2);
+              }
+              window.URL.revokeObjectURL(url);
+              var filename = vm.finalTitle.replace(/ +/g, "_");
+              canvas.toBlob(
+                function (blob) {
+                  vm.restoreMapFromPrinting();
+                  if (format === "jpg") {
+                    saveAs(blob, filename + ".jpg");
+                  } else {
+                    vm.blobGDAL(blob, filename, format, hashKey);
+                  }
+                },
+                "image/jpeg",
+                0.9,
+              );
+            });
+          };
+
+          img.src = url;
+          // only output after 5 seconds of no tiles
+        }, 5000);
+      };
+      mainmap_composing = vm.olmap.on("postcompose", function () {
+        var mapElement = document.getElementById("map");
+        var canvas = mapElement.querySelector("canvas");
+        if (!overviewmap_composing) {
+          overviewmap_composing = vm.map
+            .getControl("overviewMap")
+            .getOverviewMap()
+            .on("postcompose", function () {
+              overviewmap_canvas = canvas;
+              postcomposeFunc();
+            });
+          vm.map.getControl("overviewMap").getOverviewMap().renderSync();
+        }
+      });
+      vm.olmap.renderSync();
+    },
+    download: function (key) {
+      if (key) {
+        // download JSON blob from the state store
+        localforage.getItem("sssStateStore").then(function (store) {
+          if (key in store) {
+            var blob = new window.Blob([JSON.stringify(store[key], null, 2)], {
+              type: "application/json;charset=utf-8",
+            });
+            saveAs(blob, key + ".sss");
+          }
+        });
+      } else {
+        // download JSON blob of the current state
+        localforage.getItem("sssOfflineStore").then(function (store) {
+          var blob = new window.Blob([JSON.stringify(store, null, 2)], {
+            type: "application/json;charset=utf-8",
+          });
+          saveAs(
+            blob,
+            "sss_view_" + moment().format("YYYY-MM-DD-HHmm") + ".sss",
+          );
+        });
+      }
+    },
+    open: function (key) {
+      // load the JSON blob from the state store into the offline store
+      localforage.getItem("sssStateStore").then(function (store) {
+        if (key in store) {
+          localforage.setItem("sssOfflineStore", store[key]).then(function () {
+            document.location.reload();
+          });
+        }
+      });
+    },
+    remove: function (key) {
+      // if there's a key matching in the state store, remove it
+      var vm = this;
+      localforage.getItem("sssStateStore").then(function (store) {
+        if (key in store) {
+          delete store[key];
+          vm.states = Object.keys(store);
+          localforage.setItem("sssStateStore", store);
+        }
+      });
+    },
+    load: function () {
+      // upload JSON into a state slot
+      var vm = this;
+      var reader = new window.FileReader();
+      if (this.$refs.statefile.files.length > 0) {
+        const filename = this.$refs.statefile.files[0].name;
+        const key = filename.substring(0, filename.lastIndexOf("."));
+        reader.onload = function (e) {
+          localforage.getItem("sssStateStore", function (err, value) {
+            var store = {};
+            if (value) {
+              store = value;
+            }
+            store[key] = JSON.parse(e.target.result);
+            localforage.setItem("sssStateStore", store).then(function () {
+              vm.states = Object.keys(store);
+            });
+          });
+        };
+        reader.readAsText(this.$refs.statefile.files[0]);
+      }
+    },
+    saveStateButton: function () {
+      var key = this.$els.savestatename.value;
+      if (!key) {
+        key = moment().format("DD/MM/YYYY HH:mm");
+      }
+      this.saveState(key);
+    },
+    saveState: function (key) {
+      var vm = this;
+      var store = this.$root.store;
+      // don't save if user is in tour
+      if (vm.$root.touring) {
+        return;
+      }
+
+      // store attributes
+      var nextCenter = vm.olmap.getView().getCenter();
+      if (
+        Array.isArray(nextCenter) &&
+        nextCenter.length === 2 &&
+        Number.isFinite(nextCenter[0]) &&
+        Number.isFinite(nextCenter[1])
+      ) {
+        store.view.center = nextCenter;
+      }
+
+      var nextScale = vm.$root.map.getScale();
+      if (Number.isFinite(nextScale) && nextScale > 0) {
+        store.view.scale = Math.round(nextScale * 1000);
+      }
+      var activeLayers = vm.$root.active.activeLayers();
+      if (activeLayers === false) {
+        return;
+      }
+      store.activeLayers = activeLayers || [];
+      store.annotations = JSON.parse(
+        vm.$root.geojson.writeFeatures(
+          vm.$root.annotations.features.getArray(),
+        ),
+      );
+
+      // save in the offline store
+      localforage
+        .setItem("sssOfflineStore", vm.$root.persistentData)
+        .then(function () {
+          vm.$root.saved = moment().toLocaleString();
+        });
+
+      // if key is defined, store in state store
+      if (key) {
+        localforage.getItem("sssStateStore", function (err, value) {
+          var states = {};
+          if (value) {
+            states = value;
+          }
+          states[key] = vm.$root.persistentData;
+          localforage.setItem("sssStateStore", states).then(function () {
+            vm.states = Object.keys(states);
+          });
+        });
+      }
+    },
+  },
+  ready: function () {
+    var vm = this;
+    var exportStatus = vm.loading.register("export", "Export Component");
+
+    exportStatus.phaseBegin("initialize", 10, "Initialize");
+    this._filename_re = new RegExp("filename=['\"](.+)['\"]");
+    this._fileformats = [
+      ["geojson", ".geojson", "application/vnd.geo+json"],
+      ["shp", ".shp", "application/shp"],
+      ["json", ".geojson", "application/json"],
+      ["gpx", ".gpx", "application/gpx+xml"],
+      ["gpkg", ".gpkg", "application/x-sqlite3"],
+      ["7zip", ".7z", "application/x-7z-compressed"],
+      ["zip", ".zip", "application/zip"],
+      ["tar", ".tar", "application/x-tar"],
+      ["tar.gz", ".tar.gz", "application/x-gtar-compressed"],
+      ["tar.bz", ".tar.bz", "application/gzip"],
+      ["tar.xz", ".tar.xz", "application/gzip"],
+    ];
+
+    $("#spatialInfoDialog").on("closed.zf.reveal", function () {
+      if (vm._importData) {
+        if (vm._importData.failedCallback)
+          vm._importData.failedCallback("Cancelled");
+        delete vm._importData;
+      }
+    });
+    exportStatus.phaseEnd("initialize");
+    exportStatus.phaseBegin(
+      "gk-init",
+      80,
+      "Listen 'gk-init' event",
+      true,
+      true,
+    );
+    this.$on("gk-init", function () {
+      exportStatus.phaseEnd("gk-init");
+      exportStatus.phaseBegin(
+        "load_states",
+        10,
+        "Load states from file system",
+        true,
+        false,
+      );
+      // save state every render
+      vm.olmap.on(
+        "postrender",
+        global.debounce(
+          function () {
+            vm.saveState();
+          },
+          1000,
+          true,
+        ),
+      );
+      // TODO: Unused stateStore. Why?
+      //   var stateStore = localforage.getItem(
+      //     "sssStateStore",
+      //     function (err, value) {
+      //       if (value) {
+      //         vm.states = Object.keys(value);
+      //       }
+      //     },
+      //   );
+      exportStatus.phaseEnd("load_states");
+    });
+  },
+};
+</script>
