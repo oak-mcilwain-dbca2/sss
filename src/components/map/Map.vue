@@ -41,11 +41,11 @@
 </style>
 
 <script>
-import { getLayerId, getLayerUrl, isKbLayer } from "@/utils/layers";
+import { getLayerId, getLayerUrl, isKbLayer } from "@/utils";
 
-import ol from "ol";
+import * as ol from "ol";
 import proj4 from "proj4";
-import turf from "@turf/turf";
+import { bbox, buffer, point } from "@turf/turf";
 
 import gkInfo from "./Info.vue";
 import gkScales from "./Scales.vue";
@@ -3536,8 +3536,8 @@ export default {
           successCallback(null);
           return;
         }
-        var buffered = turf.bbox(
-          turf.buffer(turf.point(coordinate), buffers[index], "kilometers"),
+        var buffered = bbox(
+          buffer(point(coordinate), buffers[index], "kilometers"),
         );
         var townsiteLayerId = vm.env.townsitePointsLayer;
         var url = getLayerUrl(townsiteLayerId, vm.env);

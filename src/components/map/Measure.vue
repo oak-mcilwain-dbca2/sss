@@ -30,7 +30,7 @@
 </style>
 
 <script>
-import ol from "ol";
+import * as ol from "ol";
 
 export default {
   store: ["settings"],

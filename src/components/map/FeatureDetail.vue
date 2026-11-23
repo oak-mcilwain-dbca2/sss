@@ -7,7 +7,7 @@
 <script>
 // TODO: Does this need to be a component at all? Looks more like a service script
 // Consider moving to something like services/featureDetail.js
-import ol from "ol";
+import * as ol from "ol";
 
 import { getLayerUrl, getDetailLayerId } from "@utils";
 

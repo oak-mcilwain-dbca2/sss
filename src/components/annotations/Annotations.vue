@@ -226,49 +226,20 @@
   </div>
 </template>
 
-<style>
-.notecontent {
-  width: 100%;
-  height: 100px;
-  resize: both;
-  background-image: url("/static/dist/static/images/boxresize.svg");
-  background-repeat: no-repeat;
-  background-position: right bottom;
-}
-.canvaspane {
-  overflow: hidden;
-  width: 100px;
-  height: 40vh;
-}
-.row.resetmargin {
-  margin: 0px;
-}
-.resetmargin .small-6.rightmargin {
-  margin-right: 1px;
-}
-.resetmargin .small-6 {
-  margin-right: -1px;
-  padding-right: 1px;
-}
-.resetmargin .expanded.button {
-  margin-bottom: 2px;
-}
-.fa.red {
-  color: #b43232;
-}
-.pointshape {
-  padding-left: 5px;
-  padding-right: 5px;
-}
-</style>
-
 <script>
 // TODO: This component requires a full variable scope check (const/let/var) and refactoring to ES6 syntax.
 // It is currently using a mix of ES5 and ES6 syntax, which can lead to confusion and potential bugs.
 import { debounce } from "lodash-es";
 
-import ol from "ol";
-import turf from "@turf/turf";
+import * as ol from "ol";
+import {
+  intersect,
+  lineIntersect,
+  inside,
+  point,
+  polygon,
+  lineString,
+} from "@turf/turf";
 
 import gkDrawinglogs from "./DrawingLogs.vue";
 
@@ -310,9 +281,13 @@ var noteStyles = {
   },
 };
 
-const thick1Svg = "@/assets/images/thick-1.svg";
-const thick2Svg = "@/assets/images/thick-2.svg";
-const thick4Svg = "@/assets/images/thick-4.svg";
+import thick1Svg from "@/assets/images/thick-1.svg";
+import thick2Svg from "@/assets/images/thick-2.svg";
+import thick4Svg from "@/assets/images/thick-4.svg";
+
+import boxresizeSvg from "@/assets/images/boxresize.svg";
+
+import iDSpriteSvg from "@/assets/images/iD-sprite.svg";
 
 export default {
   store: {
@@ -327,6 +302,15 @@ export default {
     leftPanelHeadHeight: "layout.leftPanelHeadHeight",
   },
   components: { gkDrawinglogs },
+  setup() {
+    return {
+      thick1Svg,
+      thick2Svg,
+      thick4Svg,
+      boxresizeSvg,
+      iDSpriteSvg,
+    };
+  },
   data: function () {
     return {
       ui: {},
@@ -345,9 +329,6 @@ export default {
         colour: "#000000",
       },
       notes: {},
-      thick1Svg: thick1Svg,
-      thick2Svg: thick2Svg,
-      thick4Svg: thick4Svg,
       size: 2,
       colour: "#000000",
       colours: [
@@ -1036,20 +1017,17 @@ export default {
               }
             });
           } else if (geometry instanceof ol.geom.Polygon) {
-            isSelected = turf.intersect(
-              turf.polygon(geometry.getCoordinates()),
+            isSelected = intersect(
+              polygon(geometry.getCoordinates()),
               turfPolygon,
             );
           } else if (geometry instanceof ol.geom.LineString) {
-            isSelected = turf.lineIntersect(
-              turf.lineString(geometry.getCoordinates()),
+            isSelected = lineIntersect(
+              lineString(geometry.getCoordinates()),
               turfPolygon,
             );
           } else if (geometry instanceof ol.geom.Point) {
-            isSelected = turf.inside(
-              turf.point(geometry.getCoordinates()),
-              turfPolygon,
-            );
+            isSelected = inside(point(geometry.getCoordinates()), turfPolygon);
           } else {
             throw "Geometry not supported.";
           }
@@ -1106,7 +1084,7 @@ export default {
               var selectedFeatures = selectedFeatures_ || vm.selectedFeatures;
               try {
                 var extent = ev.element.getGeometry().getExtent();
-                var turfPolygon = turf.polygon(
+                var turfPolygon = polygon(
                   ev.element.getGeometry().getCoordinates(),
                 );
                 var multi = this.multi_ == undefined ? true : this.multi_;
@@ -2892,7 +2870,7 @@ export default {
 
     this.ui.defaultLine = {
       name: "Custom Line",
-      icon: "/static/dist/static/images/iD-sprite.svg#icon-line",
+      icon: `${iDSpriteSvg}#icon-line`,
       interactions: [this.linestringDrawFactory()],
       showName: true,
       scope: ["annotation"],
@@ -2911,7 +2889,7 @@ export default {
 
     this.ui.defaultPolygon = {
       name: "Custom Area",
-      icon: "/static/dist/static/images/iD-sprite.svg#icon-area",
+      icon: `${iDSpriteSvg}#icon-area`,
       interactions: [this.polygonDrawFactory()],
       showName: true,
       scope: ["annotation"],
@@ -3020,3 +2998,39 @@ export default {
   },
 };
 </script>
+
+<style>
+.notecontent {
+  width: 100%;
+  height: 100px;
+  resize: both;
+  background-image: url(boxresizeSvg);
+  background-repeat: no-repeat;
+  background-position: right bottom;
+}
+.canvaspane {
+  overflow: hidden;
+  width: 100px;
+  height: 40vh;
+}
+.row.resetmargin {
+  margin: 0px;
+}
+.resetmargin .small-6.rightmargin {
+  margin-right: 1px;
+}
+.resetmargin .small-6 {
+  margin-right: -1px;
+  padding-right: 1px;
+}
+.resetmargin .expanded.button {
+  margin-bottom: 2px;
+}
+.fa.red {
+  color: #b43232;
+}
+.pointshape {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+</style>

@@ -36,9 +36,9 @@
 </style>
 
 <script>
-import ol from "ol";
+import * as ol from "ol";
 
-import { getLayerUrl } from "@/utils/layers";
+import { getLayerUrl } from "@/utils";
 
 export default {
   store: ["resolutions"],

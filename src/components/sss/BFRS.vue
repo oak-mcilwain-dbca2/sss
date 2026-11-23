@@ -462,7 +462,7 @@
                       class="button tiny secondary float-right action"
                     >
                       <svg class="editicon">
-                        <use :href="iDSpriteSvg" />
+                        <use :href="`${iDSpriteSvg}#icon-area`" />
                       </svg>
                     </a>
                     <a
@@ -667,8 +667,8 @@ import { debounce } from "lodash-es";
 
 import Foundation from "foundation-sites";
 
-import ol from "ol";
-import turf from "@turf/turf";
+import * as ol from "ol";
+import { intersect, point, inside, buffer } from "@turf/turf";
 import {
   FeatureTask,
   getDateRange,
@@ -679,12 +679,12 @@ import {
 
 import hash from "object-hash";
 
-import { getLayerId, getLayerUrl } from "@/utils/layers";
+import { getLayerId, getLayerUrl } from "@/utils";
 
 import env from "@/config/env";
 
 import zoomToSelectedSvg from "@/assets/images/zoom-to-selected.svg";
-import iDSpriteSvg from "@/assets/images/iD-sprite.svg#icon-area";
+import iDSpriteSvg from "@/assets/images/iD-sprite.svg";
 import mergeSvg from "@/assets/images/merge.svg";
 
 import dashedOriginSvg from "/symbols/fire/dashed-origin.svg";
@@ -1682,8 +1682,8 @@ export default {
         //during checking, polygons are converted into turf polygon and cached in the local variable
         if (fireboundary && fireboundary.getPolygons().length === 1) {
           fireboundary = fireboundary.getCoordinates();
-          fireboundary[0] = turf.polygon(fireboundary[0]);
-          let kinks = turf.kinks(fireboundary[0]);
+          fireboundary[0] = polygon(fireboundary[0]);
+          let kinks = kinks(fireboundary[0]);
           if (kinks.features.length > 0) {
             feat.intersectionPoints = new ol.geom.MultiPoint(
               kinks.features.map(function (p) {
@@ -1698,7 +1698,7 @@ export default {
           //validate whether any existed polygons are intersect
           for (let index = 0; index < fireboundary.length; index++) {
             if (index === 0) {
-              fireboundary[index] = turf.polygon(fireboundary[index]);
+              fireboundary[index] = polygon(fireboundary[index]);
             }
             for (
               let index2 = index + 1;
@@ -1706,10 +1706,10 @@ export default {
               index2++
             ) {
               if (index === 0) {
-                fireboundary[index2] = turf.polygon(fireboundary[index2]);
+                fireboundary[index2] = polygon(fireboundary[index2]);
               }
               try {
-                checkResult = turf.intersect(
+                checkResult = intersect(
                   fireboundary[index],
                   fireboundary[index2],
                 );
@@ -1718,7 +1718,7 @@ export default {
                 if (
                   index === 0 &&
                   index2 === 1 &&
-                  (kinks = turf.kinks(fireboundary[index])).features.length > 0
+                  (kinks = kinks(fireboundary[index])).features.length > 0
                 ) {
                   feat.intersectionPoints = new ol.geom.MultiPoint(
                     kinks.features.map(function (p) {
@@ -1729,7 +1729,7 @@ export default {
                   throw "One or more fire boundaries are self intersecting, please remove self intersection";
                 } else if (
                   index === 0 &&
-                  (kinks = turf.kinks(fireboundary[index2])).features.length > 0
+                  (kinks = kinks(fireboundary[index2])).features.length > 0
                 ) {
                   feat.intersectionPoints = new ol.geom.MultiPoint(
                     kinks.features.map(function (p) {
@@ -1753,15 +1753,15 @@ export default {
 
         if (originPoint) {
           let inFireboundary = null;
-          originPoint = turf.point(originPoint.getCoordinates());
+          originPoint = point(originPoint.getCoordinates());
           //checking whether origin point is in a existing fireboundary
           if (fireboundary && fireboundary.length > 0) {
             inFireboundary = false;
             for (let index = 0; index < fireboundary.length; index++) {
               if (!convertedToTurf) {
-                fireboundary[index] = turf.polygon(fireboundary[index]);
+                fireboundary[index] = polygon(fireboundary[index]);
               }
-              if (turf.inside(originPoint, fireboundary[index])) {
+              if (inside(originPoint, fireboundary[index])) {
                 inFireboundary = true;
                 break;
               }
@@ -1775,7 +1775,7 @@ export default {
             polygonIndex === -1
           ) {
             inFireboundary = false;
-            if (turf.inside(originPoint, polygon)) {
+            if (inside(originPoint, polygon)) {
               inFireboundary = true;
             }
           }
@@ -3157,7 +3157,7 @@ export default {
 
           if (plantation_task && caller !== "showprogress") {
             plantation_task.setStatus(FeatureTask.RUNNING);
-            var point_buffer = turf.buffer(
+            var point_buffer = buffer(
               {
                 type: "Feature",
                 properties: {},

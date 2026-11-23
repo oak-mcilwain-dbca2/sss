@@ -207,13 +207,9 @@ div.ol-previewmap.ol-uncollapsible {
 <script>
 import env from "@/config/env";
 
-import ol from "ol";
+import * as ol from "ol";
 
-import {
-  getLayerId,
-  getIndependentLayerId,
-  checkPermission,
-} from "@/utils/layers";
+import { getLayerId, getIndependentLayerId, checkPermission } from "@/utils";
 
 // TODO: Discard if unused (looks unused)
 // Vue.filter("lessThan", function (value, length) {

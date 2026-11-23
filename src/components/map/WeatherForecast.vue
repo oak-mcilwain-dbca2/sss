@@ -13,7 +13,7 @@
 <style></style>
 
 <script>
-import ol from "ol";
+import * as ol from "ol";
 
 import { submitForm } from "@utils";
 

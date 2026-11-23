@@ -38,7 +38,7 @@
           </div>
           <div class="small-12" style="text-align: right">
             <img
-              :src="questionMark"
+              :src="questionMarkPng"
               style="height: 32px; width: 32px"
               @click="systemsetting.toggleShowHints()"
             />
@@ -50,7 +50,7 @@
           <li class="tabs-title side-button is-active" menu="layers">
             <a href="#menu-tab-layers" title="Map Layers">
               <svg class="icon">
-                <use :href="`${spriteUrl}#icon-layers`" />
+                <use :href="`${spriteUrlSvg}#icon-layers`" />
               </svg>
             </a>
           </li>
@@ -98,8 +98,8 @@ import gkSettings from "@/components/settings/Settings.vue";
 import gkBfrs from "@/components/sss/BFRS.vue";
 import gkDialog from "@/components/dialog/Dialog.vue";
 
-import questionMark from "@/assets/images/question-mark.png";
-import spriteUrl from "@/assets/images/iD-sprite.svg";
+import questionMarkPng from "@/assets/images/question-mark.png";
+import spriteUrlSvg from "@/assets/images/iD-sprite.svg";
 
 export default {
   store: {
@@ -118,11 +118,8 @@ export default {
     gkBfrs,
     gkDialog,
   },
-  data: function () {
-    return {
-      spriteUrl: spriteUrl,
-      questionMark: questionMark,
-    };
+  setup() {
+    (questionMarkPng, spriteUrlSvg);
   },
   computed: {
     layers: function () {

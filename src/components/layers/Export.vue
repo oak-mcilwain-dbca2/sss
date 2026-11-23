@@ -390,12 +390,12 @@ import hash from "object-hash";
 import kjua from "kjua";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
-import ol from "ol";
+import * as ol from "ol";
 
 import gkLegend from "./Legend.vue";
 import gkLayerlegends from "./LayerLegends.vue";
 
-import mapDisclaimerSvg from "@/assets/iamges/map-disclaimer.svg";
+import mapDisclaimerSvg from "@/assets/images/map-disclaimer.svg";
 
 export default {
   store: {

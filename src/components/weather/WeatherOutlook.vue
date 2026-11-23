@@ -490,7 +490,7 @@
 <script>
 import { saveAs } from "file-saver";
 
-import ol from "ol";
+import * as ol from "ol";
 
 import { getDatetimes, submitForm } from "@utils";
 

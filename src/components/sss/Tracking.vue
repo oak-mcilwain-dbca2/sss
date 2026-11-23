@@ -454,7 +454,7 @@ class="expanded secondary button" :class="{'selected': t.name == annotations.too
 <script>
 import { debounce } from "lodash-es";
 
-import ol from "ol";
+import * as ol from "ol";
 
 import { editResource, getDateRange, nextDate, checkPermission } from "@utils";
 

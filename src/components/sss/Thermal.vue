@@ -323,7 +323,7 @@
 <script>
 import { debounce } from "lodash-es";
 
-import ol from "ol";
+import * as ol from "ol";
 
 import { getDateRange } from "@utils";
 

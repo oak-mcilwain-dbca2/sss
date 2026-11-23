@@ -82,24 +82,24 @@
 </style>
 
 <script>
-import ol from "ol";
+import * as ol from "ol";
 
 import env from "@/config/env";
 
-import toolBox from "@/assets/images/toolbox.png";
+import toolBoxSvg from "@/assets/images/toolbox.svg";
 import nonToolSvg from "@/assets/images/non-tool.svg";
 
 export default {
   store: {},
   setup() {
     return {
-      toolBox,
+      toolBoxSvg,
       nonToolSvg,
     };
   },
   data: function () {
     return {
-      toolBox: toolBox,
+      toolBox: toolBoxSvg,
       tool: {},
       tools: [],
       showTools: false,
