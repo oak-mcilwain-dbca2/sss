@@ -19,9 +19,18 @@ import { submitForm } from "@utils";
 
 import env from "@/config/env";
 
+import weatherForecastSvg from "@/assets/images/weather-forecast.svg";
+import pinSvg from "@/assets/images/pin.svg";
+
 export default {
   store: {
     whoami: "whoami",
+  },
+  setup() {
+    return {
+      weatherForecastSvg,
+      pinSvg,
+    };
   },
   data: function () {
     return {
@@ -30,7 +39,7 @@ export default {
         {
           toolid: "incident-weather-forecast",
           title: "Incident Weather Forecast",
-          icon: "/static/dist/static/images/weather-forecast.svg",
+          icon: weatherForecastSvg,
         },
       ],
     };
@@ -163,7 +172,7 @@ export default {
       });
       vm._style = new ol.style.Style({
         image: new ol.style.Icon({
-          src: "/static/dist/static/images/pin.svg",
+          src: pinSvg,
           anchorOrigin: "bottom-left",
           anchorXUnits: "pixels",
           anchorYUnits: "pixels",

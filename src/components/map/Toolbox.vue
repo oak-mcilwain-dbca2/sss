@@ -87,7 +87,7 @@ import ol from "ol";
 import env from "@/config/env";
 
 import toolBox from "@/assets/images/toolbox.png";
-import nonToolSvg from "@assets/non-tool.svg";
+import nonToolSvg from "@/assets/images/non-tool.svg";
 
 export default {
   store: {},

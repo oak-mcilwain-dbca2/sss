@@ -365,38 +365,14 @@ export default {
       tints: {},
       pointShapes: [
         // point image url, point title, [border colur,filling colour]
+        ["/symbols/points/circle.svg", "Circle", [null, "#000000"]],
+        ["/symbols/points/square.svg", "Square", [null, "#000000"]],
+        ["/symbols/points/triangle.svg", "Triangle", [null, "#000000"]],
+        ["/symbols/points/star.svg", "Star", [null, "#000000"]],
+        ["/symbols/points/plus.svg", "Plus", [null, "#000000"]],
+        ["/symbols/points/minus.svg", "Minus", [null, "#000000"]],
         [
-          "/static/dist/static/symbols/points/circle.svg",
-          "Circle",
-          [null, "#000000"],
-        ],
-        [
-          "/static/dist/static/symbols/points/square.svg",
-          "Square",
-          [null, "#000000"],
-        ],
-        [
-          "/static/dist/static/symbols/points/triangle.svg",
-          "Triangle",
-          [null, "#000000"],
-        ],
-        [
-          "/static/dist/static/symbols/points/star.svg",
-          "Star",
-          [null, "#000000"],
-        ],
-        [
-          "/static/dist/static/symbols/points/plus.svg",
-          "Plus",
-          [null, "#000000"],
-        ],
-        [
-          "/static/dist/static/symbols/points/minus.svg",
-          "Minus",
-          [null, "#000000"],
-        ],
-        [
-          "/static/dist/static/symbols/points/Fire_Advice.svg",
+          "/symbols/points/Fire_Advice.svg",
           "FireAdvice",
           ["#000000", "#000000"],
         ],
@@ -2393,7 +2369,7 @@ export default {
         //draw typeSymbol along the line.
         //does not support geometry select mode
 
-        //f['typeIconStyle'] = '["/static/dist/static/symbols/fire/plus.svg","default",[20,20]]'
+        //f['typeIconStyle'] = '["/symbols/fire/plus.svg","default",[20,20]]'
         if (f["typeIconStyle"]) {
           var diffs =
             vm.map.getScale() / f["typeIconMetadata"]["points"]["scale"];
@@ -2852,7 +2828,7 @@ export default {
           //  console.log(vm.features);
           return vm._pointShapesMap[feature.get("shape")][0];
         } else {
-          return "/static/dist/static/symbols/fire/custom_point.svg";
+          return "/symbols/fire/custom_point.svg";
         }
       },
       interactions: [this.pointDrawFactory()],

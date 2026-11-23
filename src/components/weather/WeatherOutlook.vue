@@ -494,6 +494,11 @@ import ol from "ol";
 
 import { getDatetimes, submitForm } from "@utils";
 
+import pinSvg from "@/assets/images/pin.svg";
+import weatherOutlookDefaultSvg from "@/assets/images/weather-outlook-default.svg";
+import weatherOutlookCustomizedSvg from "@/assets/images/weather-outlook-customized.svg";
+import weatherOutlookAmicusSvg from "@/assets/images/weather-outlook-amicus.svg";
+
 export default {
   store: {
     outlookSettings: "settings.weatheroutlook",
@@ -501,6 +506,14 @@ export default {
     leftPanelHeadHeight: "layout.leftPanelHeadHeight",
     activeMenu: "activeMenu",
     activeSubmenu: "activeSubmenu",
+  },
+  setup() {
+    return {
+      pinSvg,
+      weatherOutlookDefaultSvg,
+      weatherOutlookCustomizedSvg,
+      weatherOutlookAmicusSvg,
+    };
   },
   data: function () {
     return {
@@ -520,19 +533,19 @@ export default {
         {
           toolid: "weather-outlook-default",
           title: "Default 4 Day Weather Outlook",
-          icon: "/static/dist/static/images/weather-outlook-default.svg",
+          icon: weatherOutlookDefaultSvg,
           fixed_columns: true,
         },
         {
           toolid: "weather-outlook-customized",
           title: "Customized Weather Outlook",
-          icon: "/static/dist/static/images/weather-outlook-customized.svg",
+          icon: weatherOutlookCustomizedSvg,
           fixed_columns: false,
         },
         {
           toolid: "weather-outlook-amicus",
           title: "Weather Outlook Amicus Export",
-          icon: "/static/dist/static/images/weather-outlook-amicus.svg",
+          icon: weatherOutlookAmicusSvg,
           fixed_columns: true,
         },
       ],
@@ -2115,7 +2128,7 @@ export default {
     });
     this._style = new ol.style.Style({
       image: new ol.style.Icon({
-        src: "/static/dist/static/images/pin.svg",
+        src: pinSvg,
         anchorOrigin: "bottom-left",
         anchorXUnits: "pixels",
         anchorYUnits: "pixels",

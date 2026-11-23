@@ -684,8 +684,11 @@ import { getLayerId, getLayerUrl } from "@/utils/layers";
 import env from "@/config/env";
 
 import zoomToSelectedSvg from "@/assets/images/zoom-to-selected.svg";
-import iDSpriteSvg from "@assets/images/iD-sprite.svg#icon-area";
-import mergeSvg from "@assets/images/merge.svg";
+import iDSpriteSvg from "@/assets/images/iD-sprite.svg#icon-area";
+import mergeSvg from "@/assets/images/merge.svg";
+
+import dashedOriginSvg from "/symbols/fire/dashed-origin.svg";
+import originSvg from "/symbols/fire/origin.svg";
 
 export default {
   store: {
@@ -703,6 +706,8 @@ export default {
       zoomToSelectedSvg,
       iDSpriteSvg,
       mergeSvg,
+      dashedOriginSvg,
+      origin,
     };
   },
   data: function () {
@@ -3549,7 +3554,7 @@ export default {
         feat.get("fire_detected_date") || feat.get("created"),
         true,
       );
-      feat.icon = "/static/dist/static/symbols/fire/dashed-origin.svg";
+      feat.icon = dashedOriginSvg;
 
       vm._insertNewFeature =
         vm._insertNewFeature ||
@@ -3969,7 +3974,7 @@ export default {
         (feature.get("status") === "merged" &&
           feature.get("linked_bushfire_status") === 1)
       ) {
-        feature.icon = "/static/dist/static/symbols/fire/dashed-origin.svg";
+        feature.icon = dashedOriginSvg;
       }
     },
 
@@ -6854,7 +6859,7 @@ export default {
       {
         name: "Bfrs Origin Point",
         label: "Add Bushfire",
-        icon: "/static/dist/static/symbols/fire/origin.svg",
+        icon: originSvg,
         tints: vm.tints,
         selectedFillColour: [0, 0, 0, 0.25],
         fillColour: [0, 0, 0, 0.25],

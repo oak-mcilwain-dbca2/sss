@@ -7,12 +7,25 @@
 <script>
 // TODO: Does this need to be a component at all? Looks more like a service script
 // Consider moving to something like services/featureDetail.js
-import { ol, $, utils } from "src/vendor.js";
+import ol from "ol";
 
 import { getLayerUrl, getDetailLayerId } from "@utils";
 
+import featureInfoSvg from "@/assets/images/feature_info.svg";
+import previousSvg from "@/assets/images/previous.svg";
+import nextSvg from "@/assets/images/next.svg";
+
+const icons = import.meta.glob("@/assets/images/*.svg", {
+  eager: true,
+  import: "default",
+});
+
 export default {
-  store: {},
+  setup() {
+    return {
+      featureInfoSvg,
+    };
+  },
   data: function () {
     return {
       layer: {},
@@ -184,10 +197,8 @@ export default {
             return o.name === "detail_link" || o.name === "detail_dialog";
           })
         ) {
-          layer.icon =
-            "/static/dist/static/images/" +
-            layer.id.replace(":", "-").toLowerCase() +
-            ".png";
+          const iconName = layer.id.replace(":", "-").toLowerCase() + ".svg";
+          layer.icon = icons[`/src/assets/images/${iconName}`];
           layer.title = layer.name || layer.id;
           layer.toolid = "feauterdetail-" + layer.id.replace(":", "-");
           vm.layers.splice(0, 0, layer);
@@ -195,7 +206,7 @@ export default {
       });
       vm._featureinfo_layer = {
         id: null,
-        icon: "/static/dist/static/images/feature_info.svg",
+        icon: featureInfoSvg,
         title: "Identity Tool",
         toolid: "featuredetail-vectorlayer-top",
       };
@@ -287,7 +298,7 @@ export default {
                     })
                   ) {
                     if (response.features[0].properties["url"]) {
-                      utils.editResource(
+                      editResource(
                         browserEvent,
                         null,
                         response.features[0].properties["url"],
@@ -364,7 +375,7 @@ export default {
                         [
                           ["", 4],
                           [
-                            "/static/dist/static/images/previous.svg",
+                            previousSvg,
                             1,
                             {
                               type: "img",
@@ -383,7 +394,7 @@ export default {
                             },
                           ],
                           [
-                            "/static/dist/static/images/next.svg",
+                            nextSvg,
                             1,
                             {
                               type: "img",

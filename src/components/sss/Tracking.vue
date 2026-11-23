@@ -460,6 +460,11 @@ import { editResource, getDateRange, nextDate, checkPermission } from "@utils";
 
 import env from "@/config/env";
 
+import directionSvg from "/symbols/device/direction.svg";
+import externalDSvg from "/symbols/device/external_d.svg";
+import dfesGenericSvg from "/symbols/device/dfes_generic.svg";
+import externalESvg from "/symbols/device/external_e.svg";
+
 export default {
   store: {
     resourceLabels: "settings.resourceLabels",
@@ -470,6 +475,9 @@ export default {
     leftPanelHeadHeight: "layout.leftPanelHeadHeight",
     activeMenu: "activeMenu",
     whoami: "whoami",
+  },
+  setup() {
+    (directionSvg, externalDSvg, dfesGenericSvg, externalESvg);
   },
   data: function () {
     var fill = "#ff6600";
@@ -1305,7 +1313,7 @@ export default {
               vm.styleWithDirection = style.concat([
                 new ol.style.Style({
                   image: new ol.style.Icon({
-                    src: "/static/dist/static/symbols/device/direction.svg",
+                    src: directionSvg,
                     scale: 1,
                     snapToPixel: true,
                   }),
@@ -1365,31 +1373,15 @@ export default {
           tint = "green";
         }
         if (f.get("source_device_type") === "dfes") {
-          f.set(
-            "icon",
-            [
-              "/static/dist/static/symbols/device/external_d.svg",
-              "/static/dist/static/symbols/device/dfes_generic.svg",
-            ],
-            true,
-          );
+          f.set("icon", [externalDSvg, dfesGenericSvg], true);
         } else if (f.get("source_device_type") === "tracplus") {
           f.set(
             "icon",
-            [
-              "/static/dist/static/symbols/device/external_e.svg",
-              "/static/dist/static/symbols/device/" +
-                f.get("symbolid") +
-                ".svg",
-            ],
+            [externalESvg, "/symbols/device/" + f.get("symbolid") + ".svg"],
             true,
           );
         } else {
-          f.set(
-            "icon",
-            "/static/dist/static/symbols/device/" + f.get("symbolid") + ".svg",
-            true,
-          );
+          f.set("icon", "/symbols/device/" + f.get("symbolid") + ".svg", true);
         }
         f.set("tint", tint, true);
         f.set("originalTint", tint, true);
