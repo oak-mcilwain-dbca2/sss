@@ -207,6 +207,8 @@ div.ol-previewmap.ol-uncollapsible {
 <script>
 import { $, ol, Vue, utils } from "src/vendor.js";
 
+import env from "@/config/env";
+
 import { getLayerId, getIndependentLayerId } from "@/utils/layers";
 
 Vue.filter("lessThan", function (value, length) {
@@ -445,7 +447,7 @@ export default {
             // i += 1;
           }
           l.systemid = l.id;
-          l.id = getIndependentLayerId(l.identifier);
+          l.id = getIndependentLayerId(l.identifier, env);
           // add the base flag for layers tagged 'basemap'
           l.base = l.tags.some(function (t) {
             return t.name === "basemap";
