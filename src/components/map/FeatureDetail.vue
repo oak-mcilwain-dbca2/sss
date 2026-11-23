@@ -7,9 +7,10 @@
 <script>
 // TODO: Does this need to be a component at all? Looks more like a service script
 // Consider moving to something like services/featureDetail.js
-import * as ol from "ol";
 
 import Interaction from "ol/interaction/Interaction";
+
+import { click } from "ol/events/condition";
 
 import env from "@/config/env";
 

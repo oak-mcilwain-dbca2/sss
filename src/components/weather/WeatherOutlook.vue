@@ -490,9 +490,10 @@
 <script>
 import { saveAs } from "file-saver";
 
-import * as ol from "ol";
-
 import Draw from "ol/interaction/Draw";
+
+import Collection from "ol/Collection";
+import Feature from "ol/Feature";
 
 import Style from "ol/style/Style";
 import Icon from "ol/style/Icon";

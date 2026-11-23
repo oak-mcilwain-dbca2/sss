@@ -323,7 +323,16 @@
 <script>
 import { debounce } from "lodash-es";
 
-import * as ol from "ol";
+import Collection from "ol/Collection";
+
+import Style from "ol/style/Style";
+import Fill from "ol/style/Fill";
+import Stroke from "ol/style/Stroke";
+import Circle from "ol/style/Circle";
+
+import { extend } from "ol/extent";
+
+import { containsCoordinate } from "ol/extent";
 
 import { getDateRange } from "@/utils";
 

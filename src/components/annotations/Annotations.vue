@@ -232,8 +232,6 @@
 // It is currently using a mix of ES5 and ES6 syntax, which can lead to confusion and potential bugs.
 import { debounce } from "lodash-es";
 
-import * as ol from "ol";
-
 import EventType from "ol/events/EventType";
 
 import Collection from "ol/Collection";

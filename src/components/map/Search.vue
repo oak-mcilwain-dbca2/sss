@@ -37,16 +37,23 @@
 
 <script>
 import Feature from "ol/Feature";
+import Collection from "ol/Collection";
+
+import Point from "ol/geom/Point";
 
 import Control from "ol/control/Control";
 
 import Style from "ol/style/Style";
 import Fill from "ol/style/Fill";
 import Stroke from "ol/style/Stroke";
+import Circle from "ol/style/Circle";
+
+import VectorSource from "ol/source/Vector";
+import VectorLayer from "ol/layer/Vector";
+
+import { containsCoordinate } from "ol/extent";
 
 import { getLayerUrl } from "@/utils";
-
-import Point from "ol/geom/Point";
 
 export default {
   store: ["resolutions"],
@@ -286,7 +293,7 @@ export default {
 
     this.style = function (feature) {
       return new Style({
-        image: new style.Circle({
+        image: new Circle({
           radius: 5,
           fill: new Fill({
             color: "rgb(255, 255, 255)",
@@ -296,7 +303,7 @@ export default {
             color: "rgb(114, 193, 0)",
           }),
         }),
-        text: new style.Text({
+        text: new Text({
           offsetX: 12,
           text: feature.get("name"),
           textAlign: "left",
@@ -310,10 +317,10 @@ export default {
     };
 
     this.features = new Collection();
-    this.source = new source.Vector({
+    this.source = new VectorSource({
       features: this.features,
     });
-    this.overlay = new Vector({
+    this.overlay = new VectorLayer({
       source: this.source,
       style: this.style,
     });

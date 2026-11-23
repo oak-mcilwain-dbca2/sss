@@ -669,7 +669,8 @@ import { debounce } from "lodash-es";
 
 import Foundation from "foundation-sites";
 
-import * as ol from "ol";
+import Collection from "ol/Collection";
+import Feature from "ol/Feature";
 
 import Point from "ol/geom/Point";
 import MultiPoint from "ol/geom/MultiPoint";
@@ -678,6 +679,16 @@ import LineString from "ol/geom/LineString";
 import MultiLineString from "ol/geom/MultiLineString";
 import MultiPolygon from "ol/geom/MultiPolygon";
 import GeometryCollection from "ol/geom/GeometryCollection";
+
+import { extend } from "ol/extent";
+
+import Style from "ol/style/Style";
+import Fill from "ol/style/Fill";
+import Circle from "ol/style/Circle";
+
+import { singleClick, shiftKeyOnly, noModifierKeys } from "ol/events/condition";
+
+import { containsCoordinate } from "ol/extent";
 
 import { intersect, point, booleanPointInPolygon, buffer } from "@turf/turf";
 import {
@@ -925,7 +936,7 @@ export default {
         if (boundaryStyle && feat.intersectionPoints) {
           selfIntersectionStyle = new Style({
             geometry: feat.intersectionPoints,
-            image: new style.Circle({
+            image: new Circle({
               fill: new Fill({
                 color: [255, 0, 0],
               }),
@@ -6893,16 +6904,16 @@ export default {
     });
 
     vm.ui.modifyTool = vm.annotations.tools.find(function (tool) {
-      return toname === "Bfrs Edit Geometry";
+      return tool.name === "Bfrs Edit Geometry";
     });
     vm.ui.originPointTool = vm.annotations.tools.find(function (tool) {
-      return toname === "Bfrs Origin Point";
+      return tool.name === "Bfrs Origin Point";
     });
     vm.ui.panTool = vm.annotations.tools.find(function (tool) {
-      return toname === "Pan";
+      return tool.name === "Pan";
     });
     vm.ui.selectTool = vm.annotations.tools.find(function (tool) {
-      return toname === "Bfrs Select";
+      return tool.name === "Bfrs Select";
     });
 
     this.$root.fixedLayers.push({
