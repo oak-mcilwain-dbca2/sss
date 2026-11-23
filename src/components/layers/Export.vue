@@ -313,11 +313,7 @@
         <gk-legend></gk-legend>
       </div>
 
-      <img
-        id="map-disclaimer"
-        class="hide"
-        src="/static/dist/static/images/map-disclaimer.svg"
-      />
+      <img id="map-disclaimer" class="hide" :src="mapDisclaimerSvg" />
 
       <gk-layerlegends v-ref:layerlegends></gk-layerlegends>
     </div>
@@ -399,6 +395,8 @@ import ol from "ol";
 import gkLegend from "./Legend.vue";
 import gkLayerlegends from "./LayerLegends.vue";
 
+import mapDisclaimerSvg from "@/assets/iamges/map-disclaimer.svg";
+
 export default {
   store: {
     whoami: "whoami",
@@ -414,6 +412,11 @@ export default {
     leftPanelHeadHeight: "layout.leftPanelHeadHeight",
   },
   components: { gkLegend, gkLayerlegends },
+  setup() {
+    return {
+      mapDisclaimerSvg,
+    };
+  },
   data: function () {
     return {
       spatialInfo: {},
