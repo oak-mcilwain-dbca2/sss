@@ -15,6 +15,8 @@
 <script>
 import * as ol from "ol";
 
+import Draw from "ol/interactions/Draw";
+
 import Point from "ol/geom/Point";
 
 import { submitForm } from "@/utils";
@@ -188,7 +190,7 @@ export default {
       });
 
       //initialize the overlay and interactions
-      var weatherforecastInter = new ol.interaction.Draw({
+      var weatherforecastInter = new Draw({
         source: vm._source,
         type: "Point",
         style: vm._style,

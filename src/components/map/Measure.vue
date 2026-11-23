@@ -507,21 +507,18 @@ export default {
         ) {
           if (!tooltipElement) {
             return measurement;
-          } else if (
-            geom instanceof ol.geom.LineString ||
-            geom instanceof ol.geom.Polygon
-          ) {
+          } else if (geom instanceof LineString || geom instanceof Polygon) {
             if (
-              (geom instanceof ol.geom.LineString &&
+              (geom instanceof LineString &&
                 (measureLength || measureBearing)) ||
-              (geom instanceof ol.geom.Polygon && measureLength)
+              (geom instanceof Polygon && measureLength)
             ) {
               measurement = measurement || {};
               var length = null;
               if (!measurement["length"] || mode === "drawing") {
-                if (geom instanceof ol.geom.LineString) {
+                if (geom instanceof LineString) {
                   length = vm.getLength(geom.getCoordinates());
-                } else if (geom instanceof ol.geom.Polygon) {
+                } else if (geom instanceof Polygon) {
                   length = vm.getLength(geom.getLinearRing(0).getCoordinates());
                 }
                 measurement["length"] = length;
@@ -532,7 +529,7 @@ export default {
                 tooltipElement.find(".length").html(vm.formatLength(length));
               }
             }
-            if (measureArea && geom instanceof ol.geom.Polygon) {
+            if (measureArea && geom instanceof Polygon) {
               measurement = measurement || {};
               var area;
               if (!measurement["area"] || mode === "drawing") {
@@ -548,7 +545,7 @@ export default {
               }
               tooltipElement.find(".area").html(vm.formatArea(area));
             }
-            if (measureBearing && geom instanceof ol.geom.LineString) {
+            if (measureBearing && geom instanceof LineString) {
               measurement = measurement || {};
               var bearing;
               if (!measurement["bearing"] || mode === "drawing") {
@@ -578,9 +575,9 @@ export default {
             }
             if (mode === "drawing" || mode === "show" || mode === "measure") {
               var tooltipCoord = null;
-              if (geom instanceof ol.geom.Polygon) {
+              if (geom instanceof Polygon) {
                 tooltipCoord = geom.getInteriorPoint().getCoordinates();
-              } else if (geom instanceof ol.geom.LineString) {
+              } else if (geom instanceof LineString) {
                 if (measureBearing) {
                   tooltipCoord = geom.getCoordinateAt(0.5);
                 } else {
@@ -602,7 +599,7 @@ export default {
             }
             return measurement;
           } else if (
-            geom instanceof ol.geom.MultiPolygon &&
+            geom instanceof MultiPolygon &&
             (measureLength || measureArea)
           ) {
             measurement = measurement || [];
@@ -637,7 +634,7 @@ export default {
             });
             return measurement;
           } else if (
-            geom instanceof ol.geom.MultiLineString &&
+            geom instanceof MultiLineString &&
             (measureLength || measureBearing)
           ) {
             measurement = measurement || [];
@@ -672,7 +669,7 @@ export default {
             });
             return measurement;
           } else if (
-            geom instanceof ol.geom.GeometryCollection &&
+            geom instanceof GeometryCollection &&
             (measureLength || measureBearing || measureArea)
           ) {
             measurement = measurement || [];
@@ -731,12 +728,12 @@ export default {
         measurement.splice(
           indexes[indexes.length - 1],
           0,
-          geom instanceof ol.geom.GeometryCollection ||
-            geom instanceof ol.geom.MultiPoint ||
-            geom instanceof ol.geom.MultiLineString ||
-            geom instanceof ol.geom.MultiPolygon
+          geom instanceof GeometryCollection ||
+            geom instanceof MultiPoint ||
+            geom instanceof MultiLineString ||
+            geom instanceof MultiPolygon
             ? []
-            : geom instanceof ol.geom.Point
+            : geom instanceof Point
               ? null
               : {},
         );
@@ -922,21 +919,20 @@ export default {
       this._createTooltipElement =
         this._createTooltipElement ||
         function (geom, measureLength, measureArea, measureBearing) {
-          if (geom instanceof ol.geom.Point) {
+          if (geom instanceof Point) {
             return null;
           } else if (
-            (geom instanceof ol.geom.LineString &&
-              (measureLength || measureBearing)) ||
-            (geom instanceof ol.geom.Polygon && (measureLength || measureArea))
+            (geom instanceof LineString && (measureLength || measureBearing)) ||
+            (geom instanceof Polygon && (measureLength || measureArea))
           ) {
             var measureTooltipElement = $("<div></div>");
             if (measureLength) {
               measureTooltipElement.append("<div class='length'></div>");
             }
-            if (measureArea && geom instanceof ol.geom.Polygon) {
+            if (measureArea && geom instanceof Polygon) {
               measureTooltipElement.append("<div class='area'></div>");
             }
-            if (measureBearing && geom instanceof ol.geom.LineString) {
+            if (measureBearing && geom instanceof LineString) {
               measureTooltipElement.append(
                 "<div class='bearing' style='white-space:pre;'></div>",
               );
@@ -947,7 +943,7 @@ export default {
 
             return measureTooltipElement;
           } else if (
-            geom instanceof ol.geom.MultiLineString &&
+            geom instanceof MultiLineString &&
             (measureLength || measureBearing)
           ) {
             var elements = [];
@@ -963,7 +959,7 @@ export default {
             });
             return elements;
           } else if (
-            geom instanceof ol.geom.MultiPolygon &&
+            geom instanceof MultiPolygon &&
             (measureLength || measureArea)
           ) {
             elements = [];
@@ -979,7 +975,7 @@ export default {
             });
             return elements;
           } else if (
-            geom instanceof ol.geom.GeometryCollection &&
+            geom instanceof GeometryCollection &&
             (measureLength || measureArea || measureBearing)
           ) {
             elements = [];
@@ -1156,7 +1152,7 @@ export default {
       var area = 0;
 
       function calculateArea(coordinates) {
-        const polygon = new ol.geom.Polygon([coordinates]);
+        const polygon = new Polygon([coordinates]);
         // TODO: Why
         // const transformedPolygon = polygon.transform("EPSG:4326", "EPSG:3857");
         return Math.abs(ol.sphere.getArea(polygon));
@@ -1184,13 +1180,13 @@ export default {
     getTotalArea: function (geom) {
       var area = 0;
       var vm = this;
-      if (geom instanceof ol.geom.Polygon) {
+      if (geom instanceof Polygon) {
         area = this.getArea(geom);
-      } else if (geom instanceof ol.geom.MultiPolygon) {
+      } else if (geom instanceof MultiPolygon) {
         $.each(geom.getPolygons(), function (index, p) {
           area += vm.getArea(p);
         });
-      } else if (geom instanceof ol.geom.GeometryCollection) {
+      } else if (geom instanceof GeometryCollection) {
         $.each(geom.getGeometriesArray(), function (index, g) {
           area += vm.getTotalArea(g);
         });
@@ -1220,19 +1216,19 @@ export default {
     },
     getTotalLength: function (geom) {
       var length = 0;
-      if (geom instanceof ol.geom.Polygon) {
+      if (geom instanceof Polygon) {
         length = this.getLength(geom.getCoordinates());
-      } else if (geom instanceof ol.geom.LineString) {
+      } else if (geom instanceof LineString) {
         length = this.getLength(geom.getCoordinates());
-      } else if (geom instanceof ol.geom.MultiPolygon) {
+      } else if (geom instanceof MultiPolygon) {
         $.each(geom.getPolygons(), function (index, p) {
           length += this.getLength(p.getCoordinates());
         });
-      } else if (geom instanceof ol.geom.MultiLineString) {
+      } else if (geom instanceof MultiLineString) {
         $.each(geom.getLineStrings(), function (index, l) {
           length += this.getLength(l.getCoordinates());
         });
-      } else if (geom instanceof ol.geom.GeometryCollection) {
+      } else if (geom instanceof GeometryCollection) {
         $.each(geom.getGeometriesArray(), function (index, g) {
           length += this.getTotalLength(g);
         });
@@ -1456,11 +1452,11 @@ export default {
       style: this.style,
     });
 
-    var measureSnap = new ol.interaction.Snap({
+    var measureSnap = new Snap({
       features: vm.annotations.features,
     });
 
-    var measureLengthInter = new ol.interaction.Draw({
+    var measureLengthInter = new Draw({
       source: this.source,
       type: "LineString",
       style: this.style,
@@ -1491,7 +1487,7 @@ export default {
     };
     this.annotations.tools.push(measureLength);
 
-    var measureBearingInter = new ol.interaction.Draw({
+    var measureBearingInter = new Draw({
       source: this.source,
       type: "LineString",
       style: this.style,
@@ -1521,7 +1517,7 @@ export default {
     };
     this.annotations.tools.push(measureBearing);
 
-    var measureAreaInter = new ol.interaction.Draw({
+    var measureAreaInter = new Draw({
       source: this.source,
       type: "Polygon",
       style: this.style,
@@ -1732,13 +1728,13 @@ export default {
                 return o === interaction;
               })
             ) {
-              if (interaction instanceof ol.interaction.Modify) {
+              if (interaction instanceof Modify) {
                 //console.log('===================')
                 interaction.on("featuresmodified", featuresChangedListener);
-              } else if (interaction instanceof ol.interaction.Translate) {
+              } else if (interaction instanceof Translate) {
                 interaction.on("translateend", featuresChangedListener);
               } else if (
-                interaction instanceof ol.interaction.Draw &&
+                interaction instanceof Draw &&
                 interaction.events &&
                 interaction.events["addfeaturegeometry"]
               ) {

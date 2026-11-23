@@ -456,6 +456,9 @@ import { debounce } from "lodash-es";
 
 import * as ol from "ol";
 
+import Point from "ol/geom/Point";
+import LineString from "ol/geom/LineString";
+
 import { editResource, getDateRange, nextDate, checkPermission } from "@/utils";
 
 import env from "@/config/env";
@@ -1590,7 +1593,7 @@ export default {
         id: env.resourceTrackingHistoryLayer,
         onadd: (function (addResource) {
           return function (f) {
-            if (f.getGeometry() instanceof ol.geom.Point) {
+            if (f.getGeometry() instanceof Point) {
               addResource(f);
             }
           };
@@ -1601,7 +1604,7 @@ export default {
         ),
         cql_filter: false,
         getFeatureInfo: function (f) {
-          if (f.getGeometry() instanceof ol.geom.Point) {
+          if (f.getGeometry() instanceof Point) {
             var name = deviceLabel(f);
             var extra_device_label = deviceExtraHoverLabel(f);
             return {
@@ -1658,7 +1661,7 @@ export default {
               startTime: moment(
                 devices[device][devices[device].length - 1].get("seen"),
               ).format("MMM DD HH:mm"),
-              geometry: new ol.geom.LineString(coords),
+              geometry: new LineString(coords),
             });
             vectorSource.addFeature(feature);
           });

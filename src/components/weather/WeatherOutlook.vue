@@ -492,6 +492,8 @@ import { saveAs } from "file-saver";
 
 import * as ol from "ol";
 
+import Draw from "ol/interactions/Draw";
+
 import Point from "ol/geom/Point";
 
 import { getDatetimes, submitForm } from "@/utils";
@@ -2144,7 +2146,7 @@ export default {
     });
 
     //initialize the overlay and interactions
-    var weatheroutlookInter = new ol.interaction.Draw({
+    var weatheroutlookInter = new Draw({
       source: this._source,
       type: "Point",
       style: this._style,

@@ -234,6 +234,20 @@ import { debounce } from "lodash-es";
 import * as ol from "ol";
 
 import Point from "ol/geom/Point";
+import MultiPoint from "ol/geom/MultiPoint";
+import Polygon from "ol/geom/Polygon";
+import LineString from "ol/geom/LineString";
+import MultiLineString from "ol/geom/MultiLineString";
+import MultiPolygon from "ol/geom/MultiPolygon";
+import GeometryCollection from "ol/geom/GeometryCollection";
+
+import Snap from "ol/interactions/Snap";
+import Draw from "ol/interactions/Draw";
+import Translate from "ol/interactions/Translate";
+import DragBox from "ol/interactions/DragBox";
+import Select from "ol/interactions/Select";
+import Interaction from "ol/interactions/Interaction";
+import Modify from "ol/interactions/Modify";
 
 import {
   intersect,
@@ -588,19 +602,17 @@ export default {
           //gpx file
           for (let i = features.length - 1; i >= 0; i--) {
             const feature = features[i];
-            if (feature.getGeometry() instanceof ol.geom.Point) {
+            if (feature.getGeometry() instanceof Point) {
               //feature.set('toolName','Spot Fire')
               ignoredFeatures.push(feature);
               features.splice(i, 1);
-            } else if (feature.getGeometry() instanceof ol.geom.LineString) {
+            } else if (feature.getGeometry() instanceof LineString) {
               vm.map.clearFeatureProperties(feature);
               let coordinates = feature.getGeometry().getCoordinates();
               coordinates.push(coordinates[0]);
-              feature.setGeometry(new ol.geom.Polygon([coordinates]));
+              feature.setGeometry(new Polygon([coordinates]));
               feature.set("toolName", "Fire Boundary");
-            } else if (
-              feature.getGeometry() instanceof ol.geom.MultiLineString
-            ) {
+            } else if (feature.getGeometry() instanceof MultiLineString) {
               //convert each linstring in MultiLineString as a fire boundary
               vm.map.clearFeatureProperties(feature);
               features.splice(i, 1);
@@ -610,7 +622,7 @@ export default {
                 f = feature.clone();
                 coordinates = linestring.getCoordinates();
                 coordinates.push(coordinates[0]);
-                f.setGeometry(new ol.geom.Polygon([coordinates]));
+                f.setGeometry(new Polygon([coordinates]));
                 f.set("toolName", "Fire Boundary");
                 features.splice(i, 0, f);
               });
@@ -625,43 +637,39 @@ export default {
             var feature = features[i];
             if (!vm.getTool(feature.get("toolName"))) {
               // external feature.
-              if (feature.getGeometry() instanceof ol.geom.Point) {
+              if (feature.getGeometry() instanceof Point) {
                 vm.map.clearFeatureProperties(feature);
                 feature.set("toolName", "Custom Point", true);
                 feature.set("shape", vm.annotations.pointShapes[0][1], true);
                 feature.set("colour", "#000000", true);
-              } else if (feature.getGeometry() instanceof ol.geom.LineString) {
+              } else if (feature.getGeometry() instanceof LineString) {
                 vm.map.clearFeatureProperties(feature);
                 feature.set("toolName", "Custom Line", true);
                 feature.set("size", 2, true);
                 feature.set("colour", "#000000", true);
-              } else if (feature.getGeometry() instanceof ol.geom.Polygon) {
+              } else if (feature.getGeometry() instanceof Polygon) {
                 vm.map.clearFeatureProperties(feature);
                 feature.set("toolName", "Custom Area", true);
                 feature.set("size", 2, true);
                 feature.set("colour", "#000000", true);
               } else if (
-                feature.getGeometry() instanceof ol.geom.MultiPoint ||
-                feature.getGeometry() instanceof ol.geom.MultiLineString ||
-                feature.getGeometry() instanceof ol.geom.MultiPolygon ||
-                feature.getGeometry() instanceof ol.geom.GeometryCollection
+                feature.getGeometry() instanceof MultiPoint ||
+                feature.getGeometry() instanceof MultiLineString ||
+                feature.getGeometry() instanceof MultiPolygon ||
+                feature.getGeometry() instanceof GeometryCollection
               ) {
                 //remove the MultiPoint feature
                 features.splice(i, 1);
                 //split the gemoetry collection into mutiple features
                 var geometries = null;
-                if (feature.getGeometry() instanceof ol.geom.MultiPoint) {
+                if (feature.getGeometry() instanceof MultiPoint) {
                   geometries = feature.getGeometry().getPoints();
-                } else if (
-                  feature.getGeometry() instanceof ol.geom.MultiLineString
-                ) {
+                } else if (feature.getGeometry() instanceof MultiLineString) {
                   geometries = feature.getGeometry().getLineStrings();
-                } else if (
-                  feature.getGeometry() instanceof ol.geom.MultiPolygon
-                ) {
+                } else if (feature.getGeometry() instanceof MultiPolygon) {
                   geometries = feature.getGeometry().getPolygons();
                 } else if (
-                  feature.getGeometry() instanceof ol.geom.GeometryCollection
+                  feature.getGeometry() instanceof GeometryCollection
                 ) {
                   geometries = feature.getGeometry().getGeometries();
                 }
@@ -708,10 +716,7 @@ export default {
         .getSource()
         .getClosestFeatureToCoordinate(coords, function (feat) {
           var geom = feat.getGeometry();
-          return (
-            geom instanceof ol.geom.Polygon ||
-            geom instanceof ol.geom.LineString
-          );
+          return geom instanceof Polygon || geom instanceof LineString;
         });
       if (!nearestFeature) {
         // no feature == no rotation
@@ -721,7 +726,7 @@ export default {
       let source;
       let segLength;
       // if a Polygon, join the last segment to the first
-      if (nearestFeature.getGeometry() instanceof ol.geom.Polygon) {
+      if (nearestFeature.getGeometry() instanceof Polygon) {
         source = nearestFeature.getGeometry().getCoordinates()[0];
         segLength = source.length;
       } else {
@@ -749,7 +754,7 @@ export default {
       return normal;
     },
     snapToLineFactory: function (options) {
-      var inter = new ol.interaction.Snap({
+      var inter = new Snap({
         features: (options && options.features) || this.features,
         edge: !options || options.edge === undefined ? true : options.edge,
         vertex:
@@ -766,7 +771,7 @@ export default {
     linestringDrawFactory: function (options) {
       var vm = this;
       return function (tool) {
-        var draw = new ol.interaction.Draw(
+        var draw = new Draw(
           $.extend(
             {
               type: "LineString",
@@ -796,7 +801,7 @@ export default {
     polygonDrawFactory: function (options) {
       var vm = this;
       return function (tool) {
-        var draw = new ol.interaction.Draw(
+        var draw = new Draw(
           $.extend(
             {
               type: "Polygon",
@@ -838,7 +843,7 @@ export default {
         });
 
         // const source = new ol.source.Vector({wrapX: false});
-        // draw = new ol.interaction.Draw({
+        // draw = new Draw({
         //   source: source,
         //   type: "Polygon",
         // });
@@ -860,7 +865,7 @@ export default {
         }
         //const source = new ol.source.Vector();
 
-        var draw = new ol.interaction.Draw(
+        var draw = new Draw(
           $.extend(
             {
               //source: source,
@@ -901,7 +906,7 @@ export default {
       var vm = this;
       return function (tool) {
         // allow translating of features by click+dragging
-        var translateInter = new ol.interaction.Translate({
+        var translateInter = new Translate({
           layers: (tool && tool.mapLayers) || [vm.featureOverlay],
           features: (tool && tool.selectedFeatures) || vm.selectedAnnotations,
         });
@@ -943,8 +948,8 @@ export default {
           var rotateAll = false;
           $.each(ev.features.getArray(), function (index, f) {
             if (
-              f.getGeometry() instanceof ol.geom.LineString ||
-              f.getGeometry() instanceof ol.geom.Polygon
+              f.getGeometry() instanceof LineString ||
+              f.getGeometry() instanceof Polygon
             ) {
               rotateAll = true;
               return false;
@@ -991,45 +996,45 @@ export default {
         });
         vm._isGeometryInPolygon = function (geometry, turfPolygon) {
           var isSelected = false;
-          if (geometry instanceof ol.geom.GeometryCollection) {
+          if (geometry instanceof GeometryCollection) {
             $.each(geometry.getGeometries(), function (index, geom) {
               if (vm._isGeometryInPolygon(geom, turfPolygon)) {
                 isSelected = true;
                 return false;
               }
             });
-          } else if (geometry instanceof ol.geom.MultiPolygon) {
+          } else if (geometry instanceof MultiPolygon) {
             $.each(geometry.getPolygons(), function (index, geom) {
               if (vm._isGeometryInPolygon(geom, turfPolygon)) {
                 isSelected = true;
                 return false;
               }
             });
-          } else if (geometry instanceof ol.geom.MultiLineString) {
+          } else if (geometry instanceof MultiLineString) {
             $.each(geometry.getLineStrings(), function (index, geom) {
               if (vm._isGeometryInPolygon(geom, turfPolygon)) {
                 isSelected = true;
                 return false;
               }
             });
-          } else if (geometry instanceof ol.geom.MultiPoint) {
+          } else if (geometry instanceof MultiPoint) {
             $.each(geometry.getPoints(), function (index, geom) {
               if (vm._isGeometryInPolygon(geom, turfPolygon)) {
                 isSelected = true;
                 return false;
               }
             });
-          } else if (geometry instanceof ol.geom.Polygon) {
+          } else if (geometry instanceof Polygon) {
             isSelected = intersect(
               polygon(geometry.getCoordinates()),
               turfPolygon,
             );
-          } else if (geometry instanceof ol.geom.LineString) {
+          } else if (geometry instanceof LineString) {
             isSelected = lineIntersect(
               lineString(geometry.getCoordinates()),
               turfPolygon,
             );
-          } else if (geometry instanceof ol.geom.Point) {
+          } else if (geometry instanceof Point) {
             isSelected = booleanPointInPolygon(
               point(geometry.getCoordinates()),
               turfPolygon,
@@ -1042,7 +1047,7 @@ export default {
       }
       return function (tool) {
         var selectedFeatures_ = (tool && tool.selectedFeatures) || null;
-        var drawInter = new ol.interaction.Draw({
+        var drawInter = new Draw({
           source: vm._source4Selection,
           type: "Polygon",
           style: vm._style4Selection,
@@ -1197,7 +1202,7 @@ export default {
       return function (tool) {
         var selectedFeatures_ = (tool && tool.selectedFeatures) || null;
         // allow dragbox selection of features
-        var dragSelectInter = new ol.interaction.DragBox({
+        var dragSelectInter = new DragBox({
           condition: function (ev) {
             return (
               (!vm._toolStatus["selectTool"] ||
@@ -1283,7 +1288,7 @@ export default {
       };
     },
     isGeometrySelected: function (geom, mapBrowserEvent) {
-      if (geom instanceof ol.geom.Point) {
+      if (geom instanceof Point) {
         var geomPosition = this.map.olmap.getPixelFromCoordinate(
           geom.getCoordinates(),
         );
@@ -1308,25 +1313,25 @@ export default {
         }
         var geom = f.getGeometry();
         for (let i = 0; i <= end; i++) {
-          if (geom instanceof ol.geom.GeometryCollection) {
+          if (geom instanceof GeometryCollection) {
             if (indexes[i] < geom.getGeometriesArray().length) {
               geom = geom.getGeometriesArray()[indexes[i]];
             } else {
               return null;
             }
-          } else if (geom instanceof ol.geom.MultiPolygon) {
+          } else if (geom instanceof MultiPolygon) {
             if (indexes[i] < geom.getPolygons().length) {
               geom = geom.getPolygon(indexes[i]);
             } else {
               return null;
             }
-          } else if (geom instanceof ol.geom.MultiPoint) {
+          } else if (geom instanceof MultiPoint) {
             if (indexes[i] < geom.getPoints().length) {
               geom = geom.getPoint(indexes[i]);
             } else {
               return null;
             }
-          } else if (geom instanceof ol.geom.MultiLineString) {
+          } else if (geom instanceof MultiLineString) {
             if (indexes[i] < geom.getLineStrings().length) {
               geom = geom.getLineString(indexes[i]);
             } else {
@@ -1351,7 +1356,7 @@ export default {
       var geom = this.getSelectedGeometry(f, indexes, indexes.length - 2);
       if (geom) {
         var deleteIndex = indexes[indexes.length - 1];
-        if (geom instanceof ol.geom.GeometryCollection) {
+        if (geom instanceof GeometryCollection) {
           if (deleteIndex < geom.getGeometriesArray().length) {
             geom.getGeometriesArray().splice(deleteIndex, 1);
             geom.setGeometriesArray(geom.getGeometriesArray());
@@ -1365,9 +1370,9 @@ export default {
             f.getGeometry().changed();
           }
         } else if (
-          geom instanceof ol.geom.MultiPolygon ||
-          geom instanceof ol.geom.MultiPoint ||
-          geom instanceof ol.geom.MultiLineString
+          geom instanceof MultiPolygon ||
+          geom instanceof MultiPoint ||
+          geom instanceof MultiLineString
         ) {
           var coordinates = geom.getCoordinates();
           if (deleteIndex < coordinates.length) {
@@ -1390,13 +1395,13 @@ export default {
     getSelectedGeometryIndex: function (geom, mapBrowserEvent) {
       var vm = this;
       var indexes = null;
-      if (geom instanceof ol.geom.GeometryCollection) {
+      if (geom instanceof GeometryCollection) {
         $.each(geom.getGeometriesArray(), function (index, g) {
           if (
-            g instanceof ol.geom.MultiPoint ||
-            g instanceof ol.geom.MultiLineString ||
-            g instanceof ol.geom.MultiPolygon ||
-            g instanceof ol.geom.GeometryCollection
+            g instanceof MultiPoint ||
+            g instanceof MultiLineString ||
+            g instanceof MultiPolygon ||
+            g instanceof GeometryCollection
           ) {
             indexes = vm.getSelectedGeometryIndex(g, mapBrowserEvent);
             if (indexes) {
@@ -1410,21 +1415,21 @@ export default {
             }
           }
         });
-      } else if (geom instanceof ol.geom.MultiPolygon) {
+      } else if (geom instanceof MultiPolygon) {
         $.each(geom.getPolygons(), function (index, g) {
           if (vm.isGeometrySelected(g, mapBrowserEvent)) {
             indexes = [index];
             return false;
           }
         });
-      } else if (geom instanceof ol.geom.MultiPoint) {
+      } else if (geom instanceof MultiPoint) {
         $.each(geom.getPoints(), function (index, g) {
           if (vm.isGeometrySelected(g, mapBrowserEvent)) {
             indexes = [index];
             return false;
           }
         });
-      } else if (geom instanceof ol.geom.MultiLineString) {
+      } else if (geom instanceof MultiLineString) {
         $.each(geom.getLineStrings(), function (index, g) {
           if (vm.isGeometrySelected(g, mapBrowserEvent)) {
             indexes = [index];
@@ -1441,7 +1446,7 @@ export default {
       return function () {
         var selectedFeatures = vm.selectedFeatures;
         // allow selecting multiple features by clicking
-        var selectInter = new ol.interaction.Select({
+        var selectInter = new Select({
           layers: function (layer) {
             return vm.selectable.indexOf(layer) > -1;
           },
@@ -1545,7 +1550,7 @@ export default {
         };
 
       return function (tool) {
-        var keyboardInter = new ol.interaction.Interaction({
+        var keyboardInter = new Interaction({
           handleEvent: function (mapBrowserEvent) {
             var stopEvent = false;
             if (mapBrowserEvent.type === ol.events.EventType.KEYDOWN) {
@@ -1613,7 +1618,7 @@ export default {
       var vm = this;
       return function (tool) {
         // allow modifying features by click+dragging
-        var modifyInter = new ol.interaction.Modify({
+        var modifyInter = new Modify({
           features: (tool && tool.features) || vm.features,
         });
 
@@ -1639,8 +1644,8 @@ export default {
           var rotateAll = false;
           $.each(modifiedFeatures.getArray(), function (index, f) {
             if (
-              f.getGeometry() instanceof ol.geom.LineString ||
-              f.getGeometry() instanceof ol.geom.Polygon
+              f.getGeometry() instanceof LineString ||
+              f.getGeometry() instanceof Polygon
             ) {
               rotateAll = true;
               return false;
@@ -2085,7 +2090,7 @@ export default {
           if (!selectedGeometry) {
             selectMode = "none";
             keySuffix = f.get("tint") + ":none";
-          } else if (selectedGeometry instanceof ol.geom.Point) {
+          } else if (selectedGeometry instanceof Point) {
             selectMode = "partial";
             keySuffix = f.get("tint") + ":partial";
           } else {
@@ -2227,7 +2232,7 @@ export default {
           var selectedGeometry = vm.getSelectedGeometry(f);
           if (!selectedGeometry) {
             selectMode = "none";
-          } else if (!(selectedGeometry instanceof ol.geom.Point)) {
+          } else if (!(selectedGeometry instanceof Point)) {
             selectMode = "partial";
           } else {
             selectMode = "none";
@@ -2400,11 +2405,9 @@ export default {
         }
         if (!typeIconStyle) {
           let linestring;
-          if (f.getGeometry() instanceof ol.geom.Polygon) {
-            linestring = new ol.geom.LineString(
-              f.getGeometry().getCoordinates()[0],
-            );
-          } else if (f.getGeometry() instanceof ol.geom.LineString) {
+          if (f.getGeometry() instanceof Polygon) {
+            linestring = new LineString(f.getGeometry().getCoordinates()[0]);
+          } else if (f.getGeometry() instanceof LineString) {
             linestring = f.getGeometry();
           } else {
             return baseStyle;
@@ -2521,7 +2524,7 @@ export default {
               ) {
                 typeIconStyle.push(
                   new ol.style.Style({
-                    geometry: new ol.geom.MultiPoint(symbolPoints),
+                    geometry: new MultiPoint(symbolPoints),
                     image: new ol.style.Icon({
                       src: src,
                       rotation: segmentMetadata["rotation"],

@@ -46,6 +46,18 @@ import { isKbLayer, getLayerId, getLayerUrl } from "@/utils";
 import * as ol from "ol";
 
 import Point from "ol/geom/Point";
+import MultiPoint from "ol/geom/MultiPoint";
+import Polygon from "ol/geom/Polygon";
+import LineString from "ol/geom/LineString";
+import MultiLineString from "ol/geom/MultiLineString";
+import MultiPolygon from "ol/geom/MultiPolygon";
+import GeometryCollection from "ol/geom/GeometryCollection";
+import LinearRing from "ol/geom/LinearRing";
+
+import DragPan from "ol/interactions/DragPan";
+import DoubleClickZoom from "ol/interactions/DoubleClickZoom";
+import KeyboardPan from "ol/interactions/KeyboardPan";
+import KeyboardZoom from "ol/interactions/KeyboardZoom";
 
 import proj4 from "proj4";
 import { bbox, buffer, point } from "@turf/turf";
@@ -103,7 +115,7 @@ export default {
           return formattedLon;
         },
       }),
-      dragPanInter: new ol.interaction.DragPan({
+      dragPanInter: new DragPan({
         condition: function (mapBrowserEvent) {
           if (
             mapBrowserEvent.pointerEvent &&
@@ -114,10 +126,10 @@ export default {
           return ol.events.condition.noModifierKeys(mapBrowserEvent);
         },
       }),
-      doubleClickZoomInter: new ol.interaction.DoubleClickZoom(),
-      keyboardPanInter: new ol.interaction.KeyboardPan(),
-      keyboardZoomInter: new ol.interaction.KeyboardZoom(),
-      middleDragPanInter: new ol.interaction.DragPan({
+      doubleClickZoomInter: new DoubleClickZoom(),
+      keyboardPanInter: new KeyboardPan(),
+      keyboardZoomInter: new KeyboardZoom(),
+      middleDragPanInter: new DragPan({
         condition: function (mapBrowserEvent) {
           if (
             mapBrowserEvent.pointerEvent &&
@@ -230,15 +242,15 @@ export default {
       epsilon = epsilon === null || epsilon === undefined ? false : epsilon;
       var initGeom = function (geom) {
         var geometries;
-        if (geom instanceof ol.geom.GeometryCollection) {
+        if (geom instanceof GeometryCollection) {
           geometries = geom.getGeometriesArray();
-        } else if (geom instanceof ol.geom.MultiPolygon) {
+        } else if (geom instanceof MultiPolygon) {
           geometries = geom.getPolygons();
-        } else if (geom instanceof ol.geom.MultiPoint) {
+        } else if (geom instanceof MultiPoint) {
           geometries = geom.getPolygons();
-        } else if (geom instanceof ol.geom.MultiLineString) {
+        } else if (geom instanceof MultiLineString) {
           geometries = geom.getLineStrings();
-        } else if (geom instanceof ol.geom.Polygon) {
+        } else if (geom instanceof Polygon) {
           geometries = geom.getLinearRings();
         } else {
           return geom;
@@ -268,18 +280,12 @@ export default {
         return true;
       } else if (((geom1 && 1) || 0) + ((geom2 && 1) || 0) === 1) {
         return false;
-      } else if (
-        geom1 instanceof ol.geom.Point &&
-        geom2 instanceof ol.geom.Point
-      ) {
+      } else if (geom1 instanceof Point && geom2 instanceof Point) {
         return isCoordinateEqual(
           geom1.getCoordinates(),
           geom2.getCoordinates(),
         );
-      } else if (
-        geom1 instanceof ol.geom.LineString &&
-        geom2 instanceof ol.geom.LineString
-      ) {
+      } else if (geom1 instanceof LineString && geom2 instanceof LineString) {
         const coords1 = geom1.getCoordinates();
         const coords2 = geom2.getCoordinates();
         let len1 = coords1.length;
@@ -329,10 +335,7 @@ export default {
           }
         }
         return true;
-      } else if (
-        geom1 instanceof ol.geom.LinearRing &&
-        geom2 instanceof ol.geom.LinearRing
-      ) {
+      } else if (geom1 instanceof LinearRing && geom2 instanceof LinearRing) {
         const coords1 = geom1.getCoordinates();
         const coords2 = geom2.getCoordinates();
         const len1 = coords1.length - 1;
@@ -375,10 +378,7 @@ export default {
           }
         }
         return true;
-      } else if (
-        geom1 instanceof ol.geom.Polygon &&
-        geom2 instanceof ol.geom.Polygon
-      ) {
+      } else if (geom1 instanceof Polygon && geom2 instanceof Polygon) {
         var vm = this;
         var rings1 = geom1.getLinearRings();
         var rings2 = geom2.getLinearRings();
@@ -404,8 +404,8 @@ export default {
         }
         return true;
       } else if (
-        geom1 instanceof ol.geom.MultiLineString &&
-        geom2 instanceof ol.geom.MultiLineString
+        geom1 instanceof MultiLineString &&
+        geom2 instanceof MultiLineString
       ) {
         const lines1 = geom1.getLineStrings();
         const lines2 = geom2.getLineStrings();
@@ -431,8 +431,8 @@ export default {
         }
         return true;
       } else if (
-        geom1 instanceof ol.geom.MultiPolygon &&
-        geom2 instanceof ol.geom.MultiPolygon
+        geom1 instanceof MultiPolygon &&
+        geom2 instanceof MultiPolygon
       ) {
         const polygons1 = geom1.getPolygons();
         const polygons2 = geom2.getPolygons();
@@ -458,8 +458,8 @@ export default {
         }
         return true;
       } else if (
-        geom1 instanceof ol.geom.GeometryCollection &&
-        geom2 instanceof ol.geom.GeometryCollection
+        geom1 instanceof GeometryCollection &&
+        geom2 instanceof GeometryCollection
       ) {
         const vm = this;
         const geometries1 = geom1.getGeometriesArray();
@@ -2884,7 +2884,7 @@ export default {
           minZoom: 5,
         }),
         controls: [],
-        interactions: ol.interaction.defaults.defaults({
+        interactions: ol.interaction.defaults({
           altShiftDragRotate: false,
           pinchRotate: false,
           dragPan: false,

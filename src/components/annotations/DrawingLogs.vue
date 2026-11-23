@@ -196,7 +196,7 @@ export default {
       //add control-z and control-r  for undo and redo
       vm._keyboardInter =
         vm._keyboardInter ||
-        new ol.interaction.Interaction({
+        new Interaction({
           handleEvent: function (mapBrowserEvent) {
             var stopEvent = false;
             if (mapBrowserEvent.type === ol.events.EventType.KEYDOWN) {

@@ -9,9 +9,11 @@
 // Consider moving to something like services/featureDetail.js
 import * as ol from "ol";
 
+import Interaction from "ol/interactions/Interaction";
+
 import env from "@/config/env";
 
-import { getLayerUrl, getDetailLayerId } from "@/utils";
+import { getLayerUrl, getDetailLayerId, editResource } from "@/utils";
 
 import featureInfoSvg from "@/assets/images/feature_info.svg";
 import previousSvg from "@/assets/images/previous.svg";
@@ -228,7 +230,7 @@ export default {
       if (vm.layers.length) {
         vm.layer = vm.layers[0];
 
-        var featuredetailInter = new ol.interaction.Interaction({
+        var featuredetailInter = new Interaction({
           handleEvent: function (browserEvent) {
             if (!ol.events.condition.click(browserEvent)) {
               return true;

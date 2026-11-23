@@ -670,6 +670,12 @@ import Foundation from "foundation-sites";
 import * as ol from "ol";
 
 import Point from "ol/geom/Point";
+import MultiPoint from "ol/geom/MultiPoint";
+import Polygon from "ol/geom/Polygon";
+import LineString from "ol/geom/LineString";
+import MultiLineString from "ol/geom/MultiLineString";
+import MultiPolygon from "ol/geom/MultiPolygon";
+import GeometryCollection from "ol/geom/GeometryCollection";
 
 import { intersect, point, booleanPointInPolygon, buffer } from "@turf/turf";
 import {
@@ -902,14 +908,13 @@ export default {
         const geometries = feat.getGeometry().getGeometriesArray();
 
         const pointStyle =
-          geometries.length > 0 || geometries[0] instanceof ol.geom.Point
+          geometries.length > 0 || geometries[0] instanceof Point
             ? pointStyleFunc.call(feat, res)
             : null;
 
         const boundaryStyle =
           (vm.showFireboundary || feat.tint) &&
-          (geometries.length > 1 ||
-            geometries[0] instanceof ol.geom.MultiPolygon)
+          (geometries.length > 1 || geometries[0] instanceof MultiPolygon)
             ? boundaryStyleFunc.call(feat, res)
             : null;
 
@@ -1523,7 +1528,7 @@ export default {
           .getGeometry()
           .getGeometriesArray()
           .find(function (g) {
-            return g instanceof ol.geom.Point;
+            return g instanceof Point;
           })
       );
     },
@@ -1586,7 +1591,7 @@ export default {
         var geometries = feat.getGeometry().getGeometries();
         var originPoint =
           geometries.find(function (g) {
-            return g instanceof ol.geom.Point;
+            return g instanceof Point;
           }) || null;
 
         if (!originPoint) {
@@ -1667,7 +1672,7 @@ export default {
 
         var fireboundary = null;
         indexes = geometries.findIndex(function (g) {
-          return g instanceof ol.geom.MultiPolygon;
+          return g instanceof MultiPolygon;
         });
         if (indexes >= 0) {
           fireboundary = geometries[indexes];
@@ -1688,7 +1693,7 @@ export default {
           fireboundary[0] = polygon(fireboundary[0]);
           let kinks = kinks(fireboundary[0]);
           if (kinks.features.length > 0) {
-            feat.intersectionPoints = new ol.geom.MultiPoint(
+            feat.intersectionPoints = new MultiPoint(
               kinks.features.map(function (p) {
                 return p.geometry.coordinates;
               }),
@@ -1723,7 +1728,7 @@ export default {
                   index2 === 1 &&
                   (kinks = kinks(fireboundary[index])).features.length > 0
                 ) {
-                  feat.intersectionPoints = new ol.geom.MultiPoint(
+                  feat.intersectionPoints = new MultiPoint(
                     kinks.features.map(function (p) {
                       return p.geometry.coordinates;
                     }),
@@ -1734,7 +1739,7 @@ export default {
                   index === 0 &&
                   (kinks = kinks(fireboundary[index2])).features.length > 0
                 ) {
-                  feat.intersectionPoints = new ol.geom.MultiPoint(
+                  feat.intersectionPoints = new MultiPoint(
                     kinks.features.map(function (p) {
                       return p.geometry.coordinates;
                     }),
@@ -2083,7 +2088,7 @@ export default {
             var geometries = feat.getGeometry().getGeometriesArray();
             var originPoint =
               geometries.find(function (g) {
-                return g instanceof ol.geom.Point;
+                return g instanceof Point;
               }) || null;
             originPoint = originPoint ? originPoint.getCoordinates() : null;
 
@@ -2102,7 +2107,7 @@ export default {
             if ((modifyType & 2) === 2) {
               fireboundary =
                 geometries.find(function (g) {
-                  return g instanceof ol.geom.MultiPolygon;
+                  return g instanceof MultiPolygon;
                 }) || null;
               // TODO: Unused
               // bbox =
@@ -2123,7 +2128,7 @@ export default {
             if (!fireboundary) {
               var existingFireboundary =
                 geometries.find(function (g) {
-                  return g instanceof ol.geom.MultiPolygon;
+                  return g instanceof MultiPolygon;
                 }) || null;
               fireboundary =
                 existingFireboundary &&
@@ -3399,7 +3404,7 @@ export default {
                       .getGeometry()
                       .getGeometries()
                       .find(function (g) {
-                        return g instanceof ol.geom.Point;
+                        return g instanceof Point;
                       }) || null;
                   if (originPoint) {
                     var checkTask = tasks.find(
@@ -3532,7 +3537,7 @@ export default {
         }
       } else {
         feat = new ol.Feature({
-          geometry: new ol.geom.GeometryCollection([]),
+          geometry: new GeometryCollection([]),
           status: "new",
           tint: "new",
           id: this._bushfireSequence * -1,
@@ -3931,16 +3936,16 @@ export default {
 
             var geom =
               fire_boundary.type === "MultiPolygon"
-                ? new ol.geom.MultiPolygon(fbCoords)
-                : new ol.geom.MultiPolygon([fbCoords]);
+                ? new MultiPolygon(fbCoords)
+                : new MultiPolygon([fbCoords]);
 
             feature.set("fire_boundary", geom.getExtent(), true);
           } else {
             fbCoords = fire_boundary.coordinates;
             geometries.push(
               fire_boundary.type === "MultiPolygon"
-                ? new ol.geom.MultiPolygon(fbCoords)
-                : new ol.geom.MultiPolygon([fbCoords]),
+                ? new MultiPolygon(fbCoords)
+                : new MultiPolygon([fbCoords]),
             );
             feature.unset("fire_boundary", true);
           }
@@ -3950,7 +3955,7 @@ export default {
       } else {
         feature.unset("fire_boundary", true);
       }
-      feature.setGeometry(new ol.geom.GeometryCollection(geometries), true);
+      feature.setGeometry(new GeometryCollection(geometries), true);
       // TODO: Unused
       // var now = moment();
       // var timestamp = moment(feature.get("created"));
@@ -4259,7 +4264,7 @@ export default {
             ]);
             feature.setGeometry(
               geometries.find(function (g) {
-                return g instanceof ol.geom.Point;
+                return g instanceof Point;
               }) || null,
             );
             feature.setId(++id);
@@ -4268,8 +4273,8 @@ export default {
             feature = vm.map.cloneFeature(feature, false);
             feature.setGeometry(
               geometries.find(function (g) {
-                return g instanceof ol.geom.MultiPolygon;
-              }) || new ol.geom.MultiPolygon(),
+                return g instanceof MultiPolygon;
+              }) || new MultiPolygon(),
             );
             feature.setId(++id);
             newBushfiresBoundary.push(feature);
@@ -4813,22 +4818,18 @@ export default {
                   featureImported(FeatureTask.IGNORED);
                   continue;
                 }
-                if (feature.getGeometry() instanceof ol.geom.Point) {
+                if (feature.getGeometry() instanceof Point) {
                   //feature.set('toolName','Spot Fire')
                   featureImported(FeatureTask.IGNORED);
                   features.splice(i, 1);
-                } else if (
-                  feature.getGeometry() instanceof ol.geom.LineString
-                ) {
+                } else if (feature.getGeometry() instanceof LineString) {
                   var coordinates = feature.getGeometry().getCoordinates();
                   coordinates.push(coordinates[0]);
-                  feature.setGeometry(new ol.geom.Polygon([coordinates]));
-                } else if (
-                  feature.getGeometry() instanceof ol.geom.MultiLineString
-                ) {
+                  feature.setGeometry(new Polygon([coordinates]));
+                } else if (feature.getGeometry() instanceof MultiLineString) {
                   var geom = feature.getGeometry();
                   coordinates = null;
-                  var mp = new ol.geom.MultiPolygon();
+                  var mp = new MultiPolygon();
                   $.each(geom.getLineStrings(), function (index, linestring) {
                     coordinates = linestring.getCoordinates();
                     if (
@@ -4839,7 +4840,7 @@ export default {
                     ) {
                       coordinates.push(coordinates[0]);
                     }
-                    mp.appendPolygon(new ol.geom.Polygon([coordinates]));
+                    mp.appendPolygon(new Polygon([coordinates]));
                   });
                   feature.setGeometry(mp);
                 } else {
@@ -4918,25 +4919,23 @@ export default {
                 } else if (targetOnly) {
                   targetFeatureFound = true;
                 }
-                if (feature.getGeometry() instanceof ol.geom.Point) {
+                if (feature.getGeometry() instanceof Point) {
                   if (uploadType === "fireboundary") {
                     featureImported(FeatureTask.IGNORED);
                     features.splice(i, 1);
                   }
-                } else if (feature.getGeometry() instanceof ol.geom.Polygon) {
+                } else if (feature.getGeometry() instanceof Polygon) {
+                  if (uploadType === "originpoint") {
+                    featureImported(FeatureTask.IGNORED);
+                    features.splice(i, 1);
+                  }
+                } else if (feature.getGeometry() instanceof MultiPolygon) {
                   if (uploadType === "originpoint") {
                     featureImported(FeatureTask.IGNORED);
                     features.splice(i, 1);
                   }
                 } else if (
-                  feature.getGeometry() instanceof ol.geom.MultiPolygon
-                ) {
-                  if (uploadType === "originpoint") {
-                    featureImported(FeatureTask.IGNORED);
-                    features.splice(i, 1);
-                  }
-                } else if (
-                  feature.getGeometry() instanceof ol.geom.GeometryCollection
+                  feature.getGeometry() instanceof GeometryCollection
                 ) {
                   //remove the MultiPoint feature
                   features.splice(i, 1);
@@ -5012,10 +5011,10 @@ export default {
                   features[i].get("fire_number") !== undefined &&
                   features[i].get("fire_number") !== null
                 ) {
-                  if (features[i].getGeometry() instanceof ol.geom.Point) {
-                    if (feat.getGeometry() instanceof ol.geom.MultiPolygon) {
+                  if (features[i].getGeometry() instanceof Point) {
+                    if (feat.getGeometry() instanceof MultiPolygon) {
                       feat.setGeometry(
-                        new ol.geom.GeometryCollection([
+                        new GeometryCollection([
                           features[i].getGeometry(),
                           feat.getGeometry(),
                         ]),
@@ -5028,20 +5027,18 @@ export default {
                       features.splice(i, 1);
                       featureImported(FeatureTask.IGNORED);
                     }
-                  } else if (
-                    features[i].getGeometry() instanceof ol.geom.Polygon
-                  ) {
-                    if (feat.getGeometry() instanceof ol.geom.MultiPolygon) {
+                  } else if (features[i].getGeometry() instanceof Polygon) {
+                    if (feat.getGeometry() instanceof MultiPolygon) {
                       feat
                         .getGeometry()
                         .appendPolygon(features[i].getGeometry());
                       mergeProperties(feat, features[i]);
                       features.splice(i, 1);
-                    } else if (feat.getGeometry() instanceof ol.geom.Point) {
+                    } else if (feat.getGeometry() instanceof Point) {
                       feat.setGeometry(
-                        new ol.geom.GeometryCollection([
+                        new GeometryCollection([
                           feat.getGeometry(),
-                          new ol.geom.MultiPolygon([
+                          new MultiPolygon([
                             features[i].getGeometry().getCoordinates(),
                           ]),
                         ]),
@@ -5049,7 +5046,7 @@ export default {
                       mergeProperties(feat, features[i]);
                       features.splice(i, 1);
                     } else if (
-                      feat.getGeometry() instanceof ol.geom.GeometryCollection
+                      feat.getGeometry() instanceof GeometryCollection
                     ) {
                       feat
                         .getGeometry()
@@ -5060,9 +5057,9 @@ export default {
                     }
                     featureImported(FeatureTask.MERGED);
                   } else if (
-                    features[i].getGeometry() instanceof ol.geom.MultiPolygon
+                    features[i].getGeometry() instanceof MultiPolygon
                   ) {
-                    if (feat.getGeometry() instanceof ol.geom.MultiPolygon) {
+                    if (feat.getGeometry() instanceof MultiPolygon) {
                       $.each(
                         features[i].getGeometry().getPolygons(),
                         function (index, p) {
@@ -5071,9 +5068,9 @@ export default {
                       );
                       mergeProperties(feat, features[i]);
                       features.splice(i, 1);
-                    } else if (feat.getGeometry() instanceof ol.geom.Point) {
+                    } else if (feat.getGeometry() instanceof Point) {
                       feat.setGeometry(
-                        new ol.geom.GeometryCollection([
+                        new GeometryCollection([
                           feat.getGeometry(),
                           features[i].getGeometry(),
                         ]),
@@ -5081,7 +5078,7 @@ export default {
                       mergeProperties(feat, features[i]);
                       features.splice(i, 1);
                     } else if (
-                      feat.getGeometry() instanceof ol.geom.GeometryCollection
+                      feat.getGeometry() instanceof GeometryCollection
                     ) {
                       $.each(
                         features[i].getGeometry().getPolygons(),
@@ -5099,11 +5096,9 @@ export default {
                   }
                 } else {
                   feat = features[i];
-                  if (feat.getGeometry() instanceof ol.geom.Polygon) {
+                  if (feat.getGeometry() instanceof Polygon) {
                     feat.setGeometry(
-                      new ol.geom.MultiPolygon([
-                        feat.getGeometry().getCoordinates(),
-                      ]),
+                      new MultiPolygon([feat.getGeometry().getCoordinates()]),
                     );
                   }
                 }
@@ -5118,14 +5113,13 @@ export default {
                 }
                 var uploadedFireboundary = null;
                 if (
-                  uploadedFeature.getGeometry() instanceof
-                  ol.geom.GeometryCollection
+                  uploadedFeature.getGeometry() instanceof GeometryCollection
                 ) {
                   uploadedFireboundary = uploadedFeature
                     .getGeometry()
                     .getGeometriesArray()[1];
                 } else if (
-                  uploadedFeature.getGeometry() instanceof ol.geom.MultiPolygon
+                  uploadedFeature.getGeometry() instanceof MultiPolygon
                 ) {
                   uploadedFireboundary = uploadedFeature.getGeometry();
                 }
@@ -5190,24 +5184,23 @@ export default {
                       geometries = feat.getGeometry().getGeometriesArray();
                       let featurePoint =
                         geometries.find(function (g) {
-                          return g instanceof ol.geom.Point;
+                          return g instanceof Point;
                         }) || null;
                       let featureFireboundary = null;
                       if (vm.isFireboundaryDrawable(feat)) {
                         featureFireboundary =
                           geometries.find(function (g) {
-                            return g instanceof ol.geom.MultiPolygon;
+                            return g instanceof MultiPolygon;
                           }) || null;
                       } else {
                         featureFireboundary = feat.get("fire_boundary");
                       }
                       var uploadedPoint = null;
                       var uploadedFireboundary = null;
-                      if (feature.getGeometry() instanceof ol.geom.Point) {
+                      if (feature.getGeometry() instanceof Point) {
                         uploadedPoint = feature.getGeometry();
                       } else if (
-                        feature.getGeometry() instanceof
-                        ol.geom.GeometryCollection
+                        feature.getGeometry() instanceof GeometryCollection
                       ) {
                         uploadedPoint = feature
                           .getGeometry()
@@ -5216,7 +5209,7 @@ export default {
                           .getGeometry()
                           .getGeometriesArray()[1];
                       } else if (
-                        feature.getGeometry() instanceof ol.geom.MultiPolygon
+                        feature.getGeometry() instanceof MultiPolygon
                       ) {
                         uploadedFireboundary = feature.getGeometry();
                       }
@@ -5279,7 +5272,7 @@ export default {
                         if ((modifyType & 1) === 1) {
                           //both fireboundary and origin point are changed
                           feature.setGeometry(
-                            new ol.geom.GeometryCollection([
+                            new GeometryCollection([
                               uploadedPoint,
                               uploadedFireboundary,
                             ]),
@@ -5287,7 +5280,7 @@ export default {
                         } else if (featurePoint) {
                           //only fire boundary is changed, feature already has a valid origin point
                           feature.setGeometry(
-                            new ol.geom.GeometryCollection([
+                            new GeometryCollection([
                               featurePoint,
                               uploadedFireboundary,
                             ]),
@@ -5295,9 +5288,7 @@ export default {
                         } else {
                           //only fire boundary is changed, feature does not have a valid origin point
                           feature.setGeometry(
-                            new ol.geom.GeometryCollection([
-                              uploadedFireboundary,
-                            ]),
+                            new GeometryCollection([uploadedFireboundary]),
                           );
                         }
                         if (
@@ -5374,13 +5365,11 @@ export default {
                       if (vm.isCreatable()) {
                         //new feature,
                         if (
-                          feature.getGeometry() instanceof ol.geom.Point ||
-                          feature.getGeometry() instanceof ol.geom.MultiPolygon
+                          feature.getGeometry() instanceof Point ||
+                          feature.getGeometry() instanceof MultiPolygon
                         ) {
                           feature.setGeometry(
-                            new ol.geom.GeometryCollection([
-                              feature.getGeometry(),
-                            ]),
+                            new GeometryCollection([feature.getGeometry()]),
                           );
                         }
                         vm.newFeature(feature);
@@ -5408,13 +5397,11 @@ export default {
                     try {
                       canUpload(feature, null);
                       if (
-                        feature.getGeometry() instanceof ol.geom.Point ||
-                        feature.getGeometry() instanceof ol.geom.MultiPolygon
+                        feature.getGeometry() instanceof Point ||
+                        feature.getGeometry() instanceof MultiPolygon
                       ) {
                         feature.setGeometry(
-                          new ol.geom.GeometryCollection([
-                            feature.getGeometry(),
-                          ]),
+                          new GeometryCollection([feature.getGeometry()]),
                         );
                       }
                       vm.newFeature(feature);
@@ -5764,7 +5751,7 @@ export default {
         }
       } else if (geometries.length === 0) {
         delete feature["selectedIndex"];
-      } else if (geometries[0] instanceof ol.geom.Point) {
+      } else if (geometries[0] instanceof Point) {
         feature["selectedIndex"] = [0];
       } else if (geometries[0].getPolygons().length === 0) {
         delete feature["selectedIndex"];
@@ -6655,7 +6642,7 @@ export default {
             .getGeometry()
             .getGeometriesArray()
             .findIndex(function (g) {
-              return g instanceof ol.geom.MultiPolygon;
+              return g instanceof MultiPolygon;
             });
           if (index >= 0) {
             indexes = [
@@ -6671,9 +6658,7 @@ export default {
             f.getGeometry()
               .getGeometriesArray()
               .push(
-                new ol.geom.MultiPolygon([
-                  ev.element.getGeometry().getCoordinates(),
-                ]),
+                new MultiPolygon([ev.element.getGeometry().getCoordinates()]),
               );
           }
           f.getGeometry().setGeometriesArray(
@@ -6703,7 +6688,7 @@ export default {
             .getGeometry()
             .getGeometriesArray()
             .find(function (g) {
-              return g instanceof ol.geom.Point;
+              return g instanceof Point;
             })
         ) {
           let f = selectedFeat;
@@ -6806,7 +6791,7 @@ export default {
                   feature["selectedIndex"] !== undefined
                 ) {
                   var geom = vm.annotations.getSelectedGeometry(feature);
-                  if (geom instanceof ol.geom.Point) {
+                  if (geom instanceof Point) {
                     if (feature.get("status") === "new") {
                       vm.deleteFeature(feature);
                     } else {
