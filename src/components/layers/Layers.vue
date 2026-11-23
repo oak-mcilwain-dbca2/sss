@@ -28,9 +28,9 @@
 </template>
 
 <script>
-import gkActive from "./layers/active.vue";
-import gkCatalogue from "./layers/catalogue.vue";
-import gkExport from "./layers/export.vue";
+import gkActive from "@/components/layers/Active.vue";
+import gkCatalogue from "@/components/layers/Catalogue.vue";
+import gkExport from "@/components/layers/Export.vue";
 
 export default {
   store: {
