@@ -25,6 +25,7 @@
     "foundation-sites": "^6.9.0",
     "html2canvas": "^1.4.1",
     "jquery": "^4.1.0",
+    "kjua": "^0.10.0",
     "localforage": "^1.10.0",
     "lodash-es": "^4.18.1",
     "moment": "^2.31.0",
