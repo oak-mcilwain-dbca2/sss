@@ -325,7 +325,7 @@ import { debounce } from "lodash-es";
 
 import * as ol from "ol";
 
-import { getDateRange } from "@utils";
+import { getDateRange } from "@/utils";
 
 export default {
   store: {
@@ -471,13 +471,14 @@ export default {
       });
     },
 
-    postmark_client: function () {
-      var postmark = require("postmark");
+    // TODO: Make sure not needed any more
+    // postmark_client: function () {
+    //   var postmark = require("postmark");
 
-      var client = new postmark.Client("c5abeaf7-cf27-4539-8f8a-790786320f30");
-      //var client = new postmark.ServerClient("c5abeaf7-cf27-4539-8f8a-790786320f30")
-      return client;
-    },
+    //   var client = new postmark.Client("c5abeaf7-cf27-4539-8f8a-790786320f30");
+    //   //var client = new postmark.ServerClient("c5abeaf7-cf27-4539-8f8a-790786320f30")
+    //   return client;
+    // },
 
     featurelist: function () {
       try {

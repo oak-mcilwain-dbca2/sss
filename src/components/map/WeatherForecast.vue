@@ -15,7 +15,7 @@
 <script>
 import * as ol from "ol";
 
-import { submitForm } from "@utils";
+import { submitForm } from "@/utils";
 
 import env from "@/config/env";
 

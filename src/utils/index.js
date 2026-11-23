@@ -1,5 +1,6 @@
 export {
   FeatureTask,
+  getFeatureTaskManager,
   FeatureTaskManager,
   SUCCEED,
   FAILED,
@@ -15,6 +16,20 @@ export { verifyDate, getDatetimes, getDateRange, nextDate } from "./dates";
 
 export { getDateFormatPrecision } from "./dates";
 
-export { getProxy } from "./proxy";
+export { proxy } from "./proxy";
 
-export { editResource, getWidth, getHeight } from "./browser";
+export {
+  editResource,
+  getWidth,
+  getHeight,
+  checkPermission,
+  submitForm,
+} from "./browser";
+
+export {
+  isKbLayer,
+  getLayerId,
+  getLayerUrl,
+  getIndependentLayerId,
+  getDetailLayerId,
+} from "./layers";

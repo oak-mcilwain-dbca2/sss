@@ -18,6 +18,14 @@ export function getLayerUrl(layerId, env) {
   return env.kmiService;
 }
 
+export function getDetailLayerId(id, env) {
+  return (
+    (env && env.detailLayerMapping && env.detailLayerMapping[id]) ||
+    (env && env.layerMapping && env.layerMapping[id]) ||
+    id
+  );
+}
+
 export function getIndependentLayerId(id, env) {
   if (!env || !env.layerMapping) {
     return id;

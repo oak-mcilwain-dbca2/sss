@@ -9,7 +9,9 @@
 // Consider moving to something like services/featureDetail.js
 import * as ol from "ol";
 
-import { getLayerUrl, getDetailLayerId } from "@utils";
+import env from "@/config/env";
+
+import { getLayerUrl, getDetailLayerId } from "@/utils";
 
 import featureInfoSvg from "@/assets/images/feature_info.svg";
 import previousSvg from "@/assets/images/previous.svg";
@@ -268,13 +270,13 @@ export default {
               url =
                 url +
                 "/wfs?service=wfs&version=2.0&request=GetFeature&count=1&outputFormat=application%2Fjson&typeNames=" +
-                getDetailLayerId(vm.layer.id) +
+                getDetailLayerId(vm.layer.id, env) +
                 bbox;
             } else {
               url =
                 url +
                 "/wfs?service=wfs&version=2.0&request=GetFeature&outputFormat=application%2Fjson&typeNames=" +
-                getDetailLayerId(vm.layer.id) +
+                getDetailLayerId(vm.layer.id, env) +
                 bbox;
             }
             var isOpen = $("#userdialog").is(":visible");

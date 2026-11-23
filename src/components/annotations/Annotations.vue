@@ -232,10 +232,11 @@
 import { debounce } from "lodash-es";
 
 import * as ol from "ol";
+
 import {
   intersect,
   lineIntersect,
-  inside,
+  booleanPointInPolygon,
   point,
   polygon,
   lineString,
@@ -1027,7 +1028,10 @@ export default {
               turfPolygon,
             );
           } else if (geometry instanceof ol.geom.Point) {
-            isSelected = inside(point(geometry.getCoordinates()), turfPolygon);
+            isSelected = booleanPointInPolygon(
+              point(geometry.getCoordinates()),
+              turfPolygon,
+            );
           } else {
             throw "Geometry not supported.";
           }

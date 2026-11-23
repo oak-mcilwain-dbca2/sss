@@ -456,7 +456,7 @@ import { debounce } from "lodash-es";
 
 import * as ol from "ol";
 
-import { editResource, getDateRange, nextDate, checkPermission } from "@utils";
+import { editResource, getDateRange, nextDate, checkPermission } from "@/utils";
 
 import env from "@/config/env";
 

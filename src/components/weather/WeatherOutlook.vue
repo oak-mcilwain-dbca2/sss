@@ -492,7 +492,7 @@ import { saveAs } from "file-saver";
 
 import * as ol from "ol";
 
-import { getDatetimes, submitForm } from "@utils";
+import { getDatetimes, submitForm } from "@/utils";
 
 import pinSvg from "@/assets/images/pin.svg";
 import weatherOutlookDefaultSvg from "@/assets/images/weather-outlook-default.svg";

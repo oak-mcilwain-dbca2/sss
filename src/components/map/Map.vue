@@ -41,7 +41,7 @@
 </style>
 
 <script>
-import { getLayerId, getLayerUrl, isKbLayer } from "@/utils";
+import { isKbLayer, getLayerId, getLayerUrl } from "@/utils";
 
 import * as ol from "ol";
 import proj4 from "proj4";

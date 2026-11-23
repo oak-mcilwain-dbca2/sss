@@ -203,7 +203,7 @@
 </style>
 
 <script>
-import { editResource, getHeight } from "@utils/index";
+import { editResource, getHeight } from "@/utils";
 
 export default {
   data: function () {

@@ -668,18 +668,18 @@ import { debounce } from "lodash-es";
 import Foundation from "foundation-sites";
 
 import * as ol from "ol";
-import { intersect, point, inside, buffer } from "@turf/turf";
+import { intersect, point, booleanPointInPolygon, buffer } from "@turf/turf";
 import {
   FeatureTask,
   getDateRange,
   nextDate,
   submitForm,
   getFeatureTaskManager,
-} from "@utils";
+  getLayerId,
+  getLayerUrl,
+} from "@/utils";
 
 import hash from "object-hash";
-
-import { getLayerId, getLayerUrl } from "@/utils";
 
 import env from "@/config/env";
 
@@ -1622,7 +1622,7 @@ export default {
                       vm._validateBushfireCallback(null, callback);
                     } else if (callback) {
                       vm._validateBushfireCallback(
-                        "Point of Origin is not inside fire boundary, please fix using the edit bushfire button",
+                        "Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button",
                         callback,
                       );
                     }
@@ -1648,7 +1648,7 @@ export default {
                   vm._validateBushfireCallback(null, callback);
                 } else {
                   vm._validateBushfireCallback(
-                    "Point of Origin is not inside fire boundary, please fix using the edit bushfire button",
+                    "Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button",
                     callback,
                   );
                 }
@@ -1761,7 +1761,7 @@ export default {
               if (!convertedToTurf) {
                 fireboundary[index] = polygon(fireboundary[index]);
               }
-              if (inside(originPoint, fireboundary[index])) {
+              if (booleanPointInPolygon(originPoint, fireboundary[index])) {
                 inFireboundary = true;
                 break;
               }
@@ -1775,14 +1775,14 @@ export default {
             polygonIndex === -1
           ) {
             inFireboundary = false;
-            if (inside(originPoint, polygon)) {
+            if (booleanPointInPolygon(originPoint, polygon)) {
               inFireboundary = true;
             }
           }
 
           if (inFireboundary === false) {
             indexes = [0];
-            throw "Point of Origin is not inside fire boundary, please fix using the edit bushfire button";
+            throw "Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button";
           }
           convertedToTurf = true;
         }
@@ -3438,7 +3438,7 @@ export default {
                         ) {
                           checkTask.setStatus(
                             FeatureTask.FAILED,
-                            "Point of Origin is not inside fire boundary, please fix using the edit bushfire button",
+                            "Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button",
                           );
                           task.setStatus(FeatureTask.WARNING);
                           callback(
@@ -3598,7 +3598,7 @@ export default {
         if (!feat.get("sss_id")) {
           feat.set(
             "sss_id",
-            hash.MD5(
+            hash(
               vm.whoami["email"] +
                 "-" +
                 Date.now() +
@@ -6850,7 +6850,7 @@ export default {
             description: [
               "Click on the map to start drawing a bushfire",
               "Hold down the 'SHIFT' key during drawing to enable freehand mode",
-              "To delete a fire boundary click inside the fire boundary to be deleted and press the 'DELETE' key",
+              "To delete a fire boundary click booleanPointInPolygon the fire boundary to be deleted and press the 'DELETE' key",
               "To modify the boundary or origin click and drag to adjust",
             ],
           },

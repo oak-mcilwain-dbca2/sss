@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import gkSystemsetting from "@components/settings/SystemSetting.vue";
+import gkSystemsetting from "@/components/settings/SystemSetting.vue";
 import gkWeatheroutlook from "@/components/weather/WeatherOutlook.vue";
 
 export default {

@@ -25,6 +25,10 @@ FeatureTask.WARNING = 4;
 FeatureTask.IGNORED = 5;
 FeatureTask.MERGED = 6;
 
+export function getFeatureTaskManager(changeCallback) {
+  return new FeatureTaskManager(changeCallback);
+}
+
 FeatureTask.prototype._getIcon = function () {
   if (
     this.status === FeatureTask.FAILED ||
@@ -201,3 +205,14 @@ FeatureTaskManager.prototype.errorMessages = function (feat, scope) {
       return t.message;
     });
 };
+
+export { FeatureTask, FeatureTaskManager };
+
+export const FAILED = FeatureTask.FAILED;
+export const FAIL_CONFIRMED = FeatureTask.FAIL_CONFIRMED;
+export const WAITING = FeatureTask.WAITING;
+export const RUNNING = FeatureTask.RUNNING;
+export const SUCCEED = FeatureTask.SUCCEED;
+export const WARNING = FeatureTask.WARNING;
+export const IGNORED = FeatureTask.IGNORED;
+export const MERGED = FeatureTask.MERGED;
