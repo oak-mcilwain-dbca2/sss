@@ -488,7 +488,12 @@
 </style>
 
 <script>
-import { ol, saveAs, $, moment, utils } from "src/vendor.js";
+import { saveAs } from "file-saver";
+
+import ol from "ol";
+
+import { getDatetimes, submitForm } from "@utils";
+
 export default {
   store: {
     outlookSettings: "settings.weatheroutlook",
@@ -725,6 +730,7 @@ export default {
   },
   // methods callable from inside the template
   methods: {
+    getDatetimes,
     adjustHeight: function () {
       if (
         this.activeMenu === "settings" &&
@@ -1979,11 +1985,11 @@ export default {
             },
             outlooks: [
               {
-                days: utils
-                  .getDatetimes(["00:00:00"], vm.outlookDays, 1)
-                  .map(function (dt) {
+                days: getDatetimes(["00:00:00"], vm.outlookDays, 1).map(
+                  function (dt) {
                     return dt.format("YYYY-MM-DD");
-                  }),
+                  },
+                ),
                 times: vm.reportTimes,
                 min_time: moment().format("YYYY-MM-DD HH:00:00"),
                 options: {
@@ -2010,11 +2016,11 @@ export default {
             },
             outlooks: [
               {
-                days: utils
-                  .getDatetimes(["00:00:00"], vm.outlookDays, 1)
-                  .map(function (dt) {
+                days: getDatetimes(["00:00:00"], vm.outlookDays, 1).map(
+                  function (dt) {
                     return dt.format("YYYY-MM-DD");
-                  }),
+                  },
+                ),
                 times: vm.reportTimes,
                 options: {
                   daily_title_pattern: dailyData[0] || "{date}",
@@ -2027,7 +2033,7 @@ export default {
         }
         if (format === "html") {
           $("#weatheroutlook_data").val(JSON.stringify(requestData));
-          utils.submitForm(
+          submitForm(
             "get_weatheroutlook",
             {
               width: screen.width > 1890 ? 1890 : screen.width,

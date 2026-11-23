@@ -389,13 +389,16 @@
 }
 </style>
 <script>
-import { kjua, saveAs, moment, $, localforage, hash } from "src/vendor.js";
-
+import localforage from "localforage";
+import hash from "object-hash";
+import kjua from "kjua";
+import html2canvas from "html2canvas";
+import { saveAs } from "file-saver";
 import ol from "ol";
 
-import gkLegend from "./legend.vue";
-import gkLayerlegends from "./layerlegends.vue";
-import html2canvas from "html2canvas";
+import gkLegend from "./Legend.vue";
+import gkLayerlegends from "./LayerLegends.vue";
+
 export default {
   store: {
     whoami: "whoami",
@@ -482,7 +485,7 @@ export default {
       return this.title.length == 0 ? "Quick Print" : this.title.trim();
     },
     hashKey: function () {
-      return hash.MD5({
+      return hash({
         extent: this.printStatus.layout.extent.join(" "),
         author: this.legendInfo().author,
         filename: this.finalTitle,

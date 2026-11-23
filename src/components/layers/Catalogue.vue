@@ -205,15 +205,21 @@ div.ol-previewmap.ol-uncollapsible {
 </style>
 
 <script>
-import { $, ol, Vue, utils } from "src/vendor.js";
-
 import env from "@/config/env";
 
-import { getLayerId, getIndependentLayerId } from "@/utils/layers";
+import ol from "ol";
 
-Vue.filter("lessThan", function (value, length) {
-  return value.length < length;
-});
+import {
+  getLayerId,
+  getIndependentLayerId,
+  checkPermission,
+} from "@/utils/layers";
+
+// TODO: Discard if unused (looks unused)
+// Vue.filter("lessThan", function (value, length) {
+//   return value.length < length;
+// });
+
 export default {
   store: {
     catalogueFilters: "catalogueFilters",
@@ -272,6 +278,7 @@ export default {
   methods: {
     getLayerId,
     getIndependentLayerId,
+    checkPermission,
     editable: function (layer) {
       return layer.systemid && this.whoami.editLayer;
     },
@@ -482,7 +489,7 @@ export default {
         });
 
         if (checkingLayer) {
-          utils.checkPermission(
+          checkPermission(
             vm.env.catalogueAdminService +
               "/admin/catalogue/record/" +
               checkingLayer.systemid +
