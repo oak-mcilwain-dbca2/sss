@@ -127,7 +127,9 @@
 </template>
 
 <script>
-import { dragula, moment } from "src/vendor.js";
+import dragula from "dragula";
+import "dragula/dist/dragula.css";
+
 export default {
   store: {
     screenHeight: "layout.screenHeight",
@@ -378,7 +380,7 @@ export default {
         });
     },
   },
-  ready: function () {
+  mounted() {
     dragula([document.querySelector("#layers-active-list")]).on(
       "drop",
       this.updateOrder,
