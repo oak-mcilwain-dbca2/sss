@@ -9,9 +9,11 @@ globalThis.$ = $;
 globalThis.jQuery = $;
 globalThis.moment = moment;
 
-const app = createApp(App).mount("#app");
+const app = createApp(App);
 
 app.use(createPinia());
+
+app.mount("#app");
 
 app.config.errorHandler = (err) => {
   console.error(err);
