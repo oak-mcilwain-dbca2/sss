@@ -333,6 +333,8 @@ import boxresizeSvg from "@/assets/images/boxresize.svg";
 
 import iDSpriteSvg from "@/assets/images/iD-sprite.svg";
 
+import { useAnnotationsStore } from "@/stores/annotations";
+
 export default {
   store: {
     dpmm: "dpmm",
@@ -2581,9 +2583,10 @@ export default {
     },
   },
   mounted() {
-    // this.setup();
-    //alert("annotations ready start")
-    var vm = this;
+    const vm = this;
+
+    const annotationsStore = useAnnotationsStore();
+    annotationsStore.setComponent(vm);
 
     var annotationStatus = this.loading.register(
       "annotation",

@@ -107,6 +107,8 @@ import gkMeasure from "./Measure.vue";
 import gkWeatherforecast from "./WeatherForecast.vue";
 import gkToolbox from "./Toolbox.vue";
 
+import { useMapStore } from "@/stores/map";
+
 export default {
   store: {
     fixedScales: "fixedScales",
@@ -3054,6 +3056,8 @@ export default {
           );
         }
       });
+      const mapStore = useMapStore();
+      mapStore.setMap(this);
     },
 
     initLayers: function (fixedLayers, activeLayers) {

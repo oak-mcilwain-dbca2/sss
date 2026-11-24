@@ -240,15 +240,15 @@
 
     <div class="reveal" id="aboutModal" data-reveal>
       <div class="about-pane row collapse about-pane">
-        <h5 class="small-12">{{ profile.description }}</h5>
+        <h5 class="small-12">{{ appInfo.description }}</h5>
         <div class="small-4">Version:</div>
-        <span class="small-8">{{ profile.version }}</span>
+        <span class="small-8">{{ appInfo.version }}</span>
         <div class="small-4">Branch:</div>
-        <span class="small-8">{{ profile.repositoryBranch }}</span>
+        <span class="small-8">{{ appInfo.repositoryBranch }}</span>
         <div class="small-4">Last commit:</div>
-        <span class="small-8">{{ profile.lastCommit }}</span>
+        <span class="small-8">{{ appInfo.lastCommit }}</span>
         <div class="small-4">Commit date:</div>
-        <span class="small-8">{{ profile.commitDate }}</span>
+        <span class="small-8">{{ appInfo.commitDate }}</span>
         <div class="small-12">
           <p>
             <br />© 2016 Government of Western Australia<br />Licensed under the
@@ -287,33 +287,43 @@ import localforage from "localforage";
 
 import aboutSvg from "@/assets/images/about.svg";
 
+import { useUserStore } from "@/stores/user";
+
+import appInfo from "@/config/appInfo";
+import { useLoadingStore } from "@/stores/loading";
+
+import { eventBus, GK_EVENTS } from "@/services/gokart";
+
 export default {
-  store: {
-    settings: "settings",
-    overviewMap: "settings.overviewMap",
-    undoLimit: "settings.undoLimit",
-    measureFeature: "settings.measureFeature",
-    lengthUnit: "settings.lengthUnit",
-    areaUnit: "settings.areaUnit",
-    rightHandTools: "settings.rightHandTools",
-    graticule: "settings.graticule",
-    showHints: "showHints",
-    tourVersion: "settings.tourVersion",
-    whoami: "whoami",
-  },
-  setup() {
-    return {
-      aboutSvg,
-    };
-  },
+  // TODO replace stores with pinia and remove
+  //   store: {
+  //     settings: "settings",
+  //     overviewMap: "settings.overviewMap",
+  //     undoLimit: "settings.undoLimit",
+  //     measureFeature: "settings.measureFeature",
+  //     lengthUnit: "settings.lengthUnit",
+  //     areaUnit: "settings.areaUnit",
+  //     rightHandTools: "settings.rightHandTools",
+  //     graticule: "settings.graticule",
+  //     showHints: "showHints",
+  //     tourVersion: "settings.tourVersion",
+  //   },
   data: function () {
     return {
+      userStore: null,
+      aboutSvg,
       configuredUndoLimit: 0,
     };
   },
   computed: {
-    loading: function () {
-      return this.$root.loading;
+    appInfo() {
+      return appInfo;
+    },
+    loading() {
+      return useLoadingStore();
+    },
+    whoami() {
+      return this.userStore.whoami;
     },
     profile: function () {
       return this.$root.profile;
@@ -499,7 +509,10 @@ export default {
       }
     },
   },
-  ready: function () {
+  created() {
+    this.userStore = useUserStore();
+  },
+  mounted() {
     var vm = this;
     var settingStatus = this.loading.register("setting", "Setting Component");
     this.configuredUndoLimit = this.undoLimit;
@@ -511,14 +524,10 @@ export default {
       true,
       true,
     );
-    this.$on("gk-postinit", function () {
-      settingStatus.phaseEnd("gk-postinit");
 
-      settingStatus.phaseBegin("initialize", 20, "Initialize", true, false);
+    eventBus.on(GK_EVENTS.POSTINIT, () => {
       vm.showOverviewMap(vm.overviewMap);
       vm.showRightHandTools(vm.rightHandTools);
-
-      settingStatus.phaseEnd("initialize");
     });
   },
 };

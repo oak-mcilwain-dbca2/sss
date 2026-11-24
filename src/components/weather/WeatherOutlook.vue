@@ -511,9 +511,12 @@ import weatherOutlookDefaultSvg from "@/assets/images/weather-outlook-default.sv
 import weatherOutlookCustomizedSvg from "@/assets/images/weather-outlook-customized.svg";
 import weatherOutlookAmicusSvg from "@/assets/images/weather-outlook-amicus.svg";
 
+import { useAnnotationsStore } from "@/stores/annotations";
+
+import { useSettingsStore } from "@/stores/settings";
+
 export default {
   store: {
-    outlookSettings: "settings.weatheroutlook",
     screenHeight: "layout.screenHeight",
     leftPanelHeadHeight: "layout.leftPanelHeadHeight",
     activeMenu: "activeMenu",
@@ -593,7 +596,7 @@ export default {
       return this.$root.catalogue;
     },
     annotations: function () {
-      return this.$root.$refs.app.$refs.annotations;
+      return useAnnotationsStore();
     },
     dailyDatasources: function () {
       return (
@@ -624,6 +627,9 @@ export default {
     },
     outlookTitle: function () {
       return this.outlookTool.title;
+    },
+    outlookSettings() {
+      return useSettingsStore().settings.weatheroutlook;
     },
     outlookSetting: function () {
       return this.columnRevision && this.getOutlookSetting();
@@ -797,6 +803,9 @@ export default {
     },
     getOutlookSetting: function (toolid) {
       toolid = toolid || this.outlookTool.toolid;
+      console.log(this.outlookTool);
+      console.log(this.outlookTool?.toolid);
+      console.log(this.outlookTool?.toolid);
       if (toolid === "weather-outlook-default") {
         if (!this._defaultOutlookSetting) {
           this._defaultOutlookSetting = {};
@@ -882,6 +891,14 @@ export default {
         ? this.getOutlookSetting(toolid)
         : this.outlookSetting;
       toolid = toolid || this.outlookTool.toolid;
+
+      console.log({
+        columnRevision: this.columnRevision,
+        revision: this.revision,
+        outlookSetting: this.outlookSetting,
+        outlookSettings: this.outlookSettings,
+      });
+
       if (!outlookSetting.outlookDays) {
         if (toolid === "weather-outlook-default") {
           this.setOutlookDays(4, toolid); // 4 days
