@@ -50,12 +50,15 @@
 <script>
 import { toStringXY } from "ol/coordinate";
 
+import { useMapStore } from "@/stores/map";
+
 export default {
   store: {
     hoverInfo: "settings.hoverInfo",
   },
   data: function () {
     return {
+      infoStatus: null,
       features: false,
       hoverable: [],
       coordinate: "",
@@ -65,8 +68,11 @@ export default {
   },
   // parts of the template to be computed live
   computed: {
-    map: function () {
-      return this.$root.$refs.app.$refs.map;
+    mapReady() {
+      return useMapStore().ready;
+    },
+    map() {
+      return useMapStore()?.component;
     },
     catalogue: function () {
       return this.$root.catalogue;
@@ -82,20 +88,24 @@ export default {
     },
     // info panel should be positioned near the mouse in the quadrant furthest away from the viewport edges
     css: function () {
-      var map = this.$root.map;
+      if (!this.map) {
+        return {
+          display: "none",
+        };
+      }
       var css = {
         left: this.pixel[0] + this.offset + "px",
         top: this.pixel[1] + this.offset + "px",
-        bottom: map.height - this.pixel[1] + this.offset + "px",
-        right: map.width - this.pixel[0] + this.offset + "px",
+        bottom: this.map.height - this.pixel[1] + this.offset + "px",
+        right: this.map.width - this.pixel[0] + this.offset + "px",
         display: "none",
       };
-      if (this.pixel[0] < map.width / 2) {
+      if (this.pixel[0] < this.map.width / 2) {
         delete css.right;
       } else {
         delete css.left;
       }
-      if (this.pixel[1] < map.height / 2) {
+      if (this.pixel[1] < this.map.height / 2) {
         delete css.bottom;
       } else {
         delete css.top;
@@ -109,8 +119,27 @@ export default {
       return this.hoverInfo && this.$root.annotations.tool.name === "Pan";
     },
   },
+  watch: {
+    mapReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready && !this._trackingInitialized) {
+          this.initialiseInfo();
+        }
+      },
+    },
+  },
   // methods callable from inside the template
   methods: {
+    initialiseInfo() {
+      this.infoStatus.phaseEnd("gk-init");
+      this.infoStatus.phaseBegin("initialize", 20, "Initialize", true, false);
+
+      // display hover popups
+      this.$root.map.olmap.on("pointermove", this.onPointerMove);
+
+      this.infoStatus.phaseEnd("initialize");
+    },
     // update the panel content
     onPointerMove: function (event) {
       var vm = this;
@@ -167,15 +196,14 @@ export default {
   },
   mounted() {
     var vm = this;
-    var infoStatus = vm.loading.register("info", "Info Component");
-    infoStatus.phaseBegin("gk-init", 80, "Listen 'gk-init' event", true, true);
-    this.$on("gk-init", function () {
-      infoStatus.phaseEnd("gk-init");
-      infoStatus.phaseBegin("initialize", 20, "Initialize", true, false);
-      // display hover popups
-      this.$root.map.olmap.on("pointermove", this.onPointerMove);
-      infoStatus.phaseEnd("initialize");
-    });
+    this.infoStatus = vm.loading.register("info", "Info Component");
+    this.infoStatus.phaseBegin(
+      "gk-init",
+      80,
+      "Listen 'gk-init' event",
+      true,
+      true,
+    );
   },
 };
 </script>

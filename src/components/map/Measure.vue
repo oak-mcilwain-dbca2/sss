@@ -2,33 +2,6 @@
   <div id="map-measure-tooltips"></div>
 </template>
 
-<style>
-#map-measure button {
-  width: 48px;
-  height: 48px;
-  margin: 0;
-}
-
-#map-measure button {
-  margin-bottom: 1px;
-}
-
-.feature-icon {
-  width: 24px;
-  height: 24px;
-}
-#map-measure {
-  position: absolute;
-  left: auto;
-  right: 16px;
-  bottom: auto;
-  padding: 0;
-}
-#map-measure .selected {
-  background-color: #2199e8;
-}
-</style>
-
 <script>
 import Collection from "ol/Collection";
 import Overlay from "ol/Overlay";
@@ -57,18 +30,31 @@ import { getDistance, getArea } from "ol/sphere";
 
 import { transform } from "ol/proj";
 
+import { useActiveStore } from "@/stores/active";
+import { useSystemSettingStore } from "@/stores/systemSetting";
+import { useSettingsStore } from "@/stores/settings";
+import { useAnnotationsStore } from "@/stores/annotations";
+import { useLoadingStore } from "@/stores/loading";
+import { useStateStore } from "@/stores/state";
+import { useMapStore } from "@/stores/map";
+
 export default {
-  store: ["settings"],
   data: function () {
     return {};
   },
   // parts of the template to be computed live
   computed: {
+    settings() {
+      return useSettingsStore();
+    },
     loading: function () {
       return this.$root.loading;
     },
-    map: function () {
-      return this.$root.map;
+    mapReady() {
+      return useMapStore().ready;
+    },
+    map() {
+      return useMapStore()?.component;
     },
     active: function () {
       return this.$root.active;
@@ -79,10 +65,19 @@ export default {
     catalogue: function () {
       return this.$root.catalogue;
     },
+    annotationsReady() {
+      return useAnnotationsStore().ready;
+    },
     annotations: function () {
-      return this.$root.$refs.app.$refs.annotations;
+      return useAnnotationsStore()?.component;
+    },
+    measureReady() {
+      return this.map && this.annotations;
     },
     measureType: function () {
+      if (!this.annotationsReady) {
+        return "";
+      }
       if (
         ["MeasureLength", "MeasureArea", "MeasureBearing"].indexOf(
           this.annotations.tool.name,
@@ -106,13 +101,13 @@ export default {
       return this.measureType === "MeasureBearing";
     },
     lengthUnit: function () {
-      return this.settings.lengthUnit;
+      return this.settings?.lengthUnit;
     },
     areaUnit: function () {
-      return this.settings.areaUnit;
+      return this.settings?.areaUnit;
     },
     measureFeature: function () {
-      return this.settings.measureFeature;
+      return this.settings?.measureFeature;
     },
     tools: function () {
       return [
@@ -156,6 +151,30 @@ export default {
     },
   },
   watch: {
+    mapReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready && !this.trackingInitialised) {
+          this.initialiseMeasureMapEvents();
+        }
+      },
+    },
+    annotationsReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready && !this.trackingInitialised) {
+          this.initialiseMeasureToolEvents();
+        }
+      },
+    },
+    measureReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready && !this.measureInitialised) {
+          this.initialiseMeasure();
+        }
+      },
+    },
     lengthUnit: function () {
       var vm = this;
       this.features.forEach(function (feature) {
@@ -236,6 +255,9 @@ export default {
   },
   // methods callable from inside the template
   methods: {
+    initialiseMeasure() {},
+    initialiseMeasureMapEvents() {},
+    initialiseMeasureToolEvents() {},
     //layer can be layer id, layer object
     register: function (layer, features, filter) {
       this._measureLayers = this._measureLayers || [];
@@ -1812,3 +1834,30 @@ export default {
   },
 };
 </script>
+
+<style>
+#map-measure button {
+  width: 48px;
+  height: 48px;
+  margin: 0;
+}
+
+#map-measure button {
+  margin-bottom: 1px;
+}
+
+.feature-icon {
+  width: 24px;
+  height: 24px;
+}
+#map-measure {
+  position: absolute;
+  left: auto;
+  right: 16px;
+  bottom: auto;
+  padding: 0;
+}
+#map-measure .selected {
+  background-color: #2199e8;
+}
+</style>
