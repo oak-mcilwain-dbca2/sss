@@ -180,7 +180,7 @@ export function getDateRange(range, format) {
   } else {
     format = format || "YYYY-MM-DD";
     resultFormat = format;
-    precision = this.getDateFormatPrecision(format);
+    precision = getDateFormatPrecision(format);
   }
   var startDate;
   var endDate;

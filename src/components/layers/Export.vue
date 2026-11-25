@@ -404,13 +404,18 @@ import gkLayerlegends from "./LayerLegends.vue";
 
 import mapDisclaimerSvg from "@/assets/images/map-disclaimer.svg";
 
+import { useSettingsStore } from "@/stores/settings";
+import { useLoadingStore } from "@/stores/loading";
+
+import { eventBus } from "@/services/gokart";
+import { useMapStore } from "@/stores/map";
+
 export default {
   store: {
     whoami: "whoami",
     dpmm: "dpmm",
     view: "view",
     mmPerInch: "mmPerInch",
-    settings: "settings",
     displayResolution: "displayResolution",
     activeMenu: "activeMenu",
     activeSubmenu: "activeSubmenu",
@@ -456,8 +461,11 @@ export default {
   },
   // parts of the template to be computed live
   computed: {
-    loading: function () {
-      return this.$root.loading;
+    loading() {
+      return useLoadingStore();
+    },
+    settings() {
+      return useSettingsStore().settings;
     },
     env: function () {
       return this.$root.env;
@@ -732,10 +740,10 @@ export default {
     },
     getSpatialInfo: function () {
       var file =
-        this.$els.spatialinfofile.files.length > 0
-          ? this.$els.spatialinfofile.files[0]
+        this.$refs.spatialinfofile.files.length > 0
+          ? this.$refs.spatialinfofile.files[0]
           : null;
-      this.$els.spatialinfofile.value = null;
+      this.$refs.spatialinfofile.value = null;
       if (!file) {
         return;
       }
@@ -1169,7 +1177,7 @@ export default {
         : null;
       return [
         "data:image/svg+xml;utf8," +
-          encodeURIComponent(this.$els.legendsvg.innerHTML),
+          encodeURIComponent(this.$refs.legendsvg.innerHTML),
         qrcanvas,
       ];
     },
@@ -1500,7 +1508,7 @@ export default {
       }
     },
     saveStateButton: function () {
-      var key = this.$els.savestatename.value;
+      var key = this.$refs.savestatename.value;
       if (!key) {
         key = moment().format("DD/MM/YYYY HH:mm");
       }
@@ -1562,12 +1570,16 @@ export default {
       }
     },
   },
-  ready: function () {
-    var vm = this;
-    var exportStatus = vm.loading.register("export", "Export Component");
+  mounted() {
+    const vm = this;
+    const mapStore = useMapStore();
+
+    const exportStatus = vm.loading.register("export", "Export Component");
 
     exportStatus.phaseBegin("initialize", 10, "Initialize");
+
     this._filename_re = new RegExp("filename=['\"](.+)['\"]");
+
     this._fileformats = [
       ["geojson", ".geojson", "application/vnd.geo+json"],
       ["shp", ".shp", "application/shp"],
@@ -1584,12 +1596,15 @@ export default {
 
     $("#spatialInfoDialog").on("closed.zf.reveal", function () {
       if (vm._importData) {
-        if (vm._importData.failedCallback)
+        if (vm._importData.failedCallback) {
           vm._importData.failedCallback("Cancelled");
+        }
         delete vm._importData;
       }
     });
+
     exportStatus.phaseEnd("initialize");
+
     exportStatus.phaseBegin(
       "gk-init",
       80,
@@ -1597,8 +1612,12 @@ export default {
       true,
       true,
     );
-    this.$on("gk-init", function () {
+
+    eventBus.on("gk-init", () => {
       exportStatus.phaseEnd("gk-init");
+
+      vm.olmap = mapStore.olmap;
+
       exportStatus.phaseBegin(
         "load_states",
         10,
@@ -1606,26 +1625,18 @@ export default {
         true,
         false,
       );
-      // save state every render
+
       vm.olmap.on(
         "postrender",
         global.debounce(
-          function () {
+          () => {
             vm.saveState();
           },
           1000,
           true,
         ),
       );
-      // TODO: Unused stateStore. Why?
-      //   var stateStore = localforage.getItem(
-      //     "sssStateStore",
-      //     function (err, value) {
-      //       if (value) {
-      //         vm.states = Object.keys(value);
-      //       }
-      //     },
-      //   );
+
       exportStatus.phaseEnd("load_states");
     });
   },

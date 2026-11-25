@@ -19,7 +19,7 @@
             >
               <span>Bushfire Reporting System</span>
               <small
-                v-if="active.layerRefreshStatus(bushfireMapLayer)"
+                v-if="active && active.layerRefreshStatus(bushfireMapLayer)"
                 style="white-space: pre-wrap"
                 ><br />Updated:
                 {{ active.layerRefreshStatus(bushfireMapLayer) }}</small
@@ -280,8 +280,7 @@
                     </select>
                   </div>
                   <div class="small-8">
-                    <input
-                      type="text"
+                    <DateTimeInput
                       id="bfrsStartDate"
                       class="span2"
                       v-model="startDate"
@@ -290,8 +289,7 @@
                       readonly
                     />
                     <i class="fa fa-minus" style="margin-top: 10px"></i>
-                    <input
-                      type="text"
+                    <DateTimeInput
                       id="bfrsEndDate"
                       class="span2"
                       v-model="endDate"
@@ -516,6 +514,7 @@
                 </div>
               </template>
               <div
+                v-if="target_feature"
                 class="small reveal"
                 id="progressInfo"
                 data-reveal
@@ -712,6 +711,14 @@ import mergeSvg from "@/assets/images/merge.svg";
 import dashedOriginSvg from "/symbols/fire/dashed-origin.svg";
 import originSvg from "/symbols/fire/origin.svg";
 
+import { useActiveStore } from "@/stores/active";
+import { useSystemSettingStore } from "@/stores/systemSetting";
+import { useAnnotationsStore } from "@/stores/annotations";
+import { useLoadingStore } from "@/stores/loading";
+import { useStateStore } from "@/stores/state";
+import { useMapStore } from "@/stores/map";
+import { useUserStore } from "@/stores/user";
+
 export default {
   store: {
     bushfireLabels: "settings.bfrs.bushfireLabels",
@@ -721,7 +728,6 @@ export default {
     leftPanelHeadHeight: "layout.leftPanelHeadHeight",
     activeMenu: "activeMenu",
     hints: "hints",
-    whoami: "whoami",
   },
   setup() {
     return {
@@ -812,23 +818,32 @@ export default {
     };
   },
   computed: {
-    map: function () {
-      return this.$root.$refs.app.$refs.map;
+    mapReady() {
+      return useMapStore().ready;
     },
-    env: function () {
-      return this.$root.env;
+    annotationsReady() {
+      return useAnnotationsStore().ready;
+    },
+    userStoreReady() {
+      return useUserStore().ready;
+    },
+    map: function () {
+      return useMapStore()?.component;
     },
     annotations: function () {
-      return this.$root.$refs.app.$refs.annotations;
+      return useAnnotationsStore()?.component;
     },
-    systemsetting: function () {
-      return this.$root.systemsetting;
+    systemsetting() {
+      return useSystemSettingStore();
     },
     dialog: function () {
       return this.$root.dialog;
     },
+    activeReady() {
+      return useActiveStore().ready;
+    },
     active: function () {
-      return this.$root.active;
+      return useActiveStore()?.component;
     },
     measure: function () {
       return this.$root.measure;
@@ -843,25 +858,31 @@ export default {
       return this.$root.export;
     },
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
     utils: function () {
       return this.$root.utils;
+    },
+    whoami() {
+      return useUserStore()?.whoami;
+    },
+    bfrsReady() {
+      return this.map && this.annotations && this.catalogue && this.whoami;
     },
     moduleStatus: function () {
       return this._bfrsStatus || {};
     },
     isReportMapLayerHidden: function () {
-      return this.$root.active.isHidden(this.bushfireMapLayer);
+      return this.active?.isHidden(this.bushfireMapLayer);
     },
     selectedFeatures: function () {
-      return this.annotations.getSelectedFeatures("bfrs");
+      return this.annotations?.getSelectedFeatures("bfrs");
     },
     selectedFeaturesSize: function () {
-      return this.selectRevision && this.selectedFeatures.getLength();
+      return this.selectRevision && this.selectedFeatures?.getLength();
     },
     bushfireLayer: function () {
-      return this.$root.catalogue.getLayer(this.env.bushfireListLayer);
+      return this.$root.catalogue.getLayer(env.bushfireListLayer);
     },
     bushfireMapLayer: function () {
       return this.$root.map
@@ -1013,6 +1034,14 @@ export default {
     },
   },
   watch: {
+    mapReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready) {
+          this.initialiseMap();
+        }
+      },
+    },
     hasSpatialData: function (hasSpatialData) {
       if (
         !hasSpatialData &&
@@ -1054,7 +1083,7 @@ export default {
       var vm = this;
       this.map.enableDependentLayer(
         this.bushfireMapLayer,
-        this.env.bushfireFinalFireBoundaryLatestLayer,
+        env.bushfireFinalFireBoundaryLatestLayer,
         newValue,
       );
       $.each(this._featurelist.getArray(), function (index, feature) {
@@ -1084,6 +1113,82 @@ export default {
     },
   },
   methods: {
+    initialiseMap() {
+      const vm = this;
+      vm._bfrsStatus.phaseEnd("gk-init");
+
+      vm._bfrsStatus.phaseBegin("attach_event", 10, "Attach events");
+      vm.map.olmap.getView().on("propertychange", function () {
+        vm.updateViewport();
+      });
+
+      vm.selectedFeatures.on("add", function (event) {
+        if (vm.annotations.toselectMode === "geometry") {
+          if (event.element["selectedIndex"] === undefined) {
+            vm.selectDefaultGeometry(event.element);
+          }
+        }
+        vm.refreshSelectedFinalFireboundaryLayer();
+        //vm.zoomToSelected(200)
+      });
+      vm.selectedFeatures.on("remove", function () {
+        vm.refreshSelectedFinalFireboundaryLayer();
+        //vm.zoomToSelected(200)
+        if (vm.selectedFeatures.getLength() !== 1) {
+          if (vm.annotations.tool === vm.ui.modifyTool) {
+            vm.annotations.setTool(vm.ui.panTool);
+          }
+        }
+
+        //remove the index of the selected geometry in geometry collection
+        //delete event.element['selectedIndex']
+      });
+      // enable resource bfrs layer, if disabled
+      //vm.annotations.setDefaultTool('bfrs','Pan')
+      $.each([vm.annotations.ui.defaultPan], function (index, t) {
+        t.scope = t.scope || [];
+        t.scope.push("bfrs");
+      });
+
+      $.each(
+        vm.annotations.tools.filter(function (t) {
+          return t.scope && t.scope.indexOf("bfrs") >= 0;
+        }),
+        function (index, t) {
+          vm.tools.splice(index, 0, t);
+        },
+      );
+
+      vm.map.olmap.on("removeLayer", function (ev) {
+        if (ev.mapLayer.get("id") === env.bushfireListLayer) {
+          vm.features.clear();
+          vm._featurelist.clear();
+          vm.isFeatureListLoading = false;
+        }
+      });
+
+      vm._resolutionChanged = debounce(function () {
+        vm.featureLabelDisabled =
+          vm.map.olmap.getView().getResolution() >= 0.003;
+      }, 200);
+
+      vm._resolutionChanged();
+
+      vm.map.olmap.getView().on("change:resolution", function () {
+        vm._resolutionChanged();
+      });
+
+      vm.selectedFeatures.on("add", function () {
+        vm.selectRevision += 1;
+      });
+      vm.selectedFeatures.on("remove", function () {
+        vm.selectRevision += 1;
+      });
+
+      vm._bfrsStatus.phaseEnd("attach_event");
+      //load user profile
+      vm.loadUserProfile();
+    },
     regionFilter: function (downloadFilter) {
       if (downloadFilter) {
         var vm = this;
@@ -1549,26 +1654,26 @@ export default {
       return this.revision && this.isDeletable(bushfire);
     },
     createUrl: function () {
-      return this.env.bfrsService + "/bfrs/create/";
+      return env.bfrsService + "/bfrs/create/";
     },
     editUrl: function (feat) {
       var status = feat.get("report_status");
       if (status > 1 && status < 5) {
-        return this.env.bfrsService + "/bfrs/final/" + feat.get("id") + "/";
+        return env.bfrsService + "/bfrs/final/" + feat.get("id") + "/";
       } else {
-        return this.env.bfrsService + "/bfrs/initial/" + feat.get("id") + "/";
+        return env.bfrsService + "/bfrs/initial/" + feat.get("id") + "/";
       }
     },
     saveUrl: function (feat) {
       return (
-        this.env.bfrsService +
+        env.bfrsService +
         "/api/v1/bushfirespatial/" +
         feat.get("id") +
         "/?format=json"
       );
     },
     deleteUrl: function (feat) {
-      return this.env.bfrsService + "/delete/" + feat.get("id");
+      return env.bfrsService + "/delete/" + feat.get("id");
     },
     startEditFeature: function (feat) {
       if (
@@ -4134,14 +4239,12 @@ export default {
       //console.log("originpoint filter = " + originpoint_filter)
       //console.log("bbox = " + bbox)
       var bushfireLayer = getLayerId(
-        downloadType === "listed"
-          ? this.env.bushfireLatestLayer
-          : this.env.bushfireLayer,
+        downloadType === "listed" ? env.bushfireLatestLayer : env.bushfireLayer,
       );
       var fireboundaryLayer = getLayerId(
         downloadType === "listed"
-          ? this.env.bushfireFireBoundaryLatestLayer
-          : this.env.bushfireFireBoundaryLayer,
+          ? env.bushfireFireBoundaryLatestLayer
+          : env.bushfireFireBoundaryLayer,
       );
       var options;
       if (downloadType === "history") {
@@ -4691,11 +4794,11 @@ export default {
     },
 
     importList: function () {
-      if (this.$els.bushfiresfile.files.length === 0) {
+      if (this.$refs.bushfiresfile.files.length === 0) {
         return;
       }
-      var file = this.$els.bushfiresfile.files[0];
-      this.$els.bushfiresfile.value = null;
+      var file = this.$refs.bushfiresfile.files[0];
+      this.$refs.bushfiresfile.value = null;
       var vm = this;
       var targetFeature = null;
       if (this._uploadBushfireNumber) {
@@ -6218,39 +6321,47 @@ export default {
     });
     vm.taskDialog = new Foundation.Reveal($("#progressInfo"));
 
+    // TODO: Native DateTimeInput replacement currently used.
+    // Review whether we want to restore:
+    // - custom << and >> navigation arrows
+    // - minuteStep behaviour
+    // - any other Foundation Datepicker UX features
+    //
+    // Original code:
+    //
     //init datepicker
-    $("#bfrsStartDate").fdatepicker({
-      format: "yyyy-mm-dd hh:ii",
-      disableDblClickSelection: true,
-      leftArrow: "<<",
-      rightArrow: ">>",
-      startDate: null,
-      endDate: null,
-      pickTime: true,
-      minuteStep: 1,
-    });
-    try {
-      this._startDatePicker = $("#bfrsStartDate").data().datepicker;
-    } catch {
-      this._startDatePicker = null;
-    }
+    // $("#bfrsStartDate").fdatepicker({
+    //   format: "yyyy-mm-dd hh:ii",
+    //   disableDblClickSelection: true,
+    //   leftArrow: "<<",
+    //   rightArrow: ">>",
+    //   startDate: null,
+    //   endDate: null,
+    //   pickTime: true,
+    //   minuteStep: 1,
+    // });
+    // try {
+    //   this._startDatePicker = $("#bfrsStartDate").data().datepicker;
+    // } catch {
+    //   this._startDatePicker = null;
+    // }
 
-    $("#bfrsEndDate").fdatepicker({
-      format: "yyyy-mm-dd hh:ii",
-      disableDblClickSelection: true,
-      leftArrow: "<<",
-      rightArrow: ">>",
-      startDate: null,
-      endDate: null,
-      pickTime: true,
-      minuteStep: 1,
-    });
+    // $("#bfrsEndDate").fdatepicker({
+    //   format: "yyyy-mm-dd hh:ii",
+    //   disableDblClickSelection: true,
+    //   leftArrow: "<<",
+    //   rightArrow: ">>",
+    //   startDate: null,
+    //   endDate: null,
+    //   pickTime: true,
+    //   minuteStep: 1,
+    // });
 
-    try {
-      this._endDatePicker = $("#bfrsEndDate").data().datepicker;
-    } catch {
-      this._endDatePicker = null;
-    }
+    // try {
+    //   this._endDatePicker = $("#bfrsEndDate").data().datepicker;
+    // } catch {
+    //   this._endDatePicker = null;
+    // }
 
     vm._bfrsStatus = this.loading.register("bfrs", "Bushfire Report Component");
     vm._bfrsStatus.phaseBegin("initialize", 10, "Initialize");
@@ -6916,7 +7027,7 @@ export default {
       return tool.name === "Bfrs Select";
     });
 
-    this.$root.fixedLayers.push({
+    useStateStore().fixedLayers.push({
       type: "WFSLayer",
       name: "Bushfire Report",
       id: env.bushfireListLayer,
@@ -6950,7 +7061,7 @@ export default {
           type: "ImageLayer",
           name: "Fire Boundary of Selected Bushfire Final Report",
           id: env.bushfireFinalFireBoundaryLatestLayer,
-          // style: getLayerId(this.env.bushfireFinalFireBoundaryLatestLayer) + ".selected",
+          // style: getLayerId(env.bushfireFinalFireBoundaryLatestLayer) + ".selected",
           mapLayerId: env.bushfireFinalFireBoundaryLatestLayer + "_selected",
           autoAdd: false,
           inheritRefresh: true,
@@ -7138,82 +7249,6 @@ export default {
       true,
       true,
     );
-    // post init event hookup
-    this.$on("gk-init", function () {
-      vm._bfrsStatus.phaseEnd("gk-init");
-
-      vm._bfrsStatus.phaseBegin("attach_event", 10, "Attach events");
-      map.olmap.getView().on("propertychange", function () {
-        vm.updateViewport();
-      });
-
-      vm.selectedFeatures.on("add", function (event) {
-        if (vm.annotations.toselectMode === "geometry") {
-          if (event.element["selectedIndex"] === undefined) {
-            vm.selectDefaultGeometry(event.element);
-          }
-        }
-        vm.refreshSelectedFinalFireboundaryLayer();
-        //vm.zoomToSelected(200)
-      });
-      vm.selectedFeatures.on("remove", function () {
-        vm.refreshSelectedFinalFireboundaryLayer();
-        //vm.zoomToSelected(200)
-        if (vm.selectedFeatures.getLength() !== 1) {
-          if (vm.annotations.tool === vm.ui.modifyTool) {
-            vm.annotations.setTool(vm.ui.panTool);
-          }
-        }
-
-        //remove the index of the selected geometry in geometry collection
-        //delete event.element['selectedIndex']
-      });
-      // enable resource bfrs layer, if disabled
-      //vm.annotations.setDefaultTool('bfrs','Pan')
-      $.each([vm.annotations.ui.defaultPan], function (index, t) {
-        t.scope = t.scope || [];
-        t.scope.push("bfrs");
-      });
-
-      $.each(
-        vm.annotations.tools.filter(function (t) {
-          return t.scope && t.scope.indexOf("bfrs") >= 0;
-        }),
-        function (index, t) {
-          vm.tools.splice(index, 0, t);
-        },
-      );
-
-      vm.map.olmap.on("removeLayer", function (ev) {
-        if (ev.mapLayer.get("id") === env.bushfireListLayer) {
-          vm.features.clear();
-          vm._featurelist.clear();
-          vm.isFeatureListLoading = false;
-        }
-      });
-
-      vm._resolutionChanged = debounce(function () {
-        vm.featureLabelDisabled =
-          vm.map.olmap.getView().getResolution() >= 0.003;
-      }, 200);
-
-      vm._resolutionChanged();
-
-      vm.map.olmap.getView().on("change:resolution", function () {
-        vm._resolutionChanged();
-      });
-
-      vm.selectedFeatures.on("add", function () {
-        vm.selectRevision += 1;
-      });
-      vm.selectedFeatures.on("remove", function () {
-        vm.selectRevision += 1;
-      });
-
-      vm._bfrsStatus.phaseEnd("attach_event");
-      //load user profile
-      vm.loadUserProfile();
-    });
   },
 };
 </script>

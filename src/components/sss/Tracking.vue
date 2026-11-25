@@ -179,9 +179,9 @@ class="expanded secondary button" :class="{'selected': t.name == annotations.too
                       class="switch-input"
                       id="toggleResourceInfo"
                       type="checkbox"
-                      :disabled="!systemsetting.hoverInfoSwitchable"
-                      :checked="systemsetting.hoverInfo"
-                      @change="systemsetting.toggleHoverInfo"
+                      :disabled="!systemSetting.hoverInfoSwitchable"
+                      :checked="systemSetting.hoverInfo"
+                      @change="systemSetting.toggleHoverInfo"
                     />
                     <label class="switch-paddle" for="toggleResourceInfo">
                       <span class="show-for-sr"
@@ -346,12 +346,13 @@ class="expanded secondary button" :class="{'selected': t.name == annotations.too
                     <label for="historyFrom">From:</label>
                   </div>
                   <div class="small-5">
-                    <input
-                      type="text"
+                    <DateTimeInput
                       id="historyFromDate"
                       class="span2"
                       v-model="historyFromDate"
                       placeholder="YYYY-MM-DD HH:mm"
+                      :min="minDate"
+                      :max="maxDate"
                       :disabled="historyRange !== '-1'"
                       readonly
                     />
@@ -372,8 +373,7 @@ class="expanded secondary button" :class="{'selected': t.name == annotations.too
                     <label for="historyTo">To:</label>
                   </div>
                   <div class="small-5">
-                    <input
-                      type="text"
+                    <DateTimeInput
                       id="historyToDate"
                       class="span2"
                       v-model="historyToDate"
@@ -475,6 +475,15 @@ import externalDSvg from "/symbols/device/external_d.svg";
 import dfesGenericSvg from "/symbols/device/dfes_generic.svg";
 import externalESvg from "/symbols/device/external_e.svg";
 
+import { useActiveStore } from "@/stores/active";
+import { useSystemSettingStore } from "@/stores/systemSetting";
+import { useAnnotationsStore } from "@/stores/annotations";
+import { useLoadingStore } from "@/stores/loading";
+import { useStateStore } from "@/stores/state";
+import { useMapStore } from "@/stores/map";
+
+import DateTimeInput from "@/components/forms/DateTimeInput.vue";
+
 export default {
   store: {
     resourceLabels: "settings.resourceLabels",
@@ -489,10 +498,14 @@ export default {
   setup() {
     (directionSvg, externalDSvg, dfesGenericSvg, externalESvg);
   },
+  components() {
+    DateTimeInput;
+  },
   data: function () {
     var fill = "#ff6600";
     var stroke = "#7c3100";
     return {
+      trackingStatus: null,
       toggleHistory: false,
       showToggles: false,
       clippedOnly: false,
@@ -550,23 +563,26 @@ export default {
     };
   },
   computed: {
-    map: function () {
-      return this.$root.map;
+    mapReady() {
+      return useMapStore().ready;
     },
-    env: function () {
-      return this.$root.env;
+    annotationsReady() {
+      return useAnnotationsStore().ready;
+    },
+    map() {
+      return useMapStore()?.component;
     },
     active: function () {
-      return this.$root.active;
+      return useActiveStore();
     },
     annotations: function () {
-      return this.$root.$refs.app.$refs.annotations;
+      return this.annotationsReady ? useAnnotationsStore().component : null;
     },
     info: function () {
       return this.$root.info;
     },
-    systemsetting: function () {
-      return this.$root.systemsetting;
+    systemSetting: function () {
+      return useSystemSettingStore();
     },
     catalogue: function () {
       return this.$root.catalogue;
@@ -575,22 +591,28 @@ export default {
       return this.$root.export;
     },
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
     utils: function () {
       return this.$root.utils;
     },
+    minDate() {
+      return moment().subtract(10, "years").format("YYYY-MM-DD") + "T00:00";
+    },
+    maxDate() {
+      return moment().format("YYYY-MM-DD") + "T23:59";
+    },
     isTrackingMapLayerHidden: function () {
-      return this.$root.active.isHidden(this.trackingMapLayer);
+      return this.active.component?.isHidden(this.trackingMapLayer);
     },
     isHistoryMapLayerHidden: function () {
-      return this.$root.active.isHidden(this.historyMapLayer);
+      return this.active.component?.isHidden(this.historyMapLayer);
     },
     selectedFeatures: function () {
-      return this.annotations.getSelectedFeatures("tracking");
+      return this.annotations?.getSelectedFeatures("tracking");
     },
     selectedFeaturesSize: function () {
-      return this.selectRevision && this.selectedFeatures.getLength();
+      return this.selectRevision && this.selectedFeatures?.getLength();
     },
     queryHistoryDisabled: function () {
       return !(
@@ -661,6 +683,14 @@ export default {
     },
   },
   watch: {
+    mapReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready && !this._trackingInitialized) {
+          this.initialiseTracking();
+        }
+      },
+    },
     isTrackingMapLayerHidden: function (newValue, oldValue) {
       if (newValue === undefined || oldValue === undefined) {
         //layer is turned on or turned off
@@ -715,6 +745,66 @@ export default {
     getDateRange,
     nextDate,
     checkPermission,
+    initialiseTracking() {
+      const vm = this;
+      vm.trackingStatus.phaseEnd("gk-init");
+
+      vm.trackingStatus.phaseBegin("attach_events", 10, "Attach events");
+      vm.map.olmap.getView().on("propertychange", function () {
+        vm.updateViewport();
+      });
+
+      /*var layersAdded = global.debounce(function () {
+          var mapLayer = vm.trackingMapLayer
+          if (!mapLayer) { return }
+          if (!mapLayer.get('tracking')) {
+            mapLayer.set('tracking', mapLayer.getSource().on('loadsource', viewChanged))
+          }
+        }, 100)
+        vm.map.olmap.getLayerGroup().on('change', layersAdded)
+        layersAdded()*/
+
+      vm.selectedFeatures.on("add", function () {
+        vm.selectRevision += 1;
+      });
+      vm.selectedFeatures.on("remove", function () {
+        vm.selectRevision += 1;
+      });
+
+      vm.map.olmap.on("removeLayer", function (ev) {
+        if (ev.mapLayer.get("id") === this.env.resourceTrackingLiveLayer) {
+          vm.features.clear();
+          vm._featurelist.clear();
+        }
+      });
+
+      vm._resolutionChanged = debounce(function () {
+        vm.featureLabelDisabled =
+          vm.map.olmap.getView().getResolution() >= 0.003;
+        vm.featureDirDisabled = vm.map.olmap.getView().getResolution() >= 0.003;
+      }, 200);
+
+      vm._resolutionChanged();
+      vm.map.olmap.getView().on("change:resolution", function () {
+        vm._resolutionChanged();
+      });
+
+      vm.trackingStatus.phaseEnd("attach_events");
+
+      vm.trackingStatus.phaseBegin("init_tools", 10, "Initialize tools");
+      //vm.annotations.setDefaultTool('tracking','Pan')
+
+      $.each([vm.annotations.ui.defaultPan], function (index, t) {
+        t.scope = t.scope || [];
+        t.scope.push("tracking");
+      });
+
+      vm.tools = vm.annotations.tools.filter(function (t) {
+        return t.scope && t.scope.indexOf("tracking") >= 0;
+      });
+
+      vm.trackingStatus.phaseEnd("init_tools");
+    },
     adjustHeight: function () {
       if (this.activeMenu === "tracking") {
         $("#tracking-list").height(
@@ -939,7 +1029,7 @@ export default {
       $.each(
         [this.trackingMapLayer, this.historyMapLayer],
         function (index, mapLayer) {
-          if (mapLayer && !vm.$root.active.isHidden(mapLayer)) {
+          if (mapLayer && !vm.active.component?.isHidden(mapLayer)) {
             mapLayer.changed();
           }
         },
@@ -1202,7 +1292,7 @@ export default {
       // enable resource tracking layer, if disabled
       if (!this.trackingMapLayer) {
         this.catalogue.onLayerChange(this.trackingLayer, true);
-      } else if (this.active.isHidden(this.trackingMapLayer)) {
+      } else if (this.active.component?.isHidden(this.trackingMapLayer)) {
         this.active.toggleHidden(this.trackingMapLayer);
       }
 
@@ -1220,26 +1310,33 @@ export default {
     },
   },
   mounted() {
-    var vm = this;
-    var trackingStatus = this.loading.register(
+    const vm = this;
+    vm.trackingStatus = this.loading.register(
       "tracking",
       "Resource Tracking Component",
     );
     vm._featurelist = new Collection();
 
-    trackingStatus.phaseBegin("initialize", 20, "Initialize");
+    vm.trackingStatus.phaseBegin("initialize", 20, "Initialize");
 
-    //init datepicker
-    $("#historyFromDate").fdatepicker({
-      format: "yyyy-mm-dd hh:ii",
-      disableDblClickSelection: true,
-      leftArrow: "<<",
-      rightArrow: ">>",
-      startDate: moment().subtract(10, "years").format("YYYY-MM-DD") + " 00:00",
-      endDate: moment().format("YYYY-MM-DD") + " 23:59",
-      pickTime: true,
-      minuteStep: 1,
-    });
+    // TODO: Native DateTimeInput replacement currently used.
+    // Review whether we want to restore:
+    // - custom << and >> navigation arrows
+    // - minuteStep behaviour
+    // - any other Foundation Datepicker UX features
+    //
+    // Original code:
+    //
+    // $("#historyFromDate").fdatepicker({
+    //   format: "yyyy-mm-dd hh:ii",
+    //   disableDblClickSelection: true,
+    //   leftArrow: "<<",
+    //   rightArrow: ">>",
+    //   startDate: moment().subtract(10, "years").format("YYYY-MM-DD") + " 00:00",
+    //   endDate: moment().format("YYYY-MM-DD") + " 23:59",
+    //   pickTime: true,
+    //   minuteStep: 1,
+    // });
 
     try {
       this._historyFromDatePicker = $("#historyFromDate").data().datepicker;
@@ -1248,16 +1345,24 @@ export default {
       this._historyFromDatePicker = null;
     }
 
-    $("#historyToDate").fdatepicker({
-      format: "yyyy-mm-dd hh:ii",
-      disableDblClickSelection: true,
-      leftArrow: "<<",
-      rightArrow: ">>",
-      startDate: moment().subtract(10, "years").format("YYYY-MM-DD") + " 00:00",
-      endDate: moment().format("YYYY-MM-DD") + " 23:59",
-      pickTime: true,
-      minuteStep: 1,
-    });
+    // TODO: Native DateTimeInput replacement currently used.
+    // Review whether we want to restore:
+    // - custom << and >> navigation arrows
+    // - minuteStep behaviour
+    // - any other Foundation Datepicker UX features
+    //
+    // Original code:
+    //
+    // $("#historyToDate").fdatepicker({
+    //   format: "yyyy-mm-dd hh:ii",
+    //   disableDblClickSelection: true,
+    //   leftArrow: "<<",
+    //   rightArrow: ">>",
+    //   startDate: moment().subtract(10, "years").format("YYYY-MM-DD") + " 00:00",
+    //   endDate: moment().format("YYYY-MM-DD") + " 23:59",
+    //   pickTime: true,
+    //   minuteStep: 1,
+    // });
 
     try {
       this._historyToDatePicker = $("#historyToDate").data().datepicker;
@@ -1307,7 +1412,7 @@ export default {
           if (
             res < 0.003 &&
             vm.resourceLabels &&
-            !vm.$root.active.isHidden(vm.map.getMapLayer(layerId))
+            !vm.active.component?.isHidden(vm.map.getMapLayer(layerId))
           ) {
             style[0].getText().setText(feat.get("label"));
           } else {
@@ -1474,7 +1579,7 @@ export default {
       return return_label;
     };
 
-    trackingStatus.phaseBegin(
+    vm.trackingStatus.phaseBegin(
       "load_resources",
       30,
       "Load resources",
@@ -1486,7 +1591,7 @@ export default {
       resourceTrackingStyleFunc(env.resourceTrackingLiveLayer),
     );
 
-    this.$root.fixedLayers.push(
+    useStateStore().fixedLayers.push(
       {
         type: "WFSLayer",
         // name: 'Resource Tracking',
@@ -1511,7 +1616,7 @@ export default {
         refresh: 60,
         onerror: function (status, message) {
           console.log("tracking onerror: before processResources function");
-          trackingStatus.phaseFailed(
+          vm.trackingStatus.phaseFailed(
             "load_resources",
             status + " : " + message,
           );
@@ -1561,7 +1666,7 @@ export default {
                 }
               }
             }
-            trackingStatus.phaseEnd("load_resources");
+            vm.trackingStatus.phaseEnd("load_resources");
           }
 
           if (
@@ -1729,69 +1834,9 @@ export default {
       vm.annotations.tools.push(tool);
     });
 
-    trackingStatus.phaseEnd("initialize");
+    vm.trackingStatus.phaseEnd("initialize");
 
-    trackingStatus.phaseBegin("gk-init", 30, "Listen 'gk-init' event");
-    // post init event hookup
-    this.$on("gk-init", function () {
-      trackingStatus.phaseEnd("gk-init");
-
-      trackingStatus.phaseBegin("attach_events", 10, "Attach events");
-      vm.map.olmap.getView().on("propertychange", function () {
-        vm.updateViewport();
-      });
-
-      /*var layersAdded = global.debounce(function () {
-          var mapLayer = vm.trackingMapLayer
-          if (!mapLayer) { return }
-          if (!mapLayer.get('tracking')) {
-            mapLayer.set('tracking', mapLayer.getSource().on('loadsource', viewChanged))
-          }
-        }, 100)
-        vm.map.olmap.getLayerGroup().on('change', layersAdded)
-        layersAdded()*/
-
-      vm.selectedFeatures.on("add", function () {
-        vm.selectRevision += 1;
-      });
-      vm.selectedFeatures.on("remove", function () {
-        vm.selectRevision += 1;
-      });
-
-      vm.map.olmap.on("removeLayer", function (ev) {
-        if (ev.mapLayer.get("id") === this.env.resourceTrackingLiveLayer) {
-          vm.features.clear();
-          vm._featurelist.clear();
-        }
-      });
-
-      vm._resolutionChanged = debounce(function () {
-        vm.featureLabelDisabled =
-          vm.map.olmap.getView().getResolution() >= 0.003;
-        vm.featureDirDisabled = vm.map.olmap.getView().getResolution() >= 0.003;
-      }, 200);
-
-      vm._resolutionChanged();
-      vm.map.olmap.getView().on("change:resolution", function () {
-        vm._resolutionChanged();
-      });
-
-      trackingStatus.phaseEnd("attach_events");
-
-      trackingStatus.phaseBegin("init_tools", 10, "Initialize tools");
-      //vm.annotations.setDefaultTool('tracking','Pan')
-
-      $.each([vm.annotations.ui.defaultPan], function (index, t) {
-        t.scope = t.scope || [];
-        t.scope.push("tracking");
-      });
-
-      vm.tools = vm.annotations.tools.filter(function (t) {
-        return t.scope && t.scope.indexOf("tracking") >= 0;
-      });
-
-      trackingStatus.phaseEnd("init_tools");
-    });
+    vm.trackingStatus.phaseBegin("gk-init", 30, "Listen 'gk-init' event");
   },
 };
 </script>

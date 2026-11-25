@@ -140,12 +140,21 @@
                 <label for="dateRangeFrom">From:</label>
               </div>
               <div class="small-5">
-                <input
-                  type="text"
+                <DateTimeInput
                   id="thermalFromDate"
                   class="span2"
-                  @click="changeThermalFromDate"
+                  :max="thermalMaxDate"
                   v-model="thermalFromDate"
+                  placeholder="YYYY-MM-DD HH:mm"
+                  :disabled="thermalDateRange !== '-1'"
+                  readonly
+                />
+                <input
+                  type="text"
+                  id="thermalToDate"
+                  class="span2"
+                  :min="thermalMinDate"
+                  v-model="thermalToDate"
                   placeholder="YYYY-MM-DD HH:mm"
                   :disabled="thermalDateRange !== '-1'"
                   readonly
@@ -336,6 +345,15 @@ import { containsCoordinate } from "ol/extent";
 
 import { getDateRange } from "@/utils";
 
+import DateTimeInput from "@/components/forms/DateTimeInput.vue";
+
+import { useActiveStore } from "@/stores/active";
+import { useSystemSettingStore } from "@/stores/systemSetting";
+import { useAnnotationsStore } from "@/stores/annotations";
+import { useLoadingStore } from "@/stores/loading";
+import { useStateStore } from "@/stores/state";
+import { useMapStore } from "@/stores/map";
+
 export default {
   store: {
     hotspotLabels: true, //boolean defining whether to show labels (can be later changed to use settings.
@@ -345,6 +363,9 @@ export default {
     leftPanelHeadHeight: "layout.leftPanelHeadHeight",
     activeMenu: "activeMenu",
     whoami: "whoami",
+  },
+  components() {
+    DateTimeInput;
   },
   data: function () {
     return {
@@ -378,17 +399,26 @@ export default {
   },
 
   computed: {
-    map: function () {
-      return this.$root.map;
+    mapReady() {
+      return useMapStore().ready;
+    },
+    map() {
+      return useMapStore()?.component;
     },
     env: function () {
       return this.$root.env;
     },
+    activeReady() {
+      return useActiveStore().ready;
+    },
     active: function () {
-      return this.$root.active;
+      return useActiveStore()?.component;
+    },
+    annotationsReady() {
+      return useAnnotationsStore().ready;
     },
     annotations: function () {
-      return this.$root.$refs.app.$refs.annotations;
+      return this.annotationsReady ? useAnnotationsStore().component : null;
     },
     info: function () {
       return this.$root.info;
@@ -403,7 +433,7 @@ export default {
       return this.$root.export;
     },
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
     selectedFeatures: function () {
       return this.annotations.getSelectedFeatures("thermal");
@@ -508,12 +538,24 @@ export default {
         return 0;
       }
     },
-
     hasFeatureFilter: function () {
       //prob replace with a hasDateFilter function based on whether a date or date range is specified
       return this.search && this.search.trim() ? true : false;
     },
+    thermalMinDate() {
+      if (!this.thermalFromDate) {
+        return moment().subtract(10, "years").format("YYYY-MM-DDTHH:mm");
+      }
 
+      return moment(this.thermalFromDate).format("YYYY-MM-DDTHH:mm");
+    },
+    thermalMaxDate() {
+      if (!this.thermalToDate) {
+        return moment().format("YYYY-MM-DDT23:59");
+      }
+
+      return moment(this.thermalToDate).format("YYYY-MM-DDTHH:mm");
+    },
     invalidDateFilter: function () {
       var invalid = true;
       if (!this.showDateRange) {
@@ -573,14 +615,16 @@ export default {
   },
 
   watch: {
+    mapReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready && !this._thermalInitialised) {
+          this.initialiseThermal();
+        }
+      },
+    },
     thermalDateRange: function () {
       this.changeThermalDateRange();
-    },
-    thermalFromDate: function () {
-      this.changeThermalFromDate();
-    },
-    thermalToDate: function () {
-      this.changeThermalToDate();
     },
   },
 
@@ -617,48 +661,6 @@ export default {
         let range = getDateRange(this.thermalDateRange, "YYYY-MM-DD HH:mm");
         this.thermalFromDate = range[0] || "";
         this.thermalToDate = range[1] || "";
-      }
-    },
-
-    changeThermalFromDate: function () {
-      if (this.thermalDateRange !== "-1") {
-        return;
-      }
-      if (!this._thermalToDatePicker) return;
-      try {
-        if (this.thermalFromDate === "") {
-          this._thermalToDatePicker.setStartDate(
-            moment().subtract(10, "years").format("YYYY-MM-DD") + " 00:00",
-          );
-        } else {
-          this._thermalToDatePicker.setStartDate(
-            moment(this.thermalFromDate, "YYYY-MM-DD HH:mm").format(
-              "YYYY-MM-DD",
-            ) + " 00:00",
-          );
-        }
-      } catch {
-        // TODO: Fix empty block
-      }
-    },
-
-    changeThermalToDate: function () {
-      if (this.thermalDateRange !== "-1") {
-        //not in editing mode
-        return;
-      }
-      if (!this._thermalFromDatePicker) return;
-
-      try {
-        if (this.thermalToDate === "") {
-          this._thermalFromDatePicker.setEndDate(
-            moment().format("YYYY-MM-DD") + " 23:59",
-          );
-        } else {
-          this._thermalFromDatePicker.setEndDate(this.thermalToDate);
-        }
-      } catch {
-        // TODO: Fix empty block
       }
     },
 
@@ -1555,8 +1557,68 @@ export default {
     teardown: function () {
       this.annotations.selectable.splice(0, this.annotations.selectable.length);
     },
-  },
+    initialiseThermal() {
+      const vm = this;
 
+      this._thermalInitialised = true;
+
+      this.thermalStatus.phaseEnd("gk-init");
+
+      this.thermalStatus.phaseBegin("attach_events", 10, "Attach events");
+
+      vm.map.olmap.getView().on("propertychange", function () {
+        vm.updateViewport();
+      });
+
+      vm.selectedFeatures.on("add", function () {
+        vm.selectRevision += 1;
+      });
+
+      vm.selectedFeatures.on("remove", function () {
+        vm.selectRevision += 1;
+      });
+
+      vm.map.olmap.on("removeLayer", function (ev) {
+        if (ev.mapLayer.get("id") === "hotspots:hotspot_centroids") {
+          vm.features.clear();
+          vm._featurelist.clear();
+        } else if (
+          ev.mapLayer.get("id") === "hotspots:hotspot_flight_footprints"
+        ) {
+          vm.footprints.clear();
+          vm._footprintlist.clear();
+        }
+      });
+
+      vm._resolutionChanged = debounce(function () {
+        vm.featureLabelDisabled =
+          vm.map.olmap.getView().getResolution() >= 0.003;
+
+        vm.featureDirDisabled = vm.map.olmap.getView().getResolution() >= 0.003;
+      }, 200);
+
+      vm._resolutionChanged();
+
+      vm.map.olmap.getView().on("change:resolution", function () {
+        vm._resolutionChanged();
+      });
+
+      this.thermalStatus.phaseEnd("attach_events");
+
+      this.thermalStatus.phaseBegin("init_tools", 10, "Initialize tools");
+
+      $.each([vm.annotations.ui.defaultPan], function (index, t) {
+        t.scope = t.scope || [];
+        t.scope.push("thermal");
+      });
+
+      vm.tools = vm.annotations.tools.filter(function (t) {
+        return t.scope && t.scope.indexOf("thermal") >= 0;
+      });
+
+      this.thermalStatus.phaseEnd("init_tools");
+    },
+  },
   mounted() {
     var vm = this;
     var thermalStatus = this.loading.register(
@@ -1568,46 +1630,10 @@ export default {
 
     thermalStatus.phaseBegin("initialize", 20, "Initialize");
 
-    //init datepicker
-    $("#thermalFromDate").fdatepicker({
-      format: "yyyy-mm-dd hh:ii",
-      disableDblClickSelection: true,
-      leftArrow: "<<",
-      rightArrow: ">>",
-      startDate: moment().subtract(10, "years").format("YYYY-MM-DD") + " 00:00",
-      endDate: moment().format("YYYY-MM-DD") + " 23:59",
-      pickTime: true,
-      minuteStep: 1,
-    });
-
-    try {
-      this._thermalFromDatePicker = $("#thermalFromDate").data().datepicker;
-    } catch (ex) {
-      console.log(ex);
-      this._thermalFromDatePicker = null;
-    }
-
-    $("#thermalToDate").fdatepicker({
-      format: "yyyy-mm-dd hh:ii",
-      disableDblClickSelection: true,
-      leftArrow: "<<",
-      rightArrow: ">>",
-      startDate: moment().subtract(10, "years").format("YYYY-MM-DD") + " 00:00",
-      endDate: moment().format("YYYY-MM-DD") + " 23:59",
-      pickTime: true,
-      minuteStep: 1,
-    });
-
-    try {
-      this._thermalToDatePicker = $("#thermalToDate").data().datepicker;
-    } catch {
-      this._thermalToDatePicker = null;
-    }
-
     this.changeThermalDateRange();
 
     thermalStatus.phaseBegin("load_hotspots", 30, "Load hotspots", false, true);
-    this.$root.fixedLayers.push({
+    useStateStore().fixedLayers.push({
       //   type: 'WFSLayer',
       type: "ImageLayer",
       name: "Thermal Imaging Hotspots",
@@ -1652,7 +1678,7 @@ export default {
       },
     });
 
-    this.$root.fixedLayers.push({
+    useStateStore().fixedLayers.push({
       type: "WFSLayer",
       name: "Thermal Imaging Flight Footprints",
       id: "hotspots:hotspot_flight_footprints",
@@ -1739,60 +1765,6 @@ export default {
     thermalStatus.phaseEnd("initialize");
 
     thermalStatus.phaseBegin("gk-init", 30, "Listen 'gk-init' event");
-    // post init event hookup
-    this.$on("gk-init", function () {
-      thermalStatus.phaseEnd("gk-init");
-
-      thermalStatus.phaseBegin("attach_events", 10, "Attach events");
-      vm.map.olmap.getView().on("propertychange", function () {
-        vm.updateViewport();
-      });
-
-      vm.selectedFeatures.on("add", function () {
-        vm.selectRevision += 1;
-      });
-      vm.selectedFeatures.on("remove", function () {
-        vm.selectRevision += 1;
-      });
-
-      vm.map.olmap.on("removeLayer", function (ev) {
-        if (ev.mapLayer.get("id") === "hotspots:hotspot_centroids") {
-          vm.features.clear();
-          vm._featurelist.clear();
-        } else if (
-          ev.mapLayer.get("id") === "hotspots:hotspot_flight_footprints"
-        ) {
-          vm.footprints.clear();
-          vm._footprintlist.clear();
-        }
-      });
-
-      vm._resolutionChanged = debounce(function () {
-        vm.featureLabelDisabled =
-          vm.map.olmap.getView().getResolution() >= 0.003;
-        vm.featureDirDisabled = vm.map.olmap.getView().getResolution() >= 0.003;
-      }, 200);
-
-      vm._resolutionChanged();
-      vm.map.olmap.getView().on("change:resolution", function () {
-        vm._resolutionChanged();
-      });
-
-      thermalStatus.phaseEnd("attach_events");
-
-      thermalStatus.phaseBegin("init_tools", 10, "Initialize tools");
-
-      $.each([vm.annotations.ui.defaultPan], function (index, t) {
-        t.scope = t.scope || [];
-        t.scope.push("thermal");
-      });
-
-      vm.tools = vm.annotations.tools.filter(function (t) {
-        return t.scope && t.scope.indexOf("thermal") >= 0;
-      });
-
-      thermalStatus.phaseEnd("init_tools");
-    });
   },
 };
 </script>

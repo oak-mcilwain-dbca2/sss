@@ -130,6 +130,10 @@
 import dragula from "dragula";
 import "dragula/dist/dragula.css";
 
+import { eventBus } from "@/services/gokart";
+import { useMapStore } from "@/stores/map";
+import { useActiveStore } from "@/stores/active";
+
 export default {
   store: {
     screenHeight: "layout.screenHeight",
@@ -381,12 +385,16 @@ export default {
     },
   },
   mounted() {
+    useActiveStore().setComponent(this);
+
     dragula([document.querySelector("#layers-active-list")]).on(
       "drop",
       this.updateOrder,
     );
-    this.$on("gk-init", function () {
-      this.allMapLayers = this.$root.map.olmap.getLayers().getArray();
+    const mapStore = useMapStore();
+
+    eventBus.on("gk-init", () => {
+      this.allMapLayers = mapStore.olmap.getLayers().getArray();
     });
   },
 };

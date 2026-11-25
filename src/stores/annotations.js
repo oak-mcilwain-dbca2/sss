@@ -7,7 +7,7 @@ export const useAnnotationsStore = defineStore("annotations", {
   }),
 
   actions: {
-    setMap(component) {
+    setComponent(component) {
       this.component = component;
       this.ready = true;
     },

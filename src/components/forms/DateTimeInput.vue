@@ -3,6 +3,9 @@
   <input
     type="datetime-local"
     :value="modelValue"
+    :min="min"
+    :max="max"
+    v-bind="$attrs"
     @input="$emit('update:modelValue', $event.target.value)"
   />
 </template>
@@ -15,6 +18,14 @@ export default {
     modelValue: {
       type: String,
       required: true,
+    },
+    min: {
+      type: String,
+      default: "",
+    },
+    max: {
+      type: String,
+      default: "",
     },
   },
 

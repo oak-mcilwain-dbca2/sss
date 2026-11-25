@@ -342,7 +342,7 @@ export default {
         this.layer = l;
         if (!previewEl.find(".layerdetails").length > 0) {
           this.$nextTick(function () {
-            previewEl.prepend(this.$els.layerdetails.innerHTML);
+            previewEl.prepend(this.$refs.layerdetails.innerHTML);
           });
         }
         let stopeventElement = document.getElementsByClassName(

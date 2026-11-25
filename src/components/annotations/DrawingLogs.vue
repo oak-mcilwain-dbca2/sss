@@ -31,8 +31,10 @@ import Collection from "ol/Collection";
 
 import EventType from "ol/events/EventType";
 
+import { useStateStore } from "@/stores/state";
+
 export default {
-  store: ["drawingLogs", "redoPointer", "settings"],
+  store: ["redoPointer", "settings"],
   data: function () {
     return {
       modifyingFeatures: {},
@@ -47,6 +49,9 @@ export default {
     },
     systemsetting: function () {
       return this.$root.systemsetting;
+    },
+    drawingLogs() {
+      return useStateStore().drawingLogs;
     },
     undoSteps: function () {
       return this.drawingLogs.length && this.redoPointer;

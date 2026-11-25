@@ -333,7 +333,9 @@ import boxresizeSvg from "@/assets/images/boxresize.svg";
 
 import iDSpriteSvg from "@/assets/images/iD-sprite.svg";
 
+import { useLoadingStore } from "@/stores/loading";
 import { useAnnotationsStore } from "@/stores/annotations";
+import { useMapStore } from "@/stores/map";
 
 export default {
   store: {
@@ -410,8 +412,11 @@ export default {
     };
   },
   computed: {
-    map: function () {
-      return this.$root.$refs.app.$refs.map;
+    mapReady() {
+      return useMapStore().ready;
+    },
+    map() {
+      return this.mapReady ? useMapStore().component : null;
     },
     export: function () {
       return this.$root.export;
@@ -429,7 +434,7 @@ export default {
       return this.$root.measure;
     },
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
     drawinglogs: function () {
       return this.$refs.drawinglogs;
@@ -535,6 +540,14 @@ export default {
     },
   },
   watch: {
+    mapReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready) {
+          this.initialiseMapInteractions();
+        }
+      },
+    },
     featureEditing: function (val) {
       if (val && val instanceof Feature && val.get) {
         if (val.get("note")) {
@@ -618,12 +631,12 @@ export default {
       });
     },
     importAnnotations: function () {
-      if (this.$els.annotationsfile.files.length === 0) {
+      if (this.$refs.annotationsfile.files.length === 0) {
         return;
       }
       var vm = this;
-      let file = this.$els.annotationsfile.files[0];
-      this.$els.annotationsfile.value = null;
+      let file = this.$refs.annotationsfile.files[0];
+      this.$refs.annotationsfile.value = null;
       this.export.importVector(file, function (features, fileFormat) {
         var ignoredFeatures = [];
         let f = null;
@@ -1866,7 +1879,7 @@ export default {
         note = this.note;
       }
       var previousColour = note.colour;
-      note.text = this.$els.notecontent.value;
+      note.text = this.$refs.notecontent.value;
       note.colour = this.colour;
       this.drawNote(note, save);
       if (
@@ -1884,7 +1897,7 @@ export default {
         return;
       }
       var vm = this;
-      var noteCanvas = this.$els.textpreview;
+      var noteCanvas = this.$refs.textpreview;
       $(noteCanvas).removeLayer("decorationLayer");
       $(noteCanvas).removeLayer("textLayer");
       $(noteCanvas).clearCanvas();
@@ -1892,11 +1905,11 @@ export default {
         //draw
         $(noteCanvas).attr(
           "height",
-          $(this.$els.notecontent).height() + noteOffset,
+          $(this.$refs.notecontent).height() + noteOffset,
         );
         $(noteCanvas).attr(
           "width",
-          $(this.$els.notecontent).width() + noteOffset,
+          $(this.$refs.notecontent).width() + noteOffset,
         );
         noteStyles[note.style](note).forEach(function (cmd) {
           $(noteCanvas)[cmd[0]](cmd[1]);
@@ -2581,6 +2594,417 @@ export default {
         feature.setStyle(tool.style);
       }
     },
+    initialiseMapInteractions() {
+      const vm = this;
+      const map = this.map;
+
+      // collection to store all annotation features
+      this.features.on("add", function (ev) {
+        const tool = vm.getTool(ev.element.get("toolName"));
+
+        if (tool.onAdd) {
+          tool.onAdd(ev.element);
+        }
+        vm._rotateAll();
+      });
+      this.features.on("remove", function () {
+        vm._rotateAll();
+      });
+
+      this.featureOverlay = new VectorLayer({
+        format: new GeoJSON(),
+        source: new VectorSource({
+          features: this.features,
+        }),
+        //source: featureSource
+      });
+
+      this.featureOverlay.set("id", "annotations");
+      this.featureOverlay.set("name", "My Drawing");
+      // collection for tracking selected features
+
+      // the following interacts are bundled into the Select and Edit tools.
+      // main difference is that Select allows movement of whole features around the map,
+      // whereas Edit is for movement of individual nodes
+
+      this.ui.translateInter = this.translateInterFactory()();
+      this.ui.dragSelectInter = this.dragSelectInterFactory()();
+      this.ui.polygonSelectInter = this.polygonSelectInterFactory()();
+      this.ui.selectInter = this.selectInterFactory()();
+      this.ui.keyboardInter = this.keyboardInterFactory()();
+      this.ui.modifyInter = this.modifyInterFactory()();
+
+      // load default tools
+      this.ui.defaultPan = {
+        name: "Pan",
+        icon: "fa-hand-paper-o",
+        cursor: ["-webkit-grab", "-moz-grab"],
+        scope: ["annotation"],
+        keepSelection: true,
+        interactions: [
+          map.dragPanInter,
+          map.doubleClickZoomInter,
+          map.keyboardPanInter,
+          map.keyboardZoomInter,
+        ],
+        /*
+        comments:[
+          {
+              name:"Tips",
+              description:[
+                  "Pan on the map using keyboard or mouse",
+                  "Zoom the map using keyboard or mouse"
+              ]
+          }
+        ]
+        */
+      };
+      this.ui.editStyle = {
+        name: "Edit Style",
+        icon: "fa-pencil-square-o",
+        scope: ["annotation"],
+        interactions: [this.ui.dragSelectInter, this.ui.selectInter],
+        onSet: function () {
+          vm.ui.dragSelectInter.setMulti(false);
+          vm.ui.selectInter.setMulti(false);
+        },
+        comments: [
+          {
+            name: "Tips",
+            description: ["Edit selected text node"],
+          },
+        ],
+      };
+      this.ui.defaultSelect = {
+        name: "Select",
+        icon: "fa-mouse-pointer",
+        scope: ["annotation"],
+        keepSelection: true,
+        interactions: [
+          this.ui.keyboardInter,
+          this.ui.dragSelectInter,
+          this.ui.polygonSelectInter,
+          this.ui.selectInter,
+          this.ui.translateInter,
+        ],
+        onSet: function () {
+          vm.ui.dragSelectInter.setMulti(true);
+          vm.ui.selectInter.setMulti(true);
+        },
+        comments: [
+          {
+            name: "Tips",
+            description: [
+              "Select all features using shortcut key 'Ctrl + A'",
+              "Select features using mouse.",
+              "Hold 'Ctrl' to enable polygon selection",
+              "Delete selected features using key 'Del'",
+            ],
+          },
+        ],
+      };
+      this.ui.defaultEdit = {
+        name: "Edit Geometry",
+        icon: "fa-pencil",
+        scope: ["annotation"],
+        interactions: [
+          this.ui.keyboardInter,
+          this.ui.selectInter,
+          this.ui.dragSelectInter,
+          this.ui.modifyInter,
+        ],
+        onSet: function () {
+          vm.ui.dragSelectInter.setMulti(false);
+          vm.ui.selectInter.setMulti(false);
+        },
+        comments: [
+          {
+            name: "Tips",
+            description: ["Edit annotation features"],
+          },
+        ],
+      };
+      this.tools = [
+        this.ui.defaultPan,
+        this.ui.defaultSelect,
+        this.ui.defaultEdit,
+        this.ui.editStyle,
+      ];
+
+      var noteStyleCache = {};
+      var noteStyle = function (res) {
+        let f = this;
+        if (res) {
+          f = res;
+        }
+        let url;
+        if (f) {
+          url = vm.getNoteUrl(f.get("note"));
+        } else {
+          return null;
+        }
+        var tint = f["tint"] || f.get("tint") || "notselected";
+        if (!noteStyleCache[url]) {
+          noteStyleCache[url] = [];
+        }
+        if (!noteStyleCache[url][tint]) {
+          var color = tint == "selected" ? "#70BDF0" : undefined;
+          noteStyleCache[url][tint] = new Style({
+            image: new Icon({
+              anchorOrigin: "bottom-left",
+              anchor: [0, 0],
+              color: color,
+              src: url,
+            }),
+          });
+        }
+        return noteStyleCache[url][tint];
+      };
+      this.ui.defaultText = {
+        name: "Text Note",
+        icon: "fa-comment",
+        style: noteStyle,
+        interactions: [vm.pointDrawFactory()],
+        showName: true,
+        scope: ["annotation"],
+        onAdd: function (f) {
+          f.getGeometry().defaultGetExtent =
+            f.getGeometry().defaultGetExtent || f.getGeometry().getExtent;
+          f.getGeometry().getExtent = function () {
+            if (vm.selecting) {
+              return vm.getNoteExtent(f);
+            } else {
+              return this.defaultGetExtent();
+            }
+          };
+          if (f.get("note")) {
+            return;
+          }
+          f.set("note", $.extend({}, vm.note));
+        },
+        comments: [
+          {
+            name: "Tips",
+            description: ["Create a text note and place it into map."],
+          },
+        ],
+      };
+
+      var customAdd = function (f) {
+        if (!f.get("size")) {
+          f.set("size", vm.size);
+        }
+        if (!f.get("colour")) {
+          f.set("colour", vm.colour);
+        }
+      };
+
+      var customPointAdd = function (f) {
+        if (!f.get("shape")) {
+          f.set("shape", vm.shape);
+        }
+        if (!f.get("colour")) {
+          f.set("colour", vm.colour);
+        }
+      };
+
+      this.ui.defaultPoint = {
+        name: "Custom Point",
+        icon: function (feature) {
+          if (feature) {
+            //  console.log(vm.features);
+            return vm._pointShapesMap[feature.get("shape")][0];
+          } else {
+            return "/symbols/fire/custom_point.svg";
+          }
+        },
+        interactions: [this.pointDrawFactory()],
+        showName: true,
+        scope: ["annotation"],
+        onAdd: customPointAdd,
+        style: vm.getIconStyleFunction(vm.tints),
+        sketchStyle: function () {
+          var feat = this;
+
+          feat.set("shape", vm.shape, true);
+          feat.set("colour", vm.colour, true);
+          var style = vm.map.cacheStyle(
+            function (feat) {
+              var src = vm.map.getBlob(feat, ["icon", "tint"], vm.tints || {});
+              if (!src) {
+                return false;
+              }
+              var rot = feat.get("rotation") || 0.0;
+              return new Style({
+                image: new Icon({
+                  src: src,
+                  scale: 0.5,
+                  rotation: rot,
+                  rotateWithView: true,
+                  snapToPixel: true,
+                }),
+              });
+            },
+            feat,
+            ["icon", "tint", "rotation"],
+          );
+
+          return style;
+        },
+        tint: function (feature) {
+          var shape = feature.get("shape");
+          var colour = feature.get("colour");
+          if (shape) {
+            return vm.getCustomPointTint(shape, [null, colour]);
+          } else {
+            return "default";
+          }
+        },
+        selectedTint: function (feature) {
+          // console.log("Custom Point defaultPoint selectedTint");
+          var shape = feature.get("shape");
+          if (shape) {
+            return vm.getCustomPointTint(shape, ["#2199e8", "#2199e8"]);
+          } else {
+            return "selected";
+          }
+        },
+        comments: [
+          {
+            name: "Tips",
+            description: ["Create a customized point and place it in map. "],
+          },
+        ],
+      };
+
+      this.ui.defaultLine = {
+        name: "Custom Line",
+        icon: `${iDSpriteSvg}#icon-line`,
+        interactions: [this.linestringDrawFactory()],
+        showName: true,
+        scope: ["annotation"],
+        onAdd: customAdd,
+        style: vm.getVectorStyleFunc(this.tints),
+        comments: [
+          {
+            name: "Tips",
+            description: [
+              "Draw a line on map",
+              "Hold down the 'SHIFT' key during drawing to enable freehand mode. ",
+            ],
+          },
+        ],
+      };
+
+      this.ui.defaultPolygon = {
+        name: "Custom Area",
+        icon: `${iDSpriteSvg}#icon-area`,
+        interactions: [this.polygonDrawFactory()],
+        showName: true,
+        scope: ["annotation"],
+        onAdd: customAdd,
+        style: vm.getVectorStyleFunc(this.tints),
+        measureLength: true,
+        measureArea: true,
+        comments: [
+          {
+            name: "Tips",
+            description: [
+              "Draw a polygon on map",
+              "Hold down the 'SHIFT' key during drawing to enable freehand mode. ",
+            ],
+          },
+        ],
+      };
+
+      var getFeatureInfo = function (feature) {
+        var tool = vm.getTool(feature.get("toolName"));
+        var icon = tool.icon;
+        if (typeof icon === "function") {
+          icon = icon(feature);
+        }
+
+        if (!icon) {
+          return { name: tool.name };
+        } else if (icon.startsWith("fa-")) {
+          return { name: tool.name, icon: "fa " + icon };
+        } else if (icon.search("#") === -1) {
+          // plain svg/image
+          return { name: tool.name, img: icon };
+        } else {
+          // svg reference
+          return { name: tool.name, svg: icon };
+        }
+      };
+
+      // add annotations layer to catalogue list
+      this.$root.catalogue.catalogue.push({
+        type: "Annotations",
+        id: "annotations",
+        name: "My Drawing",
+        getFeatureInfo: getFeatureInfo,
+      });
+
+      this.measure.register("annotations", this.features);
+
+      annotationStatus.phaseEnd("initialize");
+
+      annotationStatus.phaseBegin("load_features", 10, "Load saved features");
+      var savedFeatures = this.$root.geojson.readFeatures(
+        this.$root.store.annotations,
+      );
+      annotationStatus.phaseEnd("load_features");
+
+      annotationStatus.phaseBegin(
+        "gk-init",
+        40,
+        "Listen 'gk-init' event",
+        true,
+        true,
+      );
+      this.$on("gk-init", function () {
+        annotationStatus.phaseEnd("gk-init");
+
+        annotationStatus.phaseBegin("import_features", 10, "Import features");
+        if (savedFeatures) {
+          //set feature style
+
+          $.each(savedFeatures, function (index, feature) {
+            if (!feature.get("id")) {
+              vm.drawingSequence += 1;
+              feature.set("id", vm.drawingSequence);
+            }
+            vm.initFeature(feature);
+          });
+          this.features.extend(savedFeatures);
+        }
+        annotationStatus.phaseEnd("import_features");
+
+        annotationStatus.phaseBegin("init_tools", 20, "Initialize tools");
+        //initialize tool's interaction
+        $.each(vm.tools, function (index, tool) {
+          $.each(tool.interactions, function (subindex, interact) {
+            if (typeof interact === "function") {
+              tool.interactions[subindex] = interact(tool);
+            }
+          });
+          tool.keepSelection =
+            tool.keepSelection === undefined ? false : tool.keepSelection;
+          tool.selectMode =
+            tool.selectMode == undefined ? "feature" : tool.selectMode;
+          if (!tool.label) {
+            tool.label = tool.name;
+          }
+        });
+        vm.annotationTools = this.tools.filter(function (t) {
+          return t.scope && t.scope.indexOf("annotation") >= 0;
+        });
+        vm.setDefaultTool("annotations", "Edit");
+        annotationStatus.phaseEnd("init_tools");
+      });
+
+      console.log("annotations ready done");
+    },
   },
   mounted() {
     const vm = this;
@@ -2615,414 +3039,6 @@ export default {
         }
       });
     }, 500);
-
-    var map = this.map;
-    // collection to store all annotation features
-    this.features.on("add", function (ev) {
-      const tool = vm.getTool(ev.element.get("toolName"));
-
-      if (tool.onAdd) {
-        tool.onAdd(ev.element);
-      }
-      vm._rotateAll();
-    });
-    this.features.on("remove", function () {
-      vm._rotateAll();
-    });
-
-    this.featureOverlay = new VectorLayer({
-      format: GeoJSON(),
-      source: new VectorSource({
-        features: this.features,
-      }),
-      //source: featureSource
-    });
-
-    this.featureOverlay.set("id", "annotations");
-    this.featureOverlay.set("name", "My Drawing");
-    // collection for tracking selected features
-
-    // the following interacts are bundled into the Select and Edit tools.
-    // main difference is that Select allows movement of whole features around the map,
-    // whereas Edit is for movement of individual nodes
-
-    this.ui.translateInter = this.translateInterFactory()();
-    this.ui.dragSelectInter = this.dragSelectInterFactory()();
-    this.ui.polygonSelectInter = this.polygonSelectInterFactory()();
-    this.ui.selectInter = this.selectInterFactory()();
-    this.ui.keyboardInter = this.keyboardInterFactory()();
-    this.ui.modifyInter = this.modifyInterFactory()();
-
-    // load default tools
-    this.ui.defaultPan = {
-      name: "Pan",
-      icon: "fa-hand-paper-o",
-      cursor: ["-webkit-grab", "-moz-grab"],
-      scope: ["annotation"],
-      keepSelection: true,
-      interactions: [
-        map.dragPanInter,
-        map.doubleClickZoomInter,
-        map.keyboardPanInter,
-        map.keyboardZoomInter,
-      ],
-      /*
-        comments:[
-          {
-              name:"Tips",
-              description:[
-                  "Pan on the map using keyboard or mouse",
-                  "Zoom the map using keyboard or mouse"
-              ]
-          }
-        ]
-        */
-    };
-    this.ui.editStyle = {
-      name: "Edit Style",
-      icon: "fa-pencil-square-o",
-      scope: ["annotation"],
-      interactions: [this.ui.dragSelectInter, this.ui.selectInter],
-      onSet: function () {
-        vm.ui.dragSelectInter.setMulti(false);
-        vm.ui.selectInter.setMulti(false);
-      },
-      comments: [
-        {
-          name: "Tips",
-          description: ["Edit selected text node"],
-        },
-      ],
-    };
-    this.ui.defaultSelect = {
-      name: "Select",
-      icon: "fa-mouse-pointer",
-      scope: ["annotation"],
-      keepSelection: true,
-      interactions: [
-        this.ui.keyboardInter,
-        this.ui.dragSelectInter,
-        this.ui.polygonSelectInter,
-        this.ui.selectInter,
-        this.ui.translateInter,
-      ],
-      onSet: function () {
-        vm.ui.dragSelectInter.setMulti(true);
-        vm.ui.selectInter.setMulti(true);
-      },
-      comments: [
-        {
-          name: "Tips",
-          description: [
-            "Select all features using shortcut key 'Ctrl + A'",
-            "Select features using mouse.",
-            "Hold 'Ctrl' to enable polygon selection",
-            "Delete selected features using key 'Del'",
-          ],
-        },
-      ],
-    };
-    this.ui.defaultEdit = {
-      name: "Edit Geometry",
-      icon: "fa-pencil",
-      scope: ["annotation"],
-      interactions: [
-        this.ui.keyboardInter,
-        this.ui.selectInter,
-        this.ui.dragSelectInter,
-        this.ui.modifyInter,
-      ],
-      onSet: function () {
-        vm.ui.dragSelectInter.setMulti(false);
-        vm.ui.selectInter.setMulti(false);
-      },
-      comments: [
-        {
-          name: "Tips",
-          description: ["Edit annotation features"],
-        },
-      ],
-    };
-    this.tools = [
-      this.ui.defaultPan,
-      this.ui.defaultSelect,
-      this.ui.defaultEdit,
-      this.ui.editStyle,
-    ];
-
-    var noteStyleCache = {};
-    var noteStyle = function (res) {
-      let f = this;
-      if (res) {
-        f = res;
-      }
-      let url;
-      if (f) {
-        url = vm.getNoteUrl(f.get("note"));
-      } else {
-        return null;
-      }
-      var tint = f["tint"] || f.get("tint") || "notselected";
-      if (!noteStyleCache[url]) {
-        noteStyleCache[url] = [];
-      }
-      if (!noteStyleCache[url][tint]) {
-        var color = tint == "selected" ? "#70BDF0" : undefined;
-        noteStyleCache[url][tint] = new Style({
-          image: new Icon({
-            anchorOrigin: "bottom-left",
-            anchor: [0, 0],
-            color: color,
-            src: url,
-          }),
-        });
-      }
-      return noteStyleCache[url][tint];
-    };
-    this.ui.defaultText = {
-      name: "Text Note",
-      icon: "fa-comment",
-      style: noteStyle,
-      interactions: [vm.pointDrawFactory()],
-      showName: true,
-      scope: ["annotation"],
-      onAdd: function (f) {
-        f.getGeometry().defaultGetExtent =
-          f.getGeometry().defaultGetExtent || f.getGeometry().getExtent;
-        f.getGeometry().getExtent = function () {
-          if (vm.selecting) {
-            return vm.getNoteExtent(f);
-          } else {
-            return this.defaultGetExtent();
-          }
-        };
-        if (f.get("note")) {
-          return;
-        }
-        f.set("note", $.extend({}, vm.note));
-      },
-      comments: [
-        {
-          name: "Tips",
-          description: ["Create a text note and place it into map."],
-        },
-      ],
-    };
-
-    var customAdd = function (f) {
-      if (!f.get("size")) {
-        f.set("size", vm.size);
-      }
-      if (!f.get("colour")) {
-        f.set("colour", vm.colour);
-      }
-    };
-
-    var customPointAdd = function (f) {
-      if (!f.get("shape")) {
-        f.set("shape", vm.shape);
-      }
-      if (!f.get("colour")) {
-        f.set("colour", vm.colour);
-      }
-    };
-
-    this.ui.defaultPoint = {
-      name: "Custom Point",
-      icon: function (feature) {
-        if (feature) {
-          //  console.log(vm.features);
-          return vm._pointShapesMap[feature.get("shape")][0];
-        } else {
-          return "/symbols/fire/custom_point.svg";
-        }
-      },
-      interactions: [this.pointDrawFactory()],
-      showName: true,
-      scope: ["annotation"],
-      onAdd: customPointAdd,
-      style: vm.getIconStyleFunction(vm.tints),
-      sketchStyle: function () {
-        var feat = this;
-
-        feat.set("shape", vm.shape, true);
-        feat.set("colour", vm.colour, true);
-        var style = vm.map.cacheStyle(
-          function (feat) {
-            var src = vm.map.getBlob(feat, ["icon", "tint"], vm.tints || {});
-            if (!src) {
-              return false;
-            }
-            var rot = feat.get("rotation") || 0.0;
-            return new Style({
-              image: new Icon({
-                src: src,
-                scale: 0.5,
-                rotation: rot,
-                rotateWithView: true,
-                snapToPixel: true,
-              }),
-            });
-          },
-          feat,
-          ["icon", "tint", "rotation"],
-        );
-
-        return style;
-      },
-      tint: function (feature) {
-        var shape = feature.get("shape");
-        var colour = feature.get("colour");
-        if (shape) {
-          return vm.getCustomPointTint(shape, [null, colour]);
-        } else {
-          return "default";
-        }
-      },
-      selectedTint: function (feature) {
-        // console.log("Custom Point defaultPoint selectedTint");
-        var shape = feature.get("shape");
-        if (shape) {
-          return vm.getCustomPointTint(shape, ["#2199e8", "#2199e8"]);
-        } else {
-          return "selected";
-        }
-      },
-      comments: [
-        {
-          name: "Tips",
-          description: ["Create a customized point and place it in map. "],
-        },
-      ],
-    };
-
-    this.ui.defaultLine = {
-      name: "Custom Line",
-      icon: `${iDSpriteSvg}#icon-line`,
-      interactions: [this.linestringDrawFactory()],
-      showName: true,
-      scope: ["annotation"],
-      onAdd: customAdd,
-      style: vm.getVectorStyleFunc(this.tints),
-      comments: [
-        {
-          name: "Tips",
-          description: [
-            "Draw a line on map",
-            "Hold down the 'SHIFT' key during drawing to enable freehand mode. ",
-          ],
-        },
-      ],
-    };
-
-    this.ui.defaultPolygon = {
-      name: "Custom Area",
-      icon: `${iDSpriteSvg}#icon-area`,
-      interactions: [this.polygonDrawFactory()],
-      showName: true,
-      scope: ["annotation"],
-      onAdd: customAdd,
-      style: vm.getVectorStyleFunc(this.tints),
-      measureLength: true,
-      measureArea: true,
-      comments: [
-        {
-          name: "Tips",
-          description: [
-            "Draw a polygon on map",
-            "Hold down the 'SHIFT' key during drawing to enable freehand mode. ",
-          ],
-        },
-      ],
-    };
-
-    var getFeatureInfo = function (feature) {
-      var tool = vm.getTool(feature.get("toolName"));
-      var icon = tool.icon;
-      if (typeof icon === "function") {
-        icon = icon(feature);
-      }
-
-      if (!icon) {
-        return { name: tool.name };
-      } else if (icon.startsWith("fa-")) {
-        return { name: tool.name, icon: "fa " + icon };
-      } else if (icon.search("#") === -1) {
-        // plain svg/image
-        return { name: tool.name, img: icon };
-      } else {
-        // svg reference
-        return { name: tool.name, svg: icon };
-      }
-    };
-
-    // add annotations layer to catalogue list
-    this.$root.catalogue.catalogue.push({
-      type: "Annotations",
-      id: "annotations",
-      name: "My Drawing",
-      getFeatureInfo: getFeatureInfo,
-    });
-
-    this.measure.register("annotations", this.features);
-
-    annotationStatus.phaseEnd("initialize");
-
-    annotationStatus.phaseBegin("load_features", 10, "Load saved features");
-    var savedFeatures = this.$root.geojson.readFeatures(
-      this.$root.store.annotations,
-    );
-    annotationStatus.phaseEnd("load_features");
-
-    annotationStatus.phaseBegin(
-      "gk-init",
-      40,
-      "Listen 'gk-init' event",
-      true,
-      true,
-    );
-    this.$on("gk-init", function () {
-      annotationStatus.phaseEnd("gk-init");
-
-      annotationStatus.phaseBegin("import_features", 10, "Import features");
-      if (savedFeatures) {
-        //set feature style
-
-        $.each(savedFeatures, function (index, feature) {
-          if (!feature.get("id")) {
-            vm.drawingSequence += 1;
-            feature.set("id", vm.drawingSequence);
-          }
-          vm.initFeature(feature);
-        });
-        this.features.extend(savedFeatures);
-      }
-      annotationStatus.phaseEnd("import_features");
-
-      annotationStatus.phaseBegin("init_tools", 20, "Initialize tools");
-      //initialize tool's interaction
-      $.each(vm.tools, function (index, tool) {
-        $.each(tool.interactions, function (subindex, interact) {
-          if (typeof interact === "function") {
-            tool.interactions[subindex] = interact(tool);
-          }
-        });
-        tool.keepSelection =
-          tool.keepSelection === undefined ? false : tool.keepSelection;
-        tool.selectMode =
-          tool.selectMode == undefined ? "feature" : tool.selectMode;
-        if (!tool.label) {
-          tool.label = tool.name;
-        }
-      });
-      vm.annotationTools = this.tools.filter(function (t) {
-        return t.scope && t.scope.indexOf("annotation") >= 0;
-      });
-      vm.setDefaultTool("annotations", "Edit");
-      annotationStatus.phaseEnd("init_tools");
-    });
-
-    //alert("annotations ready done")
   },
 };
 </script>
