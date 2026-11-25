@@ -286,49 +286,6 @@
   </div>
 </template>
 
-<style>
-#thermalFromDate,
-#thermalToDate,
-#singleDate {
-  cursor: pointer;
-}
-
-/* Style the button that is used to open and close the collapsible content */
-.collapsible {
-  background-color: #eee;
-  color: #444;
-  cursor: pointer;
-  padding: 10px;
-  width: 100%;
-  border: 1px solid #009;
-  text-align: left;
-  outline: none;
-  font-size: 15px;
-}
-
-/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
-.active,
-.collapsible:hover {
-  background-color: #ccc;
-}
-
-/* Style the collapsible content. Note: hidden by default */
-.showImages {
-  padding: 0 1px;
-  display: none;
-  overflow: hidden;
-  background-color: #f1f1f1;
-}
-
-/*Button colours*/
-.red {
-  background-color: red;
-}
-.blue {
-  background-color: blue;
-}
-</style>
-
 <script>
 import { debounce } from "lodash-es";
 
@@ -348,24 +305,23 @@ import { getDateRange } from "@/utils";
 import DateTimeInput from "@/components/forms/DateTimeInput.vue";
 
 import { useActiveStore } from "@/stores/active";
-import { useSystemSettingStore } from "@/stores/systemSetting";
 import { useAnnotationsStore } from "@/stores/annotations";
 import { useLoadingStore } from "@/stores/loading";
 import { useStateStore } from "@/stores/state";
 import { useMapStore } from "@/stores/map";
+import { useSettingsStore } from "@/stores/settings";
 
 export default {
   store: {
     hotspotLabels: true, //boolean defining whether to show labels (can be later changed to use settings.
-    viewportOnly: "settings.viewportOnly",
     hintsHeight: "layout.hintsHeight",
     screenHeight: "layout.screenHeight",
     leftPanelHeadHeight: "layout.leftPanelHeadHeight",
     activeMenu: "activeMenu",
     whoami: "whoami",
   },
-  components() {
-    DateTimeInput;
+  components: {
+    DateTimeInput,
   },
   data: function () {
     return {
@@ -395,6 +351,8 @@ export default {
       extent: null,
       isHotspotImageON: false,
       showHotspotImages: false,
+      thermalSingleDate: null,
+      _featurelist: null,
     };
   },
 
@@ -425,6 +383,12 @@ export default {
     },
     systemsetting: function () {
       return this.$root.systemsetting;
+    },
+    setting() {
+      return useSettingsStore();
+    },
+    viewportOnly() {
+      return this.setting?.viewportOnly;
     },
     catalogue: function () {
       return this.$root.catalogue;
@@ -613,7 +577,6 @@ export default {
       return invalid;
     },
   },
-
   watch: {
     mapReady: {
       immediate: true,
@@ -627,7 +590,6 @@ export default {
       this.changeThermalDateRange();
     },
   },
-
   methods: {
     adjustHeight: function () {
       if (this.activeMenu === "thermal") {
@@ -640,7 +602,6 @@ export default {
         );
       }
     },
-
     changeThermalDateRange: function () {
       if (this.thermalDateRange === "-1") {
         //customized
@@ -1768,3 +1729,46 @@ export default {
   },
 };
 </script>
+
+<style>
+#thermalFromDate,
+#thermalToDate,
+#singleDate {
+  cursor: pointer;
+}
+
+/* Style the button that is used to open and close the collapsible content */
+.collapsible {
+  background-color: #eee;
+  color: #444;
+  cursor: pointer;
+  padding: 10px;
+  width: 100%;
+  border: 1px solid #009;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.active,
+.collapsible:hover {
+  background-color: #ccc;
+}
+
+/* Style the collapsible content. Note: hidden by default */
+.showImages {
+  padding: 0 1px;
+  display: none;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
+
+/*Button colours*/
+.red {
+  background-color: red;
+}
+.blue {
+  background-color: blue;
+}
+</style>

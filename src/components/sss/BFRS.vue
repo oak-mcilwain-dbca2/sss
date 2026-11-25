@@ -366,7 +366,7 @@
                       class="show-for-sr"
                       name="bushfiresfile"
                       accept="{{utils.importSpatialFileTypes}}"
-                      v-el:bushfiresfile
+                      ref="bushfiresfile"
                       @change="importList()"
                     />
                   </div>
@@ -711,6 +711,8 @@ import mergeSvg from "@/assets/images/merge.svg";
 import dashedOriginSvg from "/symbols/fire/dashed-origin.svg";
 import originSvg from "/symbols/fire/origin.svg";
 
+import DateTimeInput from "@/components/forms/DateTimeInput.vue";
+
 import { useActiveStore } from "@/stores/active";
 import { useSystemSettingStore } from "@/stores/systemSetting";
 import { useAnnotationsStore } from "@/stores/annotations";
@@ -718,11 +720,10 @@ import { useLoadingStore } from "@/stores/loading";
 import { useStateStore } from "@/stores/state";
 import { useMapStore } from "@/stores/map";
 import { useUserStore } from "@/stores/user";
+import { useSettingsStore } from "@/stores/settings";
 
 export default {
   store: {
-    bushfireLabels: "settings.bfrs.bushfireLabels",
-    viewportOnly: "settings.bfrs.viewportOnly",
     screenHeight: "layout.screenHeight",
     hintsHeight: "layout.hintsHeight",
     leftPanelHeadHeight: "layout.leftPanelHeadHeight",
@@ -737,6 +738,9 @@ export default {
       dashedOriginSvg,
       origin,
     };
+  },
+  components: {
+    DateTimeInput,
   },
   data: function () {
     return {
@@ -815,6 +819,7 @@ export default {
         "selected.textStroke": "#2199e8",
         "selected.textFill": "#333",
       },
+      _featurelist: null,
     };
   },
   computed: {
@@ -835,6 +840,15 @@ export default {
     },
     systemsetting() {
       return useSystemSettingStore();
+    },
+    setting() {
+      return useSettingsStore();
+    },
+    bushfireLabels() {
+      return this.setting?.settings.bfrs.bushfireLabels;
+    },
+    viewportOnly() {
+      return this.setting?.settings.bfrs.viewportOnly;
     },
     dialog: function () {
       return this.$root.dialog;

@@ -31,12 +31,12 @@ import { getDistance, getArea } from "ol/sphere";
 import { transform } from "ol/proj";
 
 import { useActiveStore } from "@/stores/active";
-import { useSystemSettingStore } from "@/stores/systemSetting";
 import { useSettingsStore } from "@/stores/settings";
 import { useAnnotationsStore } from "@/stores/annotations";
 import { useLoadingStore } from "@/stores/loading";
-import { useStateStore } from "@/stores/state";
 import { useMapStore } from "@/stores/map";
+import { useCatalogueStore } from "@/stores/catalogue";
+import { useFeatureDetailStore } from "@/stores/featureDetail";
 
 export default {
   data: function () {
@@ -48,7 +48,7 @@ export default {
       return useSettingsStore();
     },
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
     mapReady() {
       return useMapStore().ready;
@@ -57,13 +57,13 @@ export default {
       return useMapStore()?.component;
     },
     active: function () {
-      return this.$root.active;
+      return useActiveStore();
     },
     featuredetail: function () {
-      return this.$root.featuredetail;
+      return useFeatureDetailStore?.component;
     },
     catalogue: function () {
-      return this.$root.catalogue;
+      return useCatalogueStore();
     },
     annotationsReady() {
       return useAnnotationsStore().ready;

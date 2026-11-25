@@ -1,22 +1,16 @@
 <template>
   <div
-    class="{{classes}} reveal"
+    :class="[classes, 'reveal']"
     id="userdialog"
     data-reveal
     data-close-on-click="false"
   >
     <h3 v-show="title">{{ title }}</h3>
     <div style="max-height: 600px" class="scroller">
-      <div
-        v-for="(line, lineIndex) in messages"
-        class="row"
-        track-by="lineIndex"
-        :key="lineIndex"
-      >
+      <div v-for="(line, lineIndex) in messages" class="row" :key="lineIndex">
         <div
           v-for="(message, messageIndex) in line"
-          class="small-{{message[1]}} columns {{messageClass(message)}}"
-          track-by="messageIndex"
+          :class="[`small-${message[1]}`, 'columns', messageClass(message)]"
           :style="messageAttr(message, 'style')"
           :key="messageIndex"
         >
@@ -28,16 +22,16 @@
           </div>
           <a
             v-if="messageType(message) === 'link'"
-            href="{{message[0]}}"
+            :href="message[0]"
             @click.stop.prevent="editResource($event)"
-            target="{{messageAttr(message,'target')}}"
+            :target="messageAttr(message, 'target')"
             >{{ message[0] }}</a
           >
           <button
             v-if="messageType(message) === 'button'"
             @click.stop.prevent="processEvent(message, 'click')"
             :disabled="messageAttr(message, 'disabled')"
-            id="userdialog-button-{{message[0]}}"
+            :id="`userdialog-button-${message[0]}`"
           >
             {{ messageAttr("title") }}
           </button>
@@ -48,19 +42,19 @@
           />
           <input
             v-if="['radio', 'checkbox'].indexOf(messageType(message)) >= 0"
-            type="{{message[2]['type']}}"
-            name="{{messageAttr(message,'name')}}"
-            value="{{message[0]}}"
+            :type="message[2].type"
+            :name="messageAttr(message, 'name')"
+            :value="message[0]"
             @click.stop="processEvent(message, 'click', $event)"
-            disabled="{{messageAttr(message,'disabled',false)}}"
-            checked="{{isChecked(message)}}"
+            :disabled="messageAttr(message, 'disabled', false)"
+            :checked="isChecked(message)"
           />
           <input
             v-if="messageType(message) === 'text'"
             type="text"
-            name="{{messageAttr(message,'name')}}"
-            disabled="{{messageAttr(message,'disabled')}}"
-            value="{{getValue(message)}}"
+            :name="messageAttr(message, 'name')"
+            :disabled="messageAttr(message, 'disabled')"
+            :value="getValue(message)"
           />
         </div>
       </div>
@@ -93,9 +87,9 @@
             class="progress"
             role="progressbar"
             tabindex="0"
-            aria-valuenow="{{completedTasks}}"
+            :aria-valuenow="completedTasks"
             aria-valuemin="0"
-            aria-valuemax="{{tasks}}"
+            :aria-valuemax="tasks"
           >
             <div class="progress-meter" :style="fillstyle"></div>
           </div>
@@ -103,17 +97,11 @@
       </div>
     </div>
 
-    <div
-      v-for="(line, lineIndex) in footer"
-      track-by="lineIndex"
-      class="row"
-      :key="lineIndex"
-    >
+    <div v-for="(line, lineIndex) in footer" class="row" :key="lineIndex">
       <br />
       <div
         v-for="(message, messageIndex) in revision && line"
-        class="small-{{message[1]}} columns {{messageClass(message)}}"
-        track-by="messageIndex"
+        :class="[`small-${message[1]}`, 'columns', messageClass(message)]"
         :style="messageAttr(message, 'style')"
         :key="messageIndex"
       >
@@ -123,7 +111,7 @@
           :disabled="messageAttr(message, 'disabled')"
           class="button"
           style="cursor: pointer"
-          id="userdialog-button-{{message[0]}}"
+          :id="`userdialog-button-${message[0]}`"
         >
           {{ messageAttr(message, "title") }}
         </button>
@@ -141,26 +129,26 @@
         </div>
         <a
           v-if="messageType(message) === 'link'"
-          href="{{message[0]}}"
+          :href="message[0]"
           @click.stop.prevent="editResource($event)"
-          target="{{messageAttr(message,'target')}}"
+          :target="messageAttr(message, 'target')"
           >{{ message[0] }}</a
         >
         <input
           v-if="['radio', 'checkbox'].indexOf(messageType(message)) >= 0"
-          type="{{message[2]['type']}}"
-          name="{{messageAttr(message,'name')}}"
-          value="{{message[0]}}"
+          :type="message[2]['type']"
+          :name="messageAttr(message, 'name')"
+          :value="message[0]"
           @click.stop="processEvent(message, 'click', $event)"
-          disabled="{{messageAttr(message,'disabled',false)}}"
-          checked="{{isChecked(message)}}"
+          :disabled="messageAttr(message, 'disabled', false)"
+          :checked="isChecked(message)"
         />
         <input
           v-if="messageType(message) === 'text'"
           type="text"
-          name="{{messageAttr(message,'name')}}"
-          disabled="{{messageAttr(message,'disabled')}}"
-          value="{{getValue(message)}}"
+          :name="messageAttr(message, 'name')"
+          :disabled="messageAttr(message, 'disabled')"
+          :value="getValue(message)"
         />
       </div>
     </div>
@@ -176,42 +164,23 @@
   </div>
 </template>
 
-<style>
-#userdialog .button {
-  padding-left: 15px;
-  padding-right: 15px;
-  margin-left: 30px;
-  margin-right: 30px;
-}
-#userdialog .small-centered {
-  text-align: center;
-}
-#userdialog .detail_name {
-  font-weight: bold;
-  text-align: right;
-  padding-right: 5px;
-  background: white;
-}
-#userdialog .detail_value {
-  text-align: left;
-  padding-left: 5px;
-}
-#userdialog .header {
-  text-align: left;
-  font-weight: bold;
-}
-</style>
-
 <script>
 import { editResource, getHeight } from "@/utils";
+
+import { useLoadingStore } from "@/stores/loading";
 
 export default {
   data: function () {
     return {
       classes: "small",
       title: "",
-      //[['msg',columnSize,'classes'],]
-      //[['buttonvalue','buttontext','classes'],]
+      dialogStatus: null,
+      _messages: [],
+      _footer: [],
+      defaultOption: null,
+      option: null,
+      _initData: null,
+      _initFunc: null,
       tasks: null,
       succeedTasks: null,
       mergedTasks: null,
@@ -227,7 +196,7 @@ export default {
   },
   computed: {
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
     utils: function () {
       return this.$root.utils;
@@ -454,8 +423,8 @@ export default {
     var vm = this;
     this._messages = [];
     this._footer = [];
-    var dialogStatus = this.loading.register("dialog", "Dialog Component");
-    dialogStatus.phaseBegin("initialize", 100, "Initialize");
+    this.dialogStatus = this.loading.register("dialog", "Dialog Component");
+    this.dialogStatus.phaseBegin("initialize", 100, "Initialize");
 
     $("#userdialog").on("open.zf.reveal", function () {
       $("#userdialog").css(
@@ -483,7 +452,33 @@ export default {
       }
     });
 
-    dialogStatus.phaseEnd("initialize");
+    this.dialogStatus.phaseEnd("initialize");
   },
 };
 </script>
+
+<style>
+#userdialog .button {
+  padding-left: 15px;
+  padding-right: 15px;
+  margin-left: 30px;
+  margin-right: 30px;
+}
+#userdialog .small-centered {
+  text-align: center;
+}
+#userdialog .detail_name {
+  font-weight: bold;
+  text-align: right;
+  padding-right: 5px;
+  background: white;
+}
+#userdialog .detail_value {
+  text-align: left;
+  padding-left: 5px;
+}
+#userdialog .header {
+  text-align: left;
+  font-weight: bold;
+}
+</style>

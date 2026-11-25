@@ -15,8 +15,8 @@
     <div class="row collapse" id="settings-tab-panels">
       <div class="columns">
         <div class="tabs-content vertical" data-tabs-content="settings-tabs">
-          <gk-systemsetting v-ref:systemsetting></gk-systemsetting>
-          <gk-weatheroutlook v-ref:weatheroutlook></gk-weatheroutlook>
+          <gk-systemsetting ref="systemsetting"></gk-systemsetting>
+          <gk-weatheroutlook ref="weatheroutlook"></gk-weatheroutlook>
         </div>
       </div>
     </div>

@@ -477,6 +477,7 @@ import externalESvg from "/symbols/device/external_e.svg";
 
 import { useActiveStore } from "@/stores/active";
 import { useSystemSettingStore } from "@/stores/systemSetting";
+import { useSettingsStore } from "@/stores/settings";
 import { useAnnotationsStore } from "@/stores/annotations";
 import { useLoadingStore } from "@/stores/loading";
 import { useStateStore } from "@/stores/state";
@@ -486,9 +487,6 @@ import DateTimeInput from "@/components/forms/DateTimeInput.vue";
 
 export default {
   store: {
-    resourceLabels: "settings.resourceLabels",
-    resourceDirections: "settings.resourceDirections",
-    viewportOnly: "settings.viewportOnly",
     hintsHeight: "layout.hintsHeight",
     screenHeight: "layout.screenHeight",
     leftPanelHeadHeight: "layout.leftPanelHeadHeight",
@@ -498,8 +496,8 @@ export default {
   setup() {
     (directionSvg, externalDSvg, dfesGenericSvg, externalESvg);
   },
-  components() {
-    DateTimeInput;
+  components: {
+    DateTimeInput,
   },
   data: function () {
     var fill = "#ff6600";
@@ -560,6 +558,7 @@ export default {
       },
       revision: 1,
       selectRevision: 1,
+      _featurelist: null,
     };
   },
   computed: {
@@ -583,6 +582,18 @@ export default {
     },
     systemSetting: function () {
       return useSystemSettingStore();
+    },
+    setting() {
+      return useSettingsStore();
+    },
+    viewportOnly() {
+      return this.setting?.viewportOnly;
+    },
+    resourceDirections() {
+      return this.setting?.resourceDirections;
+    },
+    resourceLabels() {
+      return this.setting?.resourceLabels;
     },
     catalogue: function () {
       return this.$root.catalogue;

@@ -290,24 +290,14 @@ import aboutSvg from "@/assets/images/about.svg";
 import { useUserStore } from "@/stores/user";
 
 import appInfo from "@/config/appInfo";
+
 import { useLoadingStore } from "@/stores/loading";
+import { useSettingsStore } from "@/stores/settings";
+import { useStateStore } from "@/stores/state";
 
 import { eventBus, GK_EVENTS } from "@/services/gokart";
 
 export default {
-  // TODO replace stores with pinia and remove
-  //   store: {
-  //     settings: "settings",
-  //     overviewMap: "settings.overviewMap",
-  //     undoLimit: "settings.undoLimit",
-  //     measureFeature: "settings.measureFeature",
-  //     lengthUnit: "settings.lengthUnit",
-  //     areaUnit: "settings.areaUnit",
-  //     rightHandTools: "settings.rightHandTools",
-  //     graticule: "settings.graticule",
-  //     showHints: "showHints",
-  //     tourVersion: "settings.tourVersion",
-  //   },
   data: function () {
     return {
       userStore: null,
@@ -345,6 +335,36 @@ export default {
     },
     map: function () {
       return this.$root.map;
+    },
+    settings() {
+      return useSettingsStore();
+    },
+    undoLimit() {
+      return this.settings?.undoLimit;
+    },
+    lengthUnit() {
+      return this.settings?.lengthUnit;
+    },
+    areaUnit() {
+      return this.settings?.areaUnit;
+    },
+    rightHandTools() {
+      return this.settings?.rightHandTools;
+    },
+    tourVersion() {
+      return this.settings?.tourVersion;
+    },
+    measureFeature() {
+      return this.settings?.measureFeature;
+    },
+    overviewMap() {
+      return this.settings?.overviewMap;
+    },
+    graticule() {
+      return this.settings?.graticule;
+    },
+    showHints() {
+      return useStateStore().showHints;
     },
     undoLimitDesc: function () {
       return (

@@ -134,7 +134,7 @@
             </div>
           </div>
         </div>
-        <div v-el:layerdetails class="hide">
+        <div ref="layerdetails" class="hide">
           <div class="layerdetails row" style="z-index: 2">
             <div class="columns small-12">
               <h5>{{ layer.name }}</h5>
@@ -215,6 +215,8 @@ import OverviewMap from "ol/control/OverviewMap";
 
 import { getLayerId, getIndependentLayerId, checkPermission } from "@/utils";
 
+import { useCatalogueStore } from "@/stores/catalogue";
+
 // TODO: Discard if unused (looks unused)
 // Vue.filter("lessThan", function (value, length) {
 //   return value.length < length;
@@ -222,7 +224,6 @@ import { getLayerId, getIndependentLayerId, checkPermission } from "@/utils";
 
 export default {
   store: {
-    catalogueFilters: "catalogueFilters",
     screenHeight: "layout.screenHeight",
     leftPanelHeadHeight: "layout.leftPanelHeadHeight",
     activeMenu: "activeMenu",
@@ -241,6 +242,9 @@ export default {
     };
   },
   computed: {
+    catalogueFilters() {
+      return useCatalogueStore().filters;
+    },
     filteredLayers() {
       const search = this.search.toLowerCase();
 

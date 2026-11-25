@@ -1,5 +1,5 @@
 <template>
-  <gk-loading v-ref:loading application="SSS" />
+  <gk-loading ref="loading" application="SSS" />
   <div class="off-canvas-wrapper">
     <div class="off-canvas-wrapper-inner" data-off-canvas-wrapper>
       <div id="offCanvasLeft" class="off-canvas position-left" data-off-canvas>
@@ -7,13 +7,13 @@
           >&#x2715;</a
         >
         <div class="tabs-content vertical" data-tabs-content="menu-tabs">
-          <gk-settings v-ref:settings />
-          <gk-layers v-ref:layers />
-          <gk-annotations v-ref:annotations />
-          <gk-tracking v-ref:tracking />
-          <gk-thermal v-ref:thermal />
-          <gk-bfrs v-ref:bfrs />
-          <gk-dialog v-ref:dialog />
+          <gk-settings ref="settings" />
+          <gk-layers ref="layers" />
+          <gk-annotations ref="annotations" />
+          <gk-tracking ref="tracking" />
+          <gk-thermal ref="thermal" />
+          <gk-bfrs ref="bfrs" />
+          <gk-dialog ref="dialog" />
         </div>
         <div
           v-if="$root.hasHints"
@@ -80,7 +80,7 @@
             </a>
           </li>
         </ul>
-        <gk-map v-ref:map />
+        <gk-map ref="map" />
       </div>
     </div>
   </div>
@@ -101,6 +101,8 @@ import gkDialog from "@/components/dialog/Dialog.vue";
 import questionMarkPng from "@/assets/images/question-mark.png";
 import spriteUrlSvg from "@/assets/images/iD-sprite.svg";
 
+import { useStateStore } from "@/stores/state";
+
 export default {
   store: {
     activeMenu: "activeMenu",
@@ -119,7 +121,7 @@ export default {
     gkDialog,
   },
   setup() {
-    (questionMarkPng, spriteUrlSvg);
+    return { questionMarkPng, spriteUrlSvg };
   },
   computed: {
     layers: function () {
@@ -134,10 +136,18 @@ export default {
     settings: function () {
       return this.$root.settings;
     },
+    hints() {
+      return useStateStore().hints;
+    },
+    showHints() {
+      return useStateStore().showHints;
+    },
+    hasHints() {
+      return this.hints && this.hints.length > 0;
+    },
   },
   methods: {
     switchMenu: function (menu) {
-      //alert('sss.vue L110 switchMenu')
       if (this.activeMenu === menu || (!this.activeMenu && !menu)) {
         //new active menu is equal to current active menu, do nothing
         return;

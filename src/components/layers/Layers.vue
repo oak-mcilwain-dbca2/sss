@@ -18,9 +18,9 @@
     <div class="row collapse" id="layers-tab-panels">
       <div class="columns">
         <div class="tabs-content vertical" data-tabs-content="layers-tabs">
-          <gk-active v-ref:active></gk-active>
-          <gk-catalogue v-ref:catalogue></gk-catalogue>
-          <gk-export v-ref:export></gk-export>
+          <gk-active ref="active"></gk-active>
+          <gk-catalogue ref="catalogue"></gk-catalogue>
+          <gk-export ref="export"></gk-export>
         </div>
       </div>
     </div>

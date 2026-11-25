@@ -40,17 +40,11 @@
   </div>
 </template>
 
-<style>
-.feature-icon {
-  width: 24px;
-  height: 24px;
-}
-</style>
-
 <script>
 import { toStringXY } from "ol/coordinate";
 
 import { useMapStore } from "@/stores/map";
+import { useLoadingStore } from "@/stores/loading";
 
 export default {
   store: {
@@ -81,7 +75,7 @@ export default {
       return this.$root.$refs.app.$refs.annotations;
     },
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
     featuresLength: function () {
       return Object.keys(this.features).length;
@@ -207,3 +201,10 @@ export default {
   },
 };
 </script>
+
+<style>
+.feature-icon {
+  width: 24px;
+  height: 24px;
+}
+</style>

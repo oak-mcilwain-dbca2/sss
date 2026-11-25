@@ -35,12 +35,8 @@
           </div>
           <div class="small-9">
             <select v-model="paperSize">
-              <option
-                v-for="(size, index) in paperSizes"
-                :value="$key"
-                :key="index"
-              >
-                {{ $key }} ({{ size[0] }}mm &times; {{ size[1] }}mm)
+              <option v-for="(size, key) in paperSizes" :value="key" :key="key">
+                {{ key }} ({{ size[0] }}mm &times; {{ size[1] }}mm)
               </option>
             </select>
           </div>
@@ -143,7 +139,7 @@
                 id="spatialInfo"
                 class="show-for-sr"
                 name="spatialinfofile"
-                v-el:spatialinfofile
+                ref="spatialinfofile"
                 @change="getSpatialInfo()"
                 accept="{{utils.importSpatialFileTypes}}"
               />
@@ -167,7 +163,7 @@
                 id="togeojson"
                 class="show-for-sr"
                 name="convertfile"
-                v-el:togeojson
+                ref="togeojson"
                 @change="convertFormat('geojson', $event)"
                 accept="{{utils.importSpatialFileTypes}}"
               />
@@ -184,7 +180,7 @@
                 id="togpkg"
                 class="show-for-sr"
                 name="convertfile"
-                v-el:togpkg
+                ref="togpkg"
                 @change="convertFormat('gpkg', $event)"
                 accept="{{utils.importSpatialFileTypes}}"
               />
@@ -201,7 +197,7 @@
                 id="toshp"
                 class="show-for-sr"
                 name="convertfile"
-                v-el:toshp
+                ref="toshp"
                 @change="convertFormat('shp', $event)"
                 accept="{{utils.importSpatialFileTypes}}"
               />
@@ -218,7 +214,7 @@
                 id="tocsv"
                 class="show-for-sr"
                 name="convertfile"
-                v-el:tocsv
+                ref="tocsv"
                 @change="convertFormat('csv', $event)"
                 accept="{{utils.importSpatialFileTypes}}"
               />
@@ -234,7 +230,7 @@
           <div class="small-9 columns">
             <div class="input-group">
               <input
-                v-el:savestatename
+                ref="savestatename"
                 class="input-group-field"
                 type="text"
                 placeholder="Name for saved view"
@@ -309,13 +305,13 @@
         </div>
       </div>
 
-      <div class="hide" v-el:legendsvg>
+      <div class="hide" ref="legendsvg">
         <gk-legend></gk-legend>
       </div>
 
       <img id="map-disclaimer" class="hide" :src="mapDisclaimerSvg" />
 
-      <gk-layerlegends v-ref:layerlegends></gk-layerlegends>
+      <gk-layerlegends ref="layerlegends"></gk-layerlegends>
     </div>
 
     <div

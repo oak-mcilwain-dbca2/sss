@@ -79,47 +79,6 @@
   </div>
 </template>
 
-<style>
-#loading-status-overlay {
-  position: absolute;
-  top: 0%;
-  left: 0%;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0);
-  opacity: 1;
-  z-index: 2147483647;
-}
-#loading-status {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 600px;
-  border-style: solid;
-  padding: 10px 10px 10px 10px;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.3);
-  opacity: 1;
-}
-#loading-status .application {
-  font-size: 1.1em;
-}
-#loading-status .component {
-  font-size: 1em;
-  font-style: italic;
-}
-#loading-status .component .name {
-  padding-left: 20px;
-}
-#loading-status .error {
-  color: #ec5840;
-  font-weight: bold;
-}
-#loading-status .close {
-  color: black;
-}
-</style>
-
 <script>
 export default {
   store: {
@@ -131,6 +90,7 @@ export default {
       components: [],
       revision: 1,
       errors: [],
+      Status: null,
     };
   },
   computed: {
@@ -164,7 +124,7 @@ export default {
   },
   props: {
     application: {
-      type: Object,
+      type: String,
       required: true,
     },
   },
@@ -332,16 +292,22 @@ export default {
   },
   mounted() {
     var vm = this;
-    window.alert = (function () {
-      let originAlert = window.alert;
-      return function (msg) {
-        if ($("#loading-status-overlay").length > 0) {
-          console.error(msg);
-        } else {
-          originAlert(msg);
-        }
-      };
-    })();
+
+    window.alert = function (msg) {
+      console.warn("ALERT:", msg);
+    };
+
+    // TODO: make sure to bring this back from the dead if it's important
+    // window.alert = (function () {
+    //   let originAlert = window.alert;
+    //   return function (msg) {
+    //     if ($("#loading-status-overlay").length > 0) {
+    //       console.error(msg);
+    //     } else {
+    //       originAlert(msg);
+    //     }
+    //   };
+    // })();
     //vm.register("app",this.application)
     var loadingStatus = vm.register(
       "LoadingStatus",
@@ -365,43 +331,45 @@ export default {
       }
       return result;
     };
-    console.error = (function () {
-      var originFunc = console.error;
-      return function () {
-        let message;
-        if (arguments.length == 1) {
-          if (typeof arguments[0] === "string") {
-            message = arguments[0];
-          } else {
-            message = JSON.stringify(arguments[0]);
-          }
-        } else {
-          message = JSON.stringify(getArguments(arguments));
-        }
-        addMessage(message);
-        originFunc.apply(this, arguments);
-      };
-    })();
-    //override console.error
-    console.assert = (function () {
-      var originFunc = console.assert;
-      return function () {
-        if (!arguments[0]) {
-          var message;
-          if (arguments.length == 2) {
-            if (typeof arguments[1] === "string") {
-              message = arguments[1];
-            } else {
-              message = JSON.stringify(arguments[1]);
-            }
-          } else {
-            message = JSON.stringify(getArguments(arguments, 1));
-          }
-          addMessage(message);
-        }
-        originFunc.apply(this, arguments);
-      };
-    })();
+
+    // TODO: make sure to bring this back from the dead if it's important, it's annoying while debugging so I have disabled it
+    // console.error = (function () {
+    //   var originFunc = console.error;
+    //   return function () {
+    //     let message;
+    //     if (arguments.length == 1) {
+    //       if (typeof arguments[0] === "string") {
+    //         message = arguments[0];
+    //       } else {
+    //         message = JSON.stringify(arguments[0]);
+    //       }
+    //     } else {
+    //       message = JSON.stringify(getArguments(arguments));
+    //     }
+    //     addMessage(message);
+    //     originFunc.apply(this, arguments);
+    //   };
+    // })();
+
+    // console.assert = (function () {
+    //   var originFunc = console.assert;
+    //   return function () {
+    //     if (!arguments[0]) {
+    //       var message;
+    //       if (arguments.length == 2) {
+    //         if (typeof arguments[1] === "string") {
+    //           message = arguments[1];
+    //         } else {
+    //           message = JSON.stringify(arguments[1]);
+    //         }
+    //       } else {
+    //         message = JSON.stringify(getArguments(arguments, 1));
+    //       }
+    //       addMessage(message);
+    //     }
+    //     originFunc.apply(this, arguments);
+    //   };
+    // })();
 
     // TODO:
     // Legacy code replaced Vue.config.errorHandler during component
@@ -420,3 +388,44 @@ export default {
   },
 };
 </script>
+
+<style>
+#loading-status-overlay {
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0);
+  opacity: 1;
+  z-index: 2147483647;
+}
+#loading-status {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 600px;
+  border-style: solid;
+  padding: 10px 10px 10px 10px;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.3);
+  opacity: 1;
+}
+#loading-status .application {
+  font-size: 1.1em;
+}
+#loading-status .component {
+  font-size: 1em;
+  font-style: italic;
+}
+#loading-status .component .name {
+  padding-left: 20px;
+}
+#loading-status .error {
+  color: #ec5840;
+  font-weight: bold;
+}
+#loading-status .close {
+  color: black;
+}
+</style>

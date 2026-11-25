@@ -1,13 +1,13 @@
 <template>
   <div class="map" id="map" tabindex="0">
-    <gk-info v-ref:info></gk-info>
+    <gk-info ref="info"></gk-info>
   </div>
-  <gk-scales v-ref:scales></gk-scales>
-  <gk-search v-ref:search></gk-search>
-  <gk-featuredetail v-ref:featuredetail></gk-featuredetail>
-  <gk-measure v-ref:measure></gk-measure>
-  <gk-weatherforecast v-ref:weatherforecast></gk-weatherforecast>
-  <gk-toolbox v-ref:toolbox></gk-toolbox>
+  <gk-scales ref="scales"></gk-scales>
+  <gk-search ref="search"></gk-search>
+  <gk-featuredetail ref="featuredetail"></gk-featuredetail>
+  <gk-measure ref="measure"></gk-measure>
+  <gk-weatherforecast ref="weatherforecast"></gk-weatherforecast>
+  <gk-toolbox ref="toolbox"></gk-toolbox>
 </template>
 <style>
 .ol-custom-overviewmap,

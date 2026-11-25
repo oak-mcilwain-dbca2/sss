@@ -12,5 +12,7 @@ export const useStateStore = defineStore("state", {
       type: "FeatureCollection",
       features: [],
     },
+    hints: [],
+    showHints: false,
   }),
 });

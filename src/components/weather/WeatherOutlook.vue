@@ -567,6 +567,8 @@ export default {
       showSettings: false,
       revision: 1,
       columnRevision: 1,
+      _datasources: null,
+      _defaultOutlookSetting: {},
     };
   },
   // parts of the template to be computed live
@@ -801,22 +803,18 @@ export default {
           })
         : this.outlookTool;
     },
-    getOutlookSetting: function (toolid) {
+    getOutlookSetting(toolid) {
       toolid = toolid || this.outlookTool.toolid;
-      console.log(this.outlookTool);
-      console.log(this.outlookTool?.toolid);
-      console.log(this.outlookTool?.toolid);
+
       if (toolid === "weather-outlook-default") {
-        if (!this._defaultOutlookSetting) {
-          this._defaultOutlookSetting = {};
-        }
         return this.revision && this._defaultOutlookSetting;
-      } else {
-        if (!this.outlookSettings[toolid]) {
-          this.outlookSettings[toolid] = {};
-        }
-        return this.revision && this.outlookSettings[toolid];
       }
+
+      if (!this.outlookSettings[toolid]) {
+        this.outlookSettings[toolid] = {};
+      }
+
+      return this.revision && this.outlookSettings[toolid];
     },
     getReportType: function (toolid) {
       var outlookSetting = toolid
@@ -891,13 +889,6 @@ export default {
         ? this.getOutlookSetting(toolid)
         : this.outlookSetting;
       toolid = toolid || this.outlookTool.toolid;
-
-      console.log({
-        columnRevision: this.columnRevision,
-        revision: this.revision,
-        outlookSetting: this.outlookSetting,
-        outlookSettings: this.outlookSettings,
-      });
 
       if (!outlookSetting.outlookDays) {
         if (toolid === "weather-outlook-default") {

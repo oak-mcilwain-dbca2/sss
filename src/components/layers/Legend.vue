@@ -7,7 +7,7 @@ import legendSvg from "@/assets/images/legend.svg";
 export default {
   // TODO: Currently not referenced by Export.vue template.
   // Retained during migration pending review of export subsystem.
-  steup() {
+  setup() {
     return {
       legendSvg,
     };

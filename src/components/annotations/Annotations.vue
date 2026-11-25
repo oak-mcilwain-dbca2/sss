@@ -64,7 +64,7 @@
                   </div>
 
                   <div class="expanded button-group">
-                    <gk-drawinglogs v-ref:drawinglogs></gk-drawinglogs>
+                    <gk-drawinglogs ref="drawinglogs"></gk-drawinglogs>
                   </div>
 
                   <div class="expanded button-group">
@@ -80,7 +80,7 @@
                       class="show-for-sr"
                       name="annotationsfile"
                       accept="{{utils.importSpatialFileTypes}}"
-                      v-el:annotationsfile
+                      ref="annotationsfile"
                       @change="importAnnotations()"
                     />
                     <a
@@ -201,7 +201,7 @@
                   <textarea
                     @blur="updateNote(true)"
                     class="notecontent"
-                    v-el:notecontent
+                    ref="notecontent"
                     @keyup="updateNote(false)"
                     @click="updateNote(true)"
                     @mouseup="updateNote(false)"
@@ -217,7 +217,7 @@
               id="annotations-flexible-part"
             >
               <div class="small-12 canvaspane" v-show="shouldShowNoteEditor">
-                <canvas v-el:textpreview></canvas>
+                <canvas ref="textpreview"></canvas>
               </div>
             </div>
           </div>
@@ -2947,15 +2947,19 @@ export default {
 
       this.measure.register("annotations", this.features);
 
-      annotationStatus.phaseEnd("initialize");
+      this.annotationStatus.phaseEnd("initialize");
 
-      annotationStatus.phaseBegin("load_features", 10, "Load saved features");
+      this.annotationStatus.phaseBegin(
+        "load_features",
+        10,
+        "Load saved features",
+      );
       var savedFeatures = this.$root.geojson.readFeatures(
         this.$root.store.annotations,
       );
-      annotationStatus.phaseEnd("load_features");
+      this.annotationStatus.phaseEnd("load_features");
 
-      annotationStatus.phaseBegin(
+      this.annotationStatus.phaseBegin(
         "gk-init",
         40,
         "Listen 'gk-init' event",
@@ -2963,9 +2967,13 @@ export default {
         true,
       );
       this.$on("gk-init", function () {
-        annotationStatus.phaseEnd("gk-init");
+        this.annotationStatus.phaseEnd("gk-init");
 
-        annotationStatus.phaseBegin("import_features", 10, "Import features");
+        this.annotationStatus.phaseBegin(
+          "import_features",
+          10,
+          "Import features",
+        );
         if (savedFeatures) {
           //set feature style
 
@@ -2978,9 +2986,9 @@ export default {
           });
           this.features.extend(savedFeatures);
         }
-        annotationStatus.phaseEnd("import_features");
+        this.annotationStatus.phaseEnd("import_features");
 
-        annotationStatus.phaseBegin("init_tools", 20, "Initialize tools");
+        this.annotationStatus.phaseBegin("init_tools", 20, "Initialize tools");
         //initialize tool's interaction
         $.each(vm.tools, function (index, tool) {
           $.each(tool.interactions, function (subindex, interact) {
@@ -3000,7 +3008,7 @@ export default {
           return t.scope && t.scope.indexOf("annotation") >= 0;
         });
         vm.setDefaultTool("annotations", "Edit");
-        annotationStatus.phaseEnd("init_tools");
+        this.annotationStatus.phaseEnd("init_tools");
       });
 
       console.log("annotations ready done");
@@ -3012,11 +3020,11 @@ export default {
     const annotationsStore = useAnnotationsStore();
     annotationsStore.setComponent(vm);
 
-    var annotationStatus = this.loading.register(
+    this.annotationStatus = this.loading.register(
       "annotation",
       "Annotation Component",
     );
-    annotationStatus.phaseBegin("initialize", 20, "Initialize");
+    this.annotationStatus.phaseBegin("initialize", 20, "Initialize");
 
     this._toolStatus = {};
     vm._currentTool = {};

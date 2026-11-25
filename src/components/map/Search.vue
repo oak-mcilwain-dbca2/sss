@@ -55,6 +55,8 @@ import { containsCoordinate } from "ol/extent";
 
 import { getLayerUrl } from "@/utils";
 
+import { useMapStore } from "@/stores/map";
+
 export default {
   store: ["resolutions"],
   data: function () {
@@ -64,14 +66,44 @@ export default {
     env: function () {
       return this.$root.env;
     },
+    mapReady() {
+      return useMapStore().ready;
+    },
     map: function () {
-      return this.$root.map;
+      return useMapStore()?.component;
     },
     annotations: function () {
       return this.$root.annotations;
     },
   },
+  watch: {
+    mapReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready && !this._trackingInitialized) {
+          this.initialiseSearch();
+        }
+      },
+    },
+  },
   methods: {
+    initialiseSearch() {
+      this.map.mapControls.search = {
+        enabled: false,
+        controls: [
+          new Control({
+            element: $("#map-search").get(0),
+            target: $("#external-controls").get(0),
+          }),
+          new Control({
+            element: $("#map-search-button").get(0),
+            target: $("#external-controls").get(0),
+          }),
+        ],
+      };
+
+      this.overlay.setMap(this.map.olmap);
+    },
     searchKeyFix: function (ev) {
       // run a search after pressing enter
       if (ev.keyCode == 13) {
@@ -272,22 +304,6 @@ export default {
     },
   },
   mounted() {
-    var vm = this;
-
-    vm.map.mapControls["search"] = {
-      enabled: false,
-      controls: [
-        new Control({
-          element: $("#map-search").get(0),
-          target: $("#external-controls").get(0),
-        }),
-        new Control({
-          element: $("#map-search-button").get(0),
-          target: $("#external-controls").get(0),
-        }),
-      ],
-    };
-
     this._wa_bbox = [112.5, -36.0, 129.0, -13.0];
     this._wa_perth = [115.8605, -31.9527];
 
@@ -323,10 +339,6 @@ export default {
     this.overlay = new VectorLayer({
       source: this.source,
       style: this.style,
-    });
-
-    this.$on("gk-init", function () {
-      this.overlay.setMap(vm.map.olmap);
     });
   },
 };
