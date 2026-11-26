@@ -282,20 +282,20 @@
 </style>
 
 <script>
-import { debounce } from "lodash-es";
-import localforage from "localforage";
+import { debounce } from 'lodash-es';
+import localforage from 'localforage';
 
-import aboutSvg from "@/assets/images/about.svg";
+import aboutSvg from '@/assets/images/about.svg';
 
-import { useUserStore } from "@/stores/user";
+import { useUserStore } from '@/stores/user';
 
-import appInfo from "@/config/appInfo";
+import appInfo from '@/config/appInfo';
 
-import { useLoadingStore } from "@/stores/loading";
-import { useSettingsStore } from "@/stores/settings";
-import { useStateStore } from "@/stores/state";
+import { useLoadingStore } from '@/stores/loading';
+import { useSettingsStore } from '@/stores/settings';
+import { useStateStore } from '@/stores/state';
 
-import { eventBus, GK_EVENTS } from "@/services/gokart";
+import { eventBus, GK_EVENTS } from '@/services/gokart';
 
 export default {
   data: function () {
@@ -369,15 +369,15 @@ export default {
     undoLimitDesc: function () {
       return (
         (this.configuredUndoLimit < 0
-          ? "Off"
+          ? 'Off'
           : this.configuredUndoLimit === 0
-            ? "Unlimited"
+            ? 'Unlimited'
             : this.configuredUndoLimit) +
-        "/" +
+        '/' +
         (this.undoLimit < 0
-          ? "Off"
+          ? 'Off'
           : this.undoLimit === 0
-            ? "Unlimited"
+            ? 'Unlimited'
             : this.undoLimit)
       );
     },
@@ -405,7 +405,7 @@ export default {
     hoverInfoSwitchable: function () {
       return (
         this.$root.annotations.tool &&
-        this.$root.annotations.tool.name === "Pan"
+        this.$root.annotations.tool.name === 'Pan'
       );
     },
     hoverInfo: function () {
@@ -428,7 +428,7 @@ export default {
   },
   methods: {
     logout: function () {
-      document.location = "/logout";
+      document.location = '/logout';
     },
     setup: function () {
       this.annotations.setTool();
@@ -461,11 +461,11 @@ export default {
       $.each(vm.map.mapControls, function (key) {
         if (
           [
-            "overviewMap",
-            "fullScreen",
-            "search",
-            "mousePosition",
-            "attribution",
+            'overviewMap',
+            'fullScreen',
+            'search',
+            'mousePosition',
+            'attribution',
           ].indexOf(key) < 0
         ) {
           vm.map.enableControl(key, show);
@@ -494,19 +494,19 @@ export default {
     },
     showOverviewMap: function (show) {
       if (show) {
-        this.map.getControl("overviewMap").setCollapsed(false);
+        this.map.getControl('overviewMap').setCollapsed(false);
       }
-      this.map.enableControl("overviewMap", show);
+      this.map.enableControl('overviewMap', show);
     },
     reset: function () {
       if (
         window.confirm(
-          "This will clear all of your selected layers and drawings. Are you sure?",
+          'This will clear all of your selected layers and drawings. Are you sure?',
         )
       ) {
         //except settings, clear everything
         localforage
-          .setItem("sssOfflineStore", {
+          .setItem('sssOfflineStore', {
             settings: this.$root.persistentData.settings,
           })
           .then(function () {
@@ -517,7 +517,7 @@ export default {
     resetSettings: function () {
       if (
         window.confirm(
-          "This will clear all customized settings and reset to system default settings. Are you sure?",
+          'This will clear all customized settings and reset to system default settings. Are you sure?',
         )
       ) {
         this.$root.store.settings = $.extend(
@@ -534,11 +534,11 @@ export default {
   },
   mounted() {
     var vm = this;
-    var settingStatus = this.loading.register("setting", "Setting Component");
+    var settingStatus = this.loading.register('setting', 'Setting Component');
     this.configuredUndoLimit = this.undoLimit;
 
     settingStatus.phaseBegin(
-      "gk-postinit",
+      'gk-postinit',
       80,
       "Listen 'gk-postinit' event",
       true,

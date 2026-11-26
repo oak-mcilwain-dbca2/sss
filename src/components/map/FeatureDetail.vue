@@ -8,21 +8,21 @@
 // TODO: Does this need to be a component at all? Looks more like a service script
 // Consider moving to something like services/featureDetail.js
 
-import Interaction from "ol/interaction/Interaction";
+import Interaction from 'ol/interaction/Interaction';
 
-import { click } from "ol/events/condition";
+import { click } from 'ol/events/condition';
 
-import env from "@/config/env";
+import env from '@/config/env';
 
-import { getLayerUrl, getDetailLayerId, editResource } from "@/utils";
+import { getLayerUrl, getDetailLayerId, editResource } from '@/utils';
 
-import featureInfoSvg from "@/assets/images/feature_info.svg";
-import previousSvg from "@/assets/images/previous.svg";
-import nextSvg from "@/assets/images/next.svg";
+import featureInfoSvg from '@/assets/images/feature_info.svg';
+import previousSvg from '@/assets/images/previous.svg';
+import nextSvg from '@/assets/images/next.svg';
 
-const icons = import.meta.glob("@/assets/images/*.svg", {
+const icons = import.meta.glob('@/assets/images/*.svg', {
   eager: true,
-  import: "default",
+  import: 'default',
 });
 
 export default {
@@ -83,7 +83,7 @@ export default {
     },
   },
   watch: {
-    "active.olLayers": function () {
+    'active.olLayers': function () {
       this.set_featureinfo_layer();
     },
   },
@@ -153,18 +153,18 @@ export default {
     },
     set_featureinfo_layer: function () {
       var vm = this;
-      vm._featureinfo_layer["id"] = null;
-      vm._featureinfo_layer["title"] = "No Active Vector Layer";
+      vm._featureinfo_layer['id'] = null;
+      vm._featureinfo_layer['title'] = 'No Active Vector Layer';
       $.each(this.active.olLayers, function (index, layer) {
-        layer = vm.active.getLayer(layer.get("id"));
-        if (layer && layer.service_type && layer.service_type === "WFS") {
-          vm._featureinfo_layer["id"] = layer["id"];
-          vm._featureinfo_layer["title"] = layer["title"];
+        layer = vm.active.getLayer(layer.get('id'));
+        if (layer && layer.service_type && layer.service_type === 'WFS') {
+          vm._featureinfo_layer['id'] = layer['id'];
+          vm._featureinfo_layer['title'] = layer['title'];
           return false;
         }
-        if (layer && layer.type && layer.type === "WFSLayer") {
-          vm._featureinfo_layer["id"] = layer["id"];
-          vm._featureinfo_layer["title"] = layer["title"];
+        if (layer && layer.type && layer.type === 'WFSLayer') {
+          vm._featureinfo_layer['id'] = layer['id'];
+          vm._featureinfo_layer['title'] = layer['title'];
           return false;
         }
       });
@@ -173,24 +173,24 @@ export default {
   ready: function () {
     var vm = this;
     this._featuredetailStatus = vm.loading.register(
-      "featuredetail",
-      "Feature Detail Component",
+      'featuredetail',
+      'Feature Detail Component',
     );
 
     this._featuredetailStatus.phaseBegin(
-      "gk-init",
+      'gk-init',
       80,
       "Listen 'gk-init' event",
       true,
       true,
     );
-    this.$on("gk-init", function () {
-      vm._featuredetailStatus.phaseEnd("gk-init");
+    this.$on('gk-init', function () {
+      vm._featuredetailStatus.phaseEnd('gk-init');
 
       vm._featuredetailStatus.phaseBegin(
-        "initialize",
+        'initialize',
         20,
-        "Initialize",
+        'Initialize',
         true,
         false,
       );
@@ -199,32 +199,32 @@ export default {
         if (
           layer.tags &&
           layer.tags.some(function (o) {
-            return o.name === "detail_link" || o.name === "detail_dialog";
+            return o.name === 'detail_link' || o.name === 'detail_dialog';
           })
         ) {
-          const iconName = layer.id.replace(":", "-").toLowerCase() + ".svg";
+          const iconName = layer.id.replace(':', '-').toLowerCase() + '.svg';
           layer.icon = icons[`/src/assets/images/${iconName}`];
           layer.title = layer.name || layer.id;
-          layer.toolid = "feauterdetail-" + layer.id.replace(":", "-");
+          layer.toolid = 'feauterdetail-' + layer.id.replace(':', '-');
           vm.layers.splice(0, 0, layer);
         }
       });
       vm._featureinfo_layer = {
         id: null,
         icon: featureInfoSvg,
-        title: "Identity Tool",
-        toolid: "featuredetail-vectorlayer-top",
+        title: 'Identity Tool',
+        toolid: 'featuredetail-vectorlayer-top',
       };
       vm.layers.push(vm._featureinfo_layer);
 
       vm.set_featureinfo_layer();
-      vm.map.olmap.on("removeLayer", function () {
+      vm.map.olmap.on('removeLayer', function () {
         vm.set_featureinfo_layer();
       });
-      vm.map.olmap.on("addLayer", function () {
+      vm.map.olmap.on('addLayer', function () {
         vm.set_featureinfo_layer();
       });
-      vm.map.olmap.on("changeLayerOrder", function () {
+      vm.map.olmap.on('changeLayerOrder', function () {
         vm.set_featureinfo_layer();
       });
 
@@ -252,42 +252,42 @@ export default {
             );
 
             var bbox =
-              "&bbox=" +
+              '&bbox=' +
               bottomRight[1] +
-              "," +
+              ',' +
               topLeft[0] +
-              "," +
+              ',' +
               topLeft[1] +
-              "," +
+              ',' +
               bottomRight[0] +
-              ",urn:ogc:def:crs:EPSG:4326";
+              ',urn:ogc:def:crs:EPSG:4326';
             var url;
             url = getLayerUrl(vm.layer.id, vm.env);
             if (
               vm.layer !== vm._featureinfo_layer &&
               vm.layer.tags &&
               vm.layer.tags.some(function (o) {
-                return o.name === "detail_link";
+                return o.name === 'detail_link';
               })
             ) {
               url =
                 url +
-                "/wfs?service=wfs&version=2.0&request=GetFeature&count=1&outputFormat=application%2Fjson&typeNames=" +
+                '/wfs?service=wfs&version=2.0&request=GetFeature&count=1&outputFormat=application%2Fjson&typeNames=' +
                 getDetailLayerId(vm.layer.id, env) +
                 bbox;
             } else {
               url =
                 url +
-                "/wfs?service=wfs&version=2.0&request=GetFeature&outputFormat=application%2Fjson&typeNames=" +
+                '/wfs?service=wfs&version=2.0&request=GetFeature&outputFormat=application%2Fjson&typeNames=' +
                 getDetailLayerId(vm.layer.id, env) +
                 bbox;
             }
-            var isOpen = $("#userdialog").is(":visible");
+            var isOpen = $('#userdialog').is(':visible');
             if (!isOpen && !vm.feature_processing) {
               vm.feature_processing = true;
               $.ajax({
                 url: url,
-                dataType: "json",
+                dataType: 'json',
                 success: function (response) {
                   if (response.totalFeatures < 1) {
                     vm.warning = true;
@@ -299,14 +299,14 @@ export default {
                   if (
                     vm.layer.tags &&
                     vm.layer.tags.some(function (o) {
-                      return o.name === "detail_link";
+                      return o.name === 'detail_link';
                     })
                   ) {
-                    if (response.features[0].properties["url"]) {
+                    if (response.features[0].properties['url']) {
                       editResource(
                         browserEvent,
                         null,
-                        response.features[0].properties["url"],
+                        response.features[0].properties['url'],
                         vm.layer.id,
                         true,
                       );
@@ -316,27 +316,27 @@ export default {
                     $.each(
                       response.features[0].properties,
                       function (key, value) {
-                        if (["ogc_fid", "md5_rowhash"].indexOf(key) >= 0) {
+                        if (['ogc_fid', 'md5_rowhash'].indexOf(key) >= 0) {
                           vm.feature_processing = false;
                           return;
                         }
                         if (vm.dialog.isLink(value)) {
                           messages.push([
-                            [key, 3, { class: "detail_name" }],
+                            [key, 3, { class: 'detail_name' }],
                             [
                               value,
                               9,
                               {
-                                type: "link",
-                                class: "detail_value",
-                                target: vm.layer.id + "." + key,
+                                type: 'link',
+                                class: 'detail_value',
+                                target: vm.layer.id + '.' + key,
                               },
                             ],
                           ]);
                         } else {
                           messages.push([
-                            [key, 3, { class: "detail_name" }],
-                            [value, 9, { class: "detail_value" }],
+                            [key, 3, { class: 'detail_name' }],
+                            [value, 9, { class: 'detail_value' }],
                           ]);
                         }
                       },
@@ -363,7 +363,7 @@ export default {
                       $.each(
                         response.features[index - 1].properties,
                         function (key, value) {
-                          if (["ogc_fid", "md5_rowhash"].indexOf(key) >= 0) {
+                          if (['ogc_fid', 'md5_rowhash'].indexOf(key) >= 0) {
                             vm.feature_processing = false;
                             return;
                           }
@@ -372,45 +372,45 @@ export default {
                         },
                       );
                       this.footer[0][2][0] =
-                        index + "/" + response.totalFeatures;
+                        index + '/' + response.totalFeatures;
                       this.rerend();
                     };
                     if (response.totalFeatures > 1) {
                       footer = [
                         [
-                          ["", 4],
+                          ['', 4],
                           [
                             previousSvg,
                             1,
                             {
-                              type: "img",
-                              style: "text-align:center;",
-                              title: "Previous",
+                              type: 'img',
+                              style: 'text-align:center;',
+                              title: 'Previous',
                               click: function () {
                                 moveFeature.call(this, false);
                               },
                             },
                           ],
                           [
-                            index + "/" + response.totalFeatures,
+                            index + '/' + response.totalFeatures,
                             2,
                             {
-                              style: "text-align:center;",
+                              style: 'text-align:center;',
                             },
                           ],
                           [
                             nextSvg,
                             1,
                             {
-                              type: "img",
-                              style: "text-align:center;",
-                              title: "Next",
+                              type: 'img',
+                              style: 'text-align:center;',
+                              title: 'Next',
                               click: function () {
                                 moveFeature.call(this, true);
                               },
                             },
                           ],
-                          ["", 4],
+                          ['', 4],
                         ],
                       ];
                     }
@@ -425,7 +425,7 @@ export default {
                 error: function (xhr, status, message) {
                   vm.warning = true;
                   vm.feature_processing = false;
-                  alert(xhr.status + " : " + (xhr.responseText || message));
+                  alert(xhr.status + ' : ' + (xhr.responseText || message));
                 },
                 xhrFields: {
                   withCredentials: true,
@@ -437,7 +437,7 @@ export default {
         });
 
         vm._featuredetailTool = {
-          name: "FeatureDetail",
+          name: 'FeatureDetail',
           keepSelection: true,
           interactions: [featuredetailInter],
         };
@@ -445,7 +445,7 @@ export default {
         vm.annotations.tools.push(vm._featuredetailTool);
       }
 
-      vm._featuredetailStatus.phaseEnd("initialize");
+      vm._featuredetailStatus.phaseEnd('initialize');
     });
   },
 };

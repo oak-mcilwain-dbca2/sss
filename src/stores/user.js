@@ -1,13 +1,13 @@
 // stores/user.js
 
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
-export const useUserStore = defineStore("user", {
+export const useUserStore = defineStore('user', {
   state: () => ({
     ready: false,
     whoami: {
-      email: "oak@example.com",
-      username: "oak",
+      email: 'oak@example.com',
+      username: 'oak',
       is_internal_dbca: true,
     },
   }),
@@ -20,8 +20,8 @@ export const useUserStore = defineStore("user", {
 
     loadMockUser() {
       this.whoami = {
-        email: "oak@example.com",
-        username: "oak",
+        email: 'oak@example.com',
+        username: 'oak',
         is_internal_dbca: true,
       };
       this.ready = true;

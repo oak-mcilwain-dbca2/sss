@@ -41,21 +41,21 @@
 </template>
 
 <script>
-import { toStringXY } from "ol/coordinate";
+import { toStringXY } from 'ol/coordinate';
 
-import { useMapStore } from "@/stores/map";
-import { useLoadingStore } from "@/stores/loading";
+import { useMapStore } from '@/stores/map';
+import { useLoadingStore } from '@/stores/loading';
 
 export default {
   store: {
-    hoverInfo: "settings.hoverInfo",
+    hoverInfo: 'settings.hoverInfo',
   },
   data: function () {
     return {
       infoStatus: null,
       features: false,
       hoverable: [],
-      coordinate: "",
+      coordinate: '',
       offset: 0,
       pixel: [0, 0],
     };
@@ -84,15 +84,15 @@ export default {
     css: function () {
       if (!this.map) {
         return {
-          display: "none",
+          display: 'none',
         };
       }
       var css = {
-        left: this.pixel[0] + this.offset + "px",
-        top: this.pixel[1] + this.offset + "px",
-        bottom: this.map.height - this.pixel[1] + this.offset + "px",
-        right: this.map.width - this.pixel[0] + this.offset + "px",
-        display: "none",
+        left: this.pixel[0] + this.offset + 'px',
+        top: this.pixel[1] + this.offset + 'px',
+        bottom: this.map.height - this.pixel[1] + this.offset + 'px',
+        right: this.map.width - this.pixel[0] + this.offset + 'px',
+        display: 'none',
       };
       if (this.pixel[0] < this.map.width / 2) {
         delete css.right;
@@ -110,7 +110,7 @@ export default {
       return css;
     },
     enabled: function () {
-      return this.hoverInfo && this.$root.annotations.tool.name === "Pan";
+      return this.hoverInfo && this.$root.annotations.tool.name === 'Pan';
     },
   },
   watch: {
@@ -126,13 +126,13 @@ export default {
   // methods callable from inside the template
   methods: {
     initialiseInfo() {
-      this.infoStatus.phaseEnd("gk-init");
-      this.infoStatus.phaseBegin("initialize", 20, "Initialize", true, false);
+      this.infoStatus.phaseEnd('gk-init');
+      this.infoStatus.phaseBegin('initialize', 20, 'Initialize', true, false);
 
       // display hover popups
-      this.$root.map.olmap.on("pointermove", this.onPointerMove);
+      this.$root.map.olmap.on('pointermove', this.onPointerMove);
 
-      this.infoStatus.phaseEnd("initialize");
+      this.infoStatus.phaseEnd('initialize');
     },
     // update the panel content
     onPointerMove: function (event) {
@@ -171,7 +171,7 @@ export default {
       if (this._feature === feature) {
         return this._featureInfo;
       }
-      var layer = mapLayer ? this.catalogue.getLayer(mapLayer.get("id")) : null;
+      var layer = mapLayer ? this.catalogue.getLayer(mapLayer.get('id')) : null;
       if (layer && layer.getFeatureInfo) {
         this._featureInfo = layer.getFeatureInfo(feature);
       } else {
@@ -190,9 +190,9 @@ export default {
   },
   mounted() {
     var vm = this;
-    this.infoStatus = vm.loading.register("info", "Info Component");
+    this.infoStatus = vm.loading.register('info', 'Info Component');
     this.infoStatus.phaseBegin(
-      "gk-init",
+      'gk-init',
       80,
       "Listen 'gk-init' event",
       true,

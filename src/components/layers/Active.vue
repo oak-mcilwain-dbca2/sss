@@ -16,7 +16,7 @@
           >
             <div class="small-9">
               <div class="layer-title">
-                {{ l.get("name") || l.get("id") }} -
+                {{ l.get('name') || l.get('id') }} -
                 {{ Math.round(l.getOpacity() * 100) }}%
               </div>
               <small v-if="layerRefreshStatus(l)" style="white-space: pre-wrap"
@@ -127,19 +127,19 @@
 </template>
 
 <script>
-import dragula from "dragula";
-import "dragula/dist/dragula.css";
+import dragula from 'dragula';
+import 'dragula/dist/dragula.css';
 
-import { eventBus } from "@/services/gokart";
-import { useMapStore } from "@/stores/map";
-import { useActiveStore } from "@/stores/active";
+import { eventBus } from '@/services/gokart';
+import { useMapStore } from '@/stores/map';
+import { useActiveStore } from '@/stores/active';
 
 export default {
   store: {
-    screenHeight: "layout.screenHeight",
-    leftPanelHeadHeight: "layout.leftPanelHeadHeight",
-    activeMenu: "activeMenu",
-    activeSubmenu: "activeSubmenu",
+    screenHeight: 'layout.screenHeight',
+    leftPanelHeadHeight: 'layout.leftPanelHeadHeight',
+    activeMenu: 'activeMenu',
+    activeSubmenu: 'activeSubmenu',
   },
   // variables
   data: function () {
@@ -160,10 +160,10 @@ export default {
     sliderTimeline: {
       get() {
         const mapLayer = this.mapLayer();
-        return mapLayer ? mapLayer.get("timeIndex") || 0 : 0;
+        return mapLayer ? mapLayer.get('timeIndex') || 0 : 0;
       },
       set(val) {
-        this.mapLayer().set("timeIndex", val);
+        this.mapLayer().set('timeIndex', val);
         this.refreshRevision += 1;
         this.timeIndex = val; // TODO: determine whether this is still needed
       },
@@ -181,10 +181,10 @@ export default {
       try {
         return (
           this.refreshRevision &&
-          this.layer.timeline[mapLayer ? mapLayer.get("timeIndex") || 0 : 0][0]
+          this.layer.timeline[mapLayer ? mapLayer.get('timeIndex') || 0 : 0][0]
         );
       } catch {
-        return this.refreshRevision && "";
+        return this.refreshRevision && '';
       }
     },
     sliderMax: function () {
@@ -221,13 +221,13 @@ export default {
     },
     formattedLayerRefreshInterval: function () {
       if (this.layerRefreshStopped) {
-        return this.refreshRevision && "Stopped";
+        return this.refreshRevision && 'Stopped';
       } else {
-        var format = "H\\hm\\ms\\s";
+        var format = 'H\\hm\\ms\\s';
         if (this.layer.refresh < 60) {
-          format = "s\\s";
+          format = 's\\s';
         } else if (this.layer.refresh < 3600) {
-          format = "m\\ms\\s";
+          format = 'm\\ms\\s';
         }
         return (
           this.refreshRevision &&
@@ -250,21 +250,21 @@ export default {
   // methods callable from inside the template
   methods: {
     adjustHeight: function () {
-      if (this.activeMenu === "layers" && this.activeSubmenu === "active") {
+      if (this.activeMenu === 'layers' && this.activeSubmenu === 'active') {
         var height = this.screenHeight - this.leftPanelHeadHeight - 180;
         if (height > 65) {
-          $("#layers-active-list-container").height(height);
-          if ($("#layer-config-container").height() < 180) {
-            $("#layer-config-container").height(180);
+          $('#layers-active-list-container').height(height);
+          if ($('#layer-config-container').height() < 180) {
+            $('#layer-config-container').height(180);
           }
         } else if (height <= -30) {
-          $("#layers-active-list-container").height(
+          $('#layers-active-list-container').height(
             this.screenHeight - this.leftPanelHeadHeight,
           );
-          $("#layer-config-container").height(0);
+          $('#layer-config-container').height(0);
         } else {
-          $("#layers-active-list-container").height(65);
-          $("#layer-config-container").height(
+          $('#layers-active-list-container').height(65);
+          $('#layer-config-container').height(
             this.screenHeight - this.leftPanelHeadHeight - 65,
           );
         }
@@ -297,14 +297,14 @@ export default {
       var layer = id ? this.getLayer(id) : this.layer;
       return layer &&
         this.mapLayer(layer) &&
-        (layer.type === "WFSLayer" || layer.type === "TileLayer") &&
+        (layer.type === 'WFSLayer' || layer.type === 'TileLayer') &&
         layer.refresh
         ? true
         : false;
     },
     layerRefreshIntervalConfigable: function (id) {
       var layer = id ? this.getLayer(id) : this.layer;
-      return (layer.type === "WFSLayer" || layer.type === "TileLayer") &&
+      return (layer.type === 'WFSLayer' || layer.type === 'TileLayer') &&
         layer.refresh &&
         layer.min_interval &&
         layer.max_interval
@@ -312,10 +312,10 @@ export default {
         : false;
     },
     layerRefreshProgress: function (l) {
-      return this.refreshRevision && (l.progress || "");
+      return this.refreshRevision && (l.progress || '');
     },
     layerRefreshStatus: function (l) {
-      return (this.refreshRevision && l && l.get("updated")) || "";
+      return (this.refreshRevision && l && l.get('updated')) || '';
     },
     activeLayers: function () {
       var catalogue = this.$root.catalogue;
@@ -328,12 +328,12 @@ export default {
           return false;
         }
         var options = {
-          id: layer.get("id"),
+          id: layer.get('id'),
           //name: layer.get('name'),
           //type: catLayer.type,
           opacity: layer.getOpacity(),
         };
-        results.push([layer.get("id"), options]);
+        results.push([layer.get('id'), options]);
         return true;
       });
       if (!success) {
@@ -348,8 +348,8 @@ export default {
       return this.$root.map.getMapLayer(id || this.layer);
     },
     getLayer: function (id) {
-      if (id == "hotspots:hotspot_centroids_two") {
-        return this.$root.catalogue.getLayer("hotspots:hotspot_centroids");
+      if (id == 'hotspots:hotspot_centroids_two') {
+        return this.$root.catalogue.getLayer('hotspots:hotspot_centroids');
       }
       return this.$root.catalogue.getLayer(id);
     },
@@ -361,7 +361,7 @@ export default {
 
       this.map.olmap.removeLayer(olLayer);
       this.map.olmap.dispatchEvent(
-        this.map.createEvent(this.map, "removeLayer", {
+        this.map.createEvent(this.map, 'removeLayer', {
           mapLayer: olLayer,
           layer: layer,
         }),
@@ -379,7 +379,7 @@ export default {
           map.olmap.addLayer(mapLayer);
 
           map.olmap.dispatchEvent(
-            map.createEvent(map, "changeLayerOrder", { mapLayer: mapLayer }),
+            map.createEvent(map, 'changeLayerOrder', { mapLayer: mapLayer }),
           );
         });
     },
@@ -387,13 +387,13 @@ export default {
   mounted() {
     useActiveStore().setComponent(this);
 
-    dragula([document.querySelector("#layers-active-list")]).on(
-      "drop",
+    dragula([document.querySelector('#layers-active-list')]).on(
+      'drop',
       this.updateOrder,
     );
     const mapStore = useMapStore();
 
-    eventBus.on("gk-init", () => {
+    eventBus.on('gk-init', () => {
       this.allMapLayers = mapStore.olmap.getLayers().getArray();
     });
   },

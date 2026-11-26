@@ -1,6 +1,6 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
-export const useLoadingStore = defineStore("loading", {
+export const useLoadingStore = defineStore('loading', {
   state: () => ({
     app: null,
     components: [],
@@ -13,7 +13,7 @@ export const useLoadingStore = defineStore("loading", {
 
       class Status {
         constructor(componentId, componentName) {
-          if (componentId === "app") {
+          if (componentId === 'app') {
             store.app = this;
           } else {
             const index = store.components.findIndex(
@@ -112,7 +112,7 @@ export const useLoadingStore = defineStore("loading", {
         failedMessage() {
           return this.failedPhases()
             .map((p) => p.reason)
-            .join("\n");
+            .join('\n');
         }
       }
 

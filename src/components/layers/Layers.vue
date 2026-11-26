@@ -28,14 +28,14 @@
 </template>
 
 <script>
-import gkActive from "@/components/layers/Active.vue";
-import gkCatalogue from "@/components/layers/Catalogue.vue";
-import gkExport from "@/components/layers/Export.vue";
+import gkActive from '@/components/layers/Active.vue';
+import gkCatalogue from '@/components/layers/Catalogue.vue';
+import gkExport from '@/components/layers/Export.vue';
 
 export default {
   store: {
-    activeMenu: "activeMenu",
-    activeSubmenu: "activeSubmenu",
+    activeMenu: 'activeMenu',
+    activeSubmenu: 'activeSubmenu',
   },
   data: function () {
     return {
@@ -59,7 +59,7 @@ export default {
       }
     },
     switchMenu: function (menu) {
-      menu = menu || "active";
+      menu = menu || 'active';
       if (this.activeSubmenu === menu || (!this.activeSubmenu && !menu)) {
         //new active submenu is equal to current active submenu, do nothing
         return;
@@ -76,8 +76,8 @@ export default {
   },
   mounted() {
     var vm = this;
-    $("#layers-tabs").on("change.zf.tabs", function (target, selectedTab) {
-      var menu = selectedTab.attr("menu");
+    $('#layers-tabs').on('change.zf.tabs', function (target, selectedTab) {
+      var menu = selectedTab.attr('menu');
       vm.info.hoverable.splice(0, vm.info.hoverable.length);
       vm.switchMenu(menu);
       vm.$root.menuChanged();

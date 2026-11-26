@@ -1,8 +1,8 @@
 // stores/active.js
 
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
-export const useActiveStore = defineStore("active", {
+export const useActiveStore = defineStore('active', {
   state: () => ({
     component: null,
   }),

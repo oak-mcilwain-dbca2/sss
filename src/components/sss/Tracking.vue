@@ -430,9 +430,9 @@ class="expanded secondary button" :class="{'selected': t.name == annotations.too
                         id="device-icon-{{f.get('id')}}"
                         :src="featureIconSrc(f)"
                       />
-                      {{ f.get("label") }}
+                      {{ f.get('label') }}
                       <i
-                        ><small>({{ ago(f.get("seen")) }})</small></i
+                        ><small>({{ ago(f.get('seen')) }})</small></i
                       >
                     </div>
                   </div>
@@ -452,46 +452,46 @@ class="expanded secondary button" :class="{'selected': t.name == annotations.too
 }
 </style>
 <script>
-import { debounce } from "lodash-es";
+import { debounce } from 'lodash-es';
 
-import Feature from "ol/Feature";
-import Collection from "ol/Collection";
+import Feature from 'ol/Feature';
+import Collection from 'ol/Collection';
 
-import Style from "ol/style/Style";
-import Stroke from "ol/style/Stroke";
-import Icon from "ol/style/Icon";
+import Style from 'ol/style/Style';
+import Stroke from 'ol/style/Stroke';
+import Icon from 'ol/style/Icon';
 
-import { containsCoordinate } from "ol/extent";
+import { containsCoordinate } from 'ol/extent';
 
-import Point from "ol/geom/Point";
-import LineString from "ol/geom/LineString";
+import Point from 'ol/geom/Point';
+import LineString from 'ol/geom/LineString';
 
-import { editResource, getDateRange, nextDate, checkPermission } from "@/utils";
+import { editResource, getDateRange, nextDate, checkPermission } from '@/utils';
 
-import env from "@/config/env";
+import env from '@/config/env';
 
-import directionSvg from "/symbols/device/direction.svg";
-import externalDSvg from "/symbols/device/external_d.svg";
-import dfesGenericSvg from "/symbols/device/dfes_generic.svg";
-import externalESvg from "/symbols/device/external_e.svg";
+import directionSvg from '/symbols/device/direction.svg';
+import externalDSvg from '/symbols/device/external_d.svg';
+import dfesGenericSvg from '/symbols/device/dfes_generic.svg';
+import externalESvg from '/symbols/device/external_e.svg';
 
-import { useActiveStore } from "@/stores/active";
-import { useSystemSettingStore } from "@/stores/systemSetting";
-import { useSettingsStore } from "@/stores/settings";
-import { useAnnotationsStore } from "@/stores/annotations";
-import { useLoadingStore } from "@/stores/loading";
-import { useStateStore } from "@/stores/state";
-import { useMapStore } from "@/stores/map";
+import { useActiveStore } from '@/stores/active';
+import { useSystemSettingStore } from '@/stores/systemSetting';
+import { useSettingsStore } from '@/stores/settings';
+import { useAnnotationsStore } from '@/stores/annotations';
+import { useLoadingStore } from '@/stores/loading';
+import { useStateStore } from '@/stores/state';
+import { useMapStore } from '@/stores/map';
 
-import DateTimeInput from "@/components/forms/DateTimeInput.vue";
+import DateTimeInput from '@/components/forms/DateTimeInput.vue';
 
 export default {
   store: {
-    hintsHeight: "layout.hintsHeight",
-    screenHeight: "layout.screenHeight",
-    leftPanelHeadHeight: "layout.leftPanelHeadHeight",
-    activeMenu: "activeMenu",
-    whoami: "whoami",
+    hintsHeight: 'layout.hintsHeight',
+    screenHeight: 'layout.screenHeight',
+    leftPanelHeadHeight: 'layout.leftPanelHeadHeight',
+    activeMenu: 'activeMenu',
+    whoami: 'whoami',
   },
   setup() {
     (directionSvg, externalDSvg, dfesGenericSvg, externalESvg);
@@ -500,60 +500,60 @@ export default {
     DateTimeInput,
   },
   data: function () {
-    var fill = "#ff6600";
-    var stroke = "#7c3100";
+    var fill = '#ff6600';
+    var stroke = '#7c3100';
     return {
       trackingStatus: null,
       toggleHistory: false,
       showToggles: false,
       clippedOnly: false,
-      search: "",
-      groupFilter: "",
+      search: '',
+      groupFilter: '',
       sourceflag: 3,
       tools: [],
-      historyRange: "21001",
+      historyRange: '21001',
       fields: [
-        "id",
-        "registration",
-        "rin_display",
-        "deviceid",
-        "symbol",
-        "district_display",
-        "usual_driver",
-        "callsign_display",
-        "usual_location",
-        "current_driver",
-        "contractor_details",
-        "source_device_type",
+        'id',
+        'registration',
+        'rin_display',
+        'deviceid',
+        'symbol',
+        'district_display',
+        'usual_driver',
+        'callsign_display',
+        'usual_location',
+        'current_driver',
+        'contractor_details',
+        'source_device_type',
       ],
       features: new Collection(),
       extentFeaturesSize: 0,
       featureLabelDisabled: false,
       featureDirDisabled: false,
       clippedFeatures: [],
-      historyFromDate: "",
-      historyToDate: "",
+      historyFromDate: '',
+      historyToDate: '',
       tints: {
         red: [
-          [fill, "#ed2727"],
-          [stroke, "#480000"],
+          [fill, '#ed2727'],
+          [stroke, '#480000'],
         ],
         orange: [
-          [fill, "#ff6600"],
-          [stroke, "#562200"],
+          [fill, '#ff6600'],
+          [stroke, '#562200'],
         ],
         yellow: [
-          [fill, "#ffd700"],
-          [stroke, "#413104"],
+          [fill, '#ffd700'],
+          [stroke, '#413104'],
         ],
         green: [
-          [fill, "#71c837"],
-          [stroke, "#1b310d"],
+          [fill, '#71c837'],
+          [stroke, '#1b310d'],
         ],
         selected: [
-          ["#000000", "#2199e8"],
-          [stroke, "#2199e8"],
-          [fill, "#ffffff"],
+          ['#000000', '#2199e8'],
+          [stroke, '#2199e8'],
+          [fill, '#ffffff'],
         ],
       },
       revision: 1,
@@ -605,10 +605,10 @@ export default {
       return useLoadingStore();
     },
     minDate() {
-      return moment().subtract(10, "years").format("YYYY-MM-DD") + "T00:00";
+      return moment().subtract(10, 'years').format('YYYY-MM-DD') + 'T00:00';
     },
     maxDate() {
-      return moment().format("YYYY-MM-DD") + "T23:59";
+      return moment().format('YYYY-MM-DD') + 'T23:59';
     },
     isTrackingMapLayerHidden: function () {
       return this.active.component?.isHidden(this.trackingMapLayer);
@@ -617,7 +617,7 @@ export default {
       return this.active.component?.isHidden(this.historyMapLayer);
     },
     selectedFeatures: function () {
-      return this.annotations?.getSelectedFeatures("tracking");
+      return this.annotations?.getSelectedFeatures('tracking');
     },
     selectedFeaturesSize: function () {
       return this.selectRevision && this.selectedFeatures?.getLength();
@@ -627,7 +627,7 @@ export default {
         this.selectRevision &&
         this.selectedFeatures &&
         this.selectedFeatures.getLength() &&
-        this.historyFromDate !== ""
+        this.historyFromDate !== ''
       );
     },
     showOtherExternalResource: {
@@ -755,10 +755,10 @@ export default {
     checkPermission,
     initialiseTracking() {
       const vm = this;
-      vm.trackingStatus.phaseEnd("gk-init");
+      vm.trackingStatus.phaseEnd('gk-init');
 
-      vm.trackingStatus.phaseBegin("attach_events", 10, "Attach events");
-      vm.map.olmap.getView().on("propertychange", function () {
+      vm.trackingStatus.phaseBegin('attach_events', 10, 'Attach events');
+      vm.map.olmap.getView().on('propertychange', function () {
         vm.updateViewport();
       });
 
@@ -772,15 +772,15 @@ export default {
         vm.map.olmap.getLayerGroup().on('change', layersAdded)
         layersAdded()*/
 
-      vm.selectedFeatures.on("add", function () {
+      vm.selectedFeatures.on('add', function () {
         vm.selectRevision += 1;
       });
-      vm.selectedFeatures.on("remove", function () {
+      vm.selectedFeatures.on('remove', function () {
         vm.selectRevision += 1;
       });
 
-      vm.map.olmap.on("removeLayer", function (ev) {
-        if (ev.mapLayer.get("id") === this.env.resourceTrackingLiveLayer) {
+      vm.map.olmap.on('removeLayer', function (ev) {
+        if (ev.mapLayer.get('id') === this.env.resourceTrackingLiveLayer) {
           vm.features.clear();
           vm._featurelist.clear();
         }
@@ -793,46 +793,46 @@ export default {
       }, 200);
 
       vm._resolutionChanged();
-      vm.map.olmap.getView().on("change:resolution", function () {
+      vm.map.olmap.getView().on('change:resolution', function () {
         vm._resolutionChanged();
       });
 
-      vm.trackingStatus.phaseEnd("attach_events");
+      vm.trackingStatus.phaseEnd('attach_events');
 
-      vm.trackingStatus.phaseBegin("init_tools", 10, "Initialize tools");
+      vm.trackingStatus.phaseBegin('init_tools', 10, 'Initialize tools');
       //vm.annotations.setDefaultTool('tracking','Pan')
 
       $.each([vm.annotations.ui.defaultPan], function (index, t) {
         t.scope = t.scope || [];
-        t.scope.push("tracking");
+        t.scope.push('tracking');
       });
 
       vm.tools = vm.annotations.tools.filter(function (t) {
-        return t.scope && t.scope.indexOf("tracking") >= 0;
+        return t.scope && t.scope.indexOf('tracking') >= 0;
       });
 
-      vm.trackingStatus.phaseEnd("init_tools");
+      vm.trackingStatus.phaseEnd('init_tools');
     },
     adjustHeight: function () {
-      if (this.activeMenu === "tracking") {
-        $("#tracking-list").height(
+      if (this.activeMenu === 'tracking') {
+        $('#tracking-list').height(
           this.screenHeight -
             this.leftPanelHeadHeight -
             41 -
-            $("#tracking-list-controller-container").height() -
+            $('#tracking-list-controller-container').height() -
             this.hintsHeight,
         );
       }
     },
     changeHistoryRange: function () {
-      if (this.historyRange === "-1") {
+      if (this.historyRange === '-1') {
         //customized
         if (!this.historyFromDate) {
           //fromDate is null, set to default value "Last hour"
-          var range = getDateRange(21001, "YYYY-MM-DD HH:mm");
-          this.historyFromDate = range[0] || "";
-          if ((range[1] || "") !== this.historyToDate) {
-            this.historyToDate = range[1] || "";
+          var range = getDateRange(21001, 'YYYY-MM-DD HH:mm');
+          this.historyFromDate = range[0] || '';
+          if ((range[1] || '') !== this.historyToDate) {
+            this.historyToDate = range[1] || '';
           } else {
             this.changeHistoryToDate();
           }
@@ -841,13 +841,13 @@ export default {
           this.changeHistoryToDate();
         }
       } else {
-        let range = getDateRange(this.historyRange, "YYYY-MM-DD HH:mm");
-        this.historyFromDate = range[0] || "";
-        this.historyToDate = range[1] || "";
+        let range = getDateRange(this.historyRange, 'YYYY-MM-DD HH:mm');
+        this.historyFromDate = range[0] || '';
+        this.historyToDate = range[1] || '';
       }
     },
     changeHistoryFromDate: function () {
-      if (this.historyRange !== "-1") {
+      if (this.historyRange !== '-1') {
         return;
       }
 
@@ -855,20 +855,20 @@ export default {
         return;
       }
 
-      if (this.historyFromDate === "") {
+      if (this.historyFromDate === '') {
         this._historyToDatePicker.setStartDate(
-          moment().subtract(10, "years").format("YYYY-MM-DD") + " 00:00",
+          moment().subtract(10, 'years').format('YYYY-MM-DD') + ' 00:00',
         );
       } else {
         this._historyToDatePicker.setStartDate(
-          moment(this.historyFromDate, "YYYY-MM-DD HH:mm").format(
-            "YYYY-MM-DD",
-          ) + " 00:00",
+          moment(this.historyFromDate, 'YYYY-MM-DD HH:mm').format(
+            'YYYY-MM-DD',
+          ) + ' 00:00',
         );
       }
     },
     changeHistoryToDate: function () {
-      if (this.historyRange !== "-1") {
+      if (this.historyRange !== '-1') {
         return;
       }
 
@@ -876,64 +876,64 @@ export default {
         return;
       }
 
-      if (this.historyToDate === "") {
+      if (this.historyToDate === '') {
         this._historyFromDatePicker.setEndDate(
-          moment().format("YYYY-MM-DD") + " 23:59",
+          moment().format('YYYY-MM-DD') + ' 23:59',
         );
       } else {
         this._historyFromDatePicker.setEndDate(this.historyToDate);
       }
     },
     historyDateFilter: function () {
-      if (this.historyRange !== "-1") {
+      if (this.historyRange !== '-1') {
         //in predefined range, reset the historyFromDate and historyToDate
         this.changeHistoryRange();
       }
       var startDate = this.historyFromDate
-        ? moment(this.historyFromDate, "YYYY-MM-DD HH:mm", true)
+        ? moment(this.historyFromDate, 'YYYY-MM-DD HH:mm', true)
         : null;
       if (startDate && !startDate.isValid()) {
-        throw "From date is under changing.";
+        throw 'From date is under changing.';
       }
 
       var endDate =
         this.historyToDate &&
-        this.historyToDate < moment().format("YYYY-MM-DD HH:mm")
-          ? moment(this.historyToDate, "YYYY-MM-DD HH:mm", true)
+        this.historyToDate < moment().format('YYYY-MM-DD HH:mm')
+          ? moment(this.historyToDate, 'YYYY-MM-DD HH:mm', true)
           : null;
       if (endDate && !endDate.isValid()) {
-        throw "To date is under changing.";
+        throw 'To date is under changing.';
       }
 
       if (startDate) {
         if (endDate) {
           if (startDate >= endDate) {
-            throw "Start date must be earlier than end date.";
+            throw 'Start date must be earlier than end date.';
           }
           return (
             "seen BETWEEN '" +
-            startDate.utc().format("YYYY-MM-DDTHH:mm:ssZ") +
+            startDate.utc().format('YYYY-MM-DDTHH:mm:ssZ') +
             "' AND '" +
-            nextDate(endDate, "YYYY-MM-DD HH:mm")
+            nextDate(endDate, 'YYYY-MM-DD HH:mm')
               .utc()
-              .format("YYYY-MM-DDTHH:mm:ssZ") +
+              .format('YYYY-MM-DDTHH:mm:ssZ') +
             "'"
           );
         } else {
           return (
-            "seen >= '" + startDate.utc().format("YYYY-MM-DDTHH:mm:ssZ") + "'"
+            "seen >= '" + startDate.utc().format('YYYY-MM-DDTHH:mm:ssZ') + "'"
           );
         }
       } else if (endDate) {
         return (
           "seen < '" +
-          nextDate(endDate, "YYYY-MM-DD HH:mm")
+          nextDate(endDate, 'YYYY-MM-DD HH:mm')
             .utc()
-            .format("YYYY-MM-DDTHH:mm:ssZ") +
+            .format('YYYY-MM-DDTHH:mm:ssZ') +
           "'"
         );
       } else {
-        throw "Please speicify history range.";
+        throw 'Please speicify history range.';
       }
     },
     setSourceFlag: function (flag, show) {
@@ -961,39 +961,39 @@ export default {
         !this.showDFESResource &&
         !this.showOtherExternalResource
       ) {
-        throw "Please choose at least one resource source.";
+        throw 'Please choose at least one resource source.';
       }
-      var filter = "";
+      var filter = '';
       if (this.showDBCAResource) {
         filter +=
           "'fleetcare','iriditrak','dplus','spot','other','netstar','mp70'";
       }
       if (this.showDFESResource) {
-        if (filter !== "") filter += ",";
+        if (filter !== '') filter += ',';
         filter += "'dfes'";
       }
       if (this.showOtherExternalResource) {
-        if (filter !== "") filter += ",";
+        if (filter !== '') filter += ',';
         filter += "'tracplus'";
       }
-      return "source_device_type in (" + filter + ")";
+      return 'source_device_type in (' + filter + ')';
     },
     ago: function (time) {
       var now = moment();
-      if (now.diff(moment(time), "days") == 1) {
-        return now.diff(moment(time), "days") + " day";
-      } else if (now.diff(moment(time), "days") > 1) {
-        return now.diff(moment(time), "days") + " days";
-      } else if (now.diff(moment(time), "hours") == 1) {
-        return now.diff(moment(time), "hours") + " hr";
-      } else if (now.diff(moment(time), "hours") > 1) {
-        return now.diff(moment(time), "hours") + " hrs";
-      } else if (now.diff(moment(time), "minutes") == 1) {
-        return now.diff(moment(time), "minutes") + " min";
-      } else if (now.diff(moment(time), "minutes") < 1) {
-        return "<1 min";
+      if (now.diff(moment(time), 'days') == 1) {
+        return now.diff(moment(time), 'days') + ' day';
+      } else if (now.diff(moment(time), 'days') > 1) {
+        return now.diff(moment(time), 'days') + ' days';
+      } else if (now.diff(moment(time), 'hours') == 1) {
+        return now.diff(moment(time), 'hours') + ' hr';
+      } else if (now.diff(moment(time), 'hours') > 1) {
+        return now.diff(moment(time), 'hours') + ' hrs';
+      } else if (now.diff(moment(time), 'minutes') == 1) {
+        return now.diff(moment(time), 'minutes') + ' min';
+      } else if (now.diff(moment(time), 'minutes') < 1) {
+        return '<1 min';
       } else {
-        return now.diff(moment(time), "minutes") + " mins";
+        return now.diff(moment(time), 'minutes') + ' mins';
       }
     },
     scrollToSelected: function () {
@@ -1009,7 +1009,7 @@ export default {
         }
       }
       if (index >= 0) {
-        var listElement = document.getElementById("tracking-list");
+        var listElement = document.getElementById('tracking-list');
         if (index < listElement.children.length) {
           listElement.scrollTop +=
             listElement.children[index].getBoundingClientRect().top -
@@ -1054,8 +1054,8 @@ export default {
       var vm = this;
       return (
         vm.selectRevision &&
-        this.map.getBlob(f, ["icon", "originalTint"], this.tints, function () {
-          $("#device-icon-" + f.get("id")).attr("src", vm.featureIconSrc(f));
+        this.map.getBlob(f, ['icon', 'originalTint'], this.tints, function () {
+          $('#device-icon-' + f.get('id')).attr('src', vm.featureIconSrc(f));
         })
       );
     },
@@ -1075,20 +1075,20 @@ export default {
       } else {
         list = this._featurelist.getArray();
       }
-      this.$root.export.exportVector(list, "trackingdata");
+      this.$root.export.exportVector(list, 'trackingdata');
     },
     downloadSelectedCSV: function () {
-      var deviceFilter = "";
+      var deviceFilter = '';
       if (this.selectedFeatures.getLength() > 0) {
         deviceFilter =
-          "deviceid__in=" +
+          'deviceid__in=' +
           this.selectedFeatures
             .getArray()
             .map(function (o) {
-              return o.get("deviceid");
+              return o.get('deviceid');
             })
-            .join(",") +
-          "";
+            .join(',') +
+          '';
       }
       console.log(deviceFilter);
       return deviceFilter;
@@ -1096,7 +1096,7 @@ export default {
     clearHistory: function () {
       var historyLayer = this.historyLayer;
       if (!this.toggleHistory) {
-        historyLayer.cql_filter = "clearhistorylayer";
+        historyLayer.cql_filter = 'clearhistorylayer';
         this.$root.catalogue.onLayerChange(historyLayer, false);
       }
     },
@@ -1107,7 +1107,7 @@ export default {
         vm._updateCQLFilter = debounce(function () {
           try {
             var groupFilter = vm.groupFilter;
-            var deviceFilter = "";
+            var deviceFilter = '';
             var sourceFilter = vm.getSourceFilter();
             // filter by specific devices if "Show selected only" is enabled
             if (vm.clippedOnly) {
@@ -1119,17 +1119,17 @@ export default {
               }
             }
             // CQL statement assembling logic
-            var cql_filter = "";
+            var cql_filter = '';
             if (deviceFilter) {
               cql_filter = deviceFilter;
             } else if (groupFilter && sourceFilter) {
-              cql_filter = "(" + groupFilter + ") and (" + sourceFilter + ")";
+              cql_filter = '(' + groupFilter + ') and (' + sourceFilter + ')';
             } else if (groupFilter) {
               cql_filter = groupFilter;
             } else if (sourceFilter) {
               cql_filter = sourceFilter;
             } else {
-              cql_filter = "";
+              cql_filter = '';
             }
             if (cql_filter === vm.trackingLayer.cql_filter) {
               //filter not changed
@@ -1137,10 +1137,10 @@ export default {
             }
             vm.trackingLayer.cql_filter = cql_filter;
             //clear device filter or change other filter
-            vm.trackingMapLayer.set("updated", moment().toLocaleString());
+            vm.trackingMapLayer.set('updated', moment().toLocaleString());
             vm.trackingMapLayer
               .getSource()
-              .loadSource(deviceFilter ? "querySavedSelection" : "query");
+              .loadSource(deviceFilter ? 'querySavedSelection' : 'query');
           } catch (ex) {
             alert(ex);
           }
@@ -1162,36 +1162,36 @@ export default {
           this.selectedFeatures
             .getArray()
             .map(function (o) {
-              return o.get("deviceid");
+              return o.get('deviceid');
             })
             .join("','") +
           "')";
         historyLayer.cql_filter =
-          deviceFilter + "and " + this.historyDateFilter();
+          deviceFilter + 'and ' + this.historyDateFilter();
         if (this.$root.catalogue.onLayerChange(historyLayer, true)) {
           //Add history layer into the map. need to add to the hoverable
           this.info.hoverable.push(this.historyMapLayer);
         } else {
           //history layer is already turned on, manually load the history source
           var source = this.$root.map.getMapLayer(historyLayer).getSource();
-          source.loadSource("query");
+          source.loadSource('query');
         }
       } catch (ex) {
         alert(ex);
       }
     },
     featureFilter: function (f) {
-      var search = this.search ? this.search.toLowerCase().trim() : "";
+      var search = this.search ? this.search.toLowerCase().trim() : '';
       var found =
         !search ||
         this.fields.some(function (key) {
-          return ("" + f.get(key)).toLowerCase().indexOf(search) > -1;
+          return ('' + f.get(key)).toLowerCase().indexOf(search) > -1;
         });
       return found;
     },
     featureOrder: function (a, b) {
-      var as = a.get("seen");
-      var bs = b.get("seen");
+      var as = a.get('seen');
+      var bs = b.get('seen');
       if (as < bs) {
         return 1;
       } else if (as > bs) {
@@ -1285,7 +1285,7 @@ export default {
       this.clippedFeatures.splice(0, this.clippedFeatures.length);
       for (var index = 0; index < this.selectedFeatures.getLength(); index++) {
         this.clippedFeatures.push(
-          this.selectedFeatures.item(index).get("deviceid"),
+          this.selectedFeatures.item(index).get('deviceid'),
         );
       }
       if (this.clippedOnly) {
@@ -1320,12 +1320,12 @@ export default {
   mounted() {
     const vm = this;
     vm.trackingStatus = this.loading.register(
-      "tracking",
-      "Resource Tracking Component",
+      'tracking',
+      'Resource Tracking Component',
     );
     vm._featurelist = new Collection();
 
-    vm.trackingStatus.phaseBegin("initialize", 20, "Initialize");
+    vm.trackingStatus.phaseBegin('initialize', 20, 'Initialize');
 
     // TODO: Native DateTimeInput replacement currently used.
     // Review whether we want to restore:
@@ -1347,7 +1347,7 @@ export default {
     // });
 
     try {
-      this._historyFromDatePicker = $("#historyFromDate").data().datepicker;
+      this._historyFromDatePicker = $('#historyFromDate').data().datepicker;
     } catch (ex) {
       console.log(ex);
       this._historyFromDatePicker = null;
@@ -1373,7 +1373,7 @@ export default {
     // });
 
     try {
-      this._historyToDatePicker = $("#historyToDate").data().datepicker;
+      this._historyToDatePicker = $('#historyToDate').data().datepicker;
     } catch {
       this._historyToDatePicker = null;
     }
@@ -1387,7 +1387,7 @@ export default {
         // cache styles for performance
         var style = vm.map.cacheStyle(
           function (feat) {
-            var src = vm.map.getBlob(feat, ["icon", "tint"], vm.tints);
+            var src = vm.map.getBlob(feat, ['icon', 'tint'], vm.tints);
 
             if (!src) {
               return false;
@@ -1400,10 +1400,10 @@ export default {
               }),
               text: new Text({
                 offsetX: 12,
-                textAlign: "left",
-                font: "12px Helvetica,Roboto,Arial,sans-serif",
+                textAlign: 'left',
+                font: '12px Helvetica,Roboto,Arial,sans-serif',
                 stroke: new Stroke({
-                  color: "#fff",
+                  color: '#fff',
                   width: 4,
                 }),
               }),
@@ -1414,7 +1414,7 @@ export default {
             });
           },
           feat,
-          ["icon", "tint"],
+          ['icon', 'tint'],
         );
         if (style[0].getText && style[0].getText()) {
           if (
@@ -1422,14 +1422,14 @@ export default {
             vm.resourceLabels &&
             !vm.active.component?.isHidden(vm.map.getMapLayer(layerId))
           ) {
-            style[0].getText().setText(feat.get("label"));
+            style[0].getText().setText(feat.get('label'));
           } else {
-            style[0].getText().setText("");
+            style[0].getText().setText('');
           }
         }
         if (res < 0.003 && vm.resourceDirections) {
-          var heading = feat.get("heading");
-          var speed = feat.get("velocity");
+          var heading = feat.get('heading');
+          var speed = feat.get('velocity');
           if (heading !== undefined && (heading !== 0 || speed !== 0)) {
             //style.getImage().setRotation( (heading + 90) / 180 * Math.PI )
             if (!vm.styleWithDirection) {
@@ -1459,8 +1459,8 @@ export default {
       var name;
 
       //var callsign_display = device.get('callsign_display');
-      var callsign = device.get("callsign");
-      var registration = device.get("registration");
+      var callsign = device.get('callsign');
+      var registration = device.get('registration');
       /*if (!district || district == 'Aviation' || district == 'Other'){
 			if (!callsign_display || rin_symbols.indexOf(symbol) === -1){
                 name = registration
@@ -1476,111 +1476,111 @@ export default {
         }
         return name*/
       //name = callsign_display +' '+ registration
-      name = callsign + " " + registration;
-      name = name.replace("null", "");
+      name = callsign + ' ' + registration;
+      name = name.replace('null', '');
       return name;
     };
 
     var addResourceFunc = function (styleFunc) {
       return function (f) {
         var now = moment();
-        var timestamp = moment(f.get("seen"));
-        var tint = "red";
-        if (now.diff(timestamp, "hours") < 24) {
-          tint = "orange";
+        var timestamp = moment(f.get('seen'));
+        var tint = 'red';
+        if (now.diff(timestamp, 'hours') < 24) {
+          tint = 'orange';
         }
-        if (now.diff(timestamp, "hours") < 3) {
-          tint = "yellow";
+        if (now.diff(timestamp, 'hours') < 3) {
+          tint = 'yellow';
         }
-        if (now.diff(timestamp, "hours") < 1) {
-          tint = "green";
+        if (now.diff(timestamp, 'hours') < 1) {
+          tint = 'green';
         }
-        if (f.get("source_device_type") === "dfes") {
-          f.set("icon", [externalDSvg, dfesGenericSvg], true);
-        } else if (f.get("source_device_type") === "tracplus") {
+        if (f.get('source_device_type') === 'dfes') {
+          f.set('icon', [externalDSvg, dfesGenericSvg], true);
+        } else if (f.get('source_device_type') === 'tracplus') {
           f.set(
-            "icon",
-            [externalESvg, "/symbols/device/" + f.get("symbolid") + ".svg"],
+            'icon',
+            [externalESvg, '/symbols/device/' + f.get('symbolid') + '.svg'],
             true,
           );
         } else {
-          f.set("icon", "/symbols/device/" + f.get("symbolid") + ".svg", true);
+          f.set('icon', '/symbols/device/' + f.get('symbolid') + '.svg', true);
         }
-        f.set("tint", tint, true);
-        f.set("originalTint", tint, true);
-        f.set("label", deviceLabel(f), true);
-        f.set("time", timestamp.toLocaleString(), true);
+        f.set('tint', tint, true);
+        f.set('originalTint', tint, true);
+        f.set('label', deviceLabel(f), true);
+        f.set('time', timestamp.toLocaleString(), true);
         // Set a different vue template for rendering
-        f.set("partialId", "resourceInfo", true);
+        f.set('partialId', 'resourceInfo', true);
         // Set id for select tools
-        f.set("selectId", f.get("deviceid"), true);
+        f.set('selectId', f.get('deviceid'), true);
         f.setStyle(styleFunc, true);
       };
     };
 
     var deviceExtraHoverLabel = function (device) {
       var rin_symbols = [
-        "heavy duty",
-        "gang truck",
-        "dozer",
-        "loader",
-        "grader",
-        "tender",
-        "float",
+        'heavy duty',
+        'gang truck',
+        'dozer',
+        'loader',
+        'grader',
+        'tender',
+        'float',
       ];
-      var symbol = device.get("symbol");
-      var return_label = "";
-      var callsign_label = "";
-      var callsign_display = device.get("callsign_display");
-      var c_label = "";
-      var u_label = "";
-      var c_driver = " " + (device.get("current_driver") || "");
-      var u_driver = " " + (device.get("usual_driver") || "");
-      var u_location = " " + (device.get("usual_location") || "");
+      var symbol = device.get('symbol');
+      var return_label = '';
+      var callsign_label = '';
+      var callsign_display = device.get('callsign_display');
+      var c_label = '';
+      var u_label = '';
+      var c_driver = ' ' + (device.get('current_driver') || '');
+      var u_driver = ' ' + (device.get('usual_driver') || '');
+      var u_location = ' ' + (device.get('usual_location') || '');
       var contractor_label =
-        "Contractor: " + (device.get("contractor_details") || "");
+        'Contractor: ' + (device.get('contractor_details') || '');
 
       // Set "Callsign" Label for "Light vehicles" (no RIN)
 
       if (callsign_display && rin_symbols.indexOf(symbol) === -1) {
-        callsign_label = "Callsign: " + callsign_display;
+        callsign_label = 'Callsign: ' + callsign_display;
       }
 
       // Set "Usual" Label
-      if (u_driver != " ") {
-        u_label += "Usual driver:" + u_driver;
-        if (u_location != " ") {
-          u_label += ", Location:" + u_location;
+      if (u_driver != ' ') {
+        u_label += 'Usual driver:' + u_driver;
+        if (u_location != ' ') {
+          u_label += ', Location:' + u_location;
         }
-      } else if (u_location != " ") {
-        u_label += "Usual location:" + u_location;
+      } else if (u_location != ' ') {
+        u_label += 'Usual location:' + u_location;
       }
 
       // Set "Current" Label
-      if (c_driver != " ") {
-        c_label += "Current driver:" + c_driver;
+      if (c_driver != ' ') {
+        c_label += 'Current driver:' + c_driver;
       }
 
       // Generate Full Label
-      if (callsign_label != "") {
+      if (callsign_label != '') {
         return_label += callsign_label;
       }
-      if ((callsign_label != "") & (c_label != "")) {
-        return_label += "<br>" + c_label;
-      } else if (c_label != "") {
+      if ((callsign_label != '') & (c_label != '')) {
+        return_label += '<br>' + c_label;
+      } else if (c_label != '') {
         return_label += c_label;
       }
-      if ((c_label != "" || callsign_label != "") && u_label != "") {
-        return_label += "<br>" + u_label;
-      } else if (u_label != "") {
+      if ((c_label != '' || callsign_label != '') && u_label != '') {
+        return_label += '<br>' + u_label;
+      } else if (u_label != '') {
         return_label += u_label;
       }
       if (
-        (c_label != "" || u_label != "") &&
-        contractor_label != "Contractor: "
+        (c_label != '' || u_label != '') &&
+        contractor_label != 'Contractor: '
       ) {
-        return_label += "<br>" + contractor_label;
-      } else if (contractor_label != "Contractor: ") {
+        return_label += '<br>' + contractor_label;
+      } else if (contractor_label != 'Contractor: ') {
         return_label += contractor_label;
       }
 
@@ -1588,9 +1588,9 @@ export default {
     };
 
     vm.trackingStatus.phaseBegin(
-      "load_resources",
+      'load_resources',
       30,
-      "Load resources",
+      'Load resources',
       false,
       true,
     );
@@ -1601,32 +1601,32 @@ export default {
 
     useStateStore().fixedLayers.push(
       {
-        type: "WFSLayer",
+        type: 'WFSLayer',
         // name: 'Resource Tracking',
-        name: "DBCA Resource Tracking (Live)",
+        name: 'DBCA Resource Tracking (Live)',
         id: env.resourceTrackingLiveLayer,
         features: vm._featurelist,
         cql_filter: vm.getSourceFilter(),
         getFeatureInfo: function (f) {
           var extra_device_label = deviceExtraHoverLabel(f);
           return {
-            name: f.get("label"),
-            img: vm.map.getBlob(f, ["icon", "tint"]),
+            name: f.get('label'),
+            img: vm.map.getBlob(f, ['icon', 'tint']),
             comments:
-              "(" +
-              vm.ago(f.get("seen")) +
-              " ago, Heading:" +
-              f.get("heading") +
-              "&deg;)<br>" +
+              '(' +
+              vm.ago(f.get('seen')) +
+              ' ago, Heading:' +
+              f.get('heading') +
+              '&deg;)<br>' +
               extra_device_label,
           };
         },
         refresh: 60,
         onerror: function (status, message) {
-          console.log("tracking onerror: before processResources function");
+          console.log('tracking onerror: before processResources function');
           vm.trackingStatus.phaseFailed(
-            "load_resources",
-            status + " : " + message,
+            'load_resources',
+            status + ' : ' + message,
           );
         },
         onload: function (loadType, vectorSource, features) {
@@ -1644,7 +1644,7 @@ export default {
               ) {
                 var f = vm.selectedFeatures.item(index);
                 loadedFeature = features.find(function (f1) {
-                  return f1.get("deviceid") === f.get("deviceid");
+                  return f1.get('deviceid') === f.get('deviceid');
                 });
                 if (loadedFeature) {
                   vm.selectedFeatures.setAt(index, loadedFeature);
@@ -1659,7 +1659,7 @@ export default {
             vm.updateViewport(0);
             vm.updateFeatureFilter(0);
             //remove nonexisted deviceid from clippedFeatures
-            if (loadType === "querySavedSelection") {
+            if (loadType === 'querySavedSelection') {
               for (
                 let index = vm.clippedFeatures.length - 1;
                 index >= 0;
@@ -1667,14 +1667,14 @@ export default {
               ) {
                 if (
                   !features.find(function (f) {
-                    return f.get("deviceid") === vm.clippedFeatures[index];
+                    return f.get('deviceid') === vm.clippedFeatures[index];
                   })
                 ) {
                   vm.clippedFeatures.splice(index, 1);
                 }
               }
             }
-            vm.trackingStatus.phaseEnd("load_resources");
+            vm.trackingStatus.phaseEnd('load_resources');
           }
 
           if (
@@ -1683,15 +1683,15 @@ export default {
             features.length > 0
           ) {
             var f = features.find(function (f) {
-              return f.get("source_device_type") != "tracplus";
+              return f.get('source_device_type') != 'tracplus';
             });
             if (f) {
               checkPermission(
                 vm.env.resourceTrackingService +
-                  "/devices/" +
-                  f.get("id") +
-                  "/update/",
-                "GET",
+                  '/devices/' +
+                  f.get('id') +
+                  '/update/',
+                'GET',
                 function (allowed) {
                   vm.whoami.editVehicle = allowed;
 
@@ -1707,9 +1707,9 @@ export default {
         },
       },
       {
-        type: "WFSLayer",
+        type: 'WFSLayer',
         // name: 'Resource Tracking History',
-        name: "DBCA Resource Tracking History (Live)",
+        name: 'DBCA Resource Tracking History (Live)',
         id: env.resourceTrackingHistoryLayer,
         onadd: (function (addResource) {
           return function (f) {
@@ -1729,21 +1729,21 @@ export default {
             var extra_device_label = deviceExtraHoverLabel(f);
             return {
               name: name,
-              img: vm.map.getBlob(f, ["icon", "tint"]),
+              img: vm.map.getBlob(f, ['icon', 'tint']),
               comments:
-                "(" +
-                f.get("label") +
-                ", Heading:" +
-                f.get("heading") +
-                "&deg;)<br>" +
+                '(' +
+                f.get('label') +
+                ', Heading:' +
+                f.get('heading') +
+                '&deg;)<br>' +
                 extra_device_label,
             };
           } else {
             return {
-              name: f.get("name"),
-              img: vm.map.getBlob(f, ["icon", "tint"]),
+              name: f.get('name'),
+              img: vm.map.getBlob(f, ['icon', 'tint']),
               comments:
-                "(" + f.get("startTime") + " - " + f.get("endTime") + ")",
+                '(' + f.get('startTime') + ' - ' + f.get('endTime') + ')',
             };
           }
         },
@@ -1753,7 +1753,7 @@ export default {
           var devices = {};
           // group by device
           features.forEach(function (feature) {
-            var deviceid = feature.get("deviceid");
+            var deviceid = feature.get('deviceid');
             if (!(deviceid in devices)) {
               devices[deviceid] = [];
             }
@@ -1765,8 +1765,8 @@ export default {
             // pull the coordinates
             var coords = devices[device].map(function (point) {
               point.set(
-                "label",
-                moment(point.get("seen")).format("MMM DD HH:mm"),
+                'label',
+                moment(point.get('seen')).format('MMM DD HH:mm'),
               );
               return point.getGeometry().getCoordinates();
             });
@@ -1774,13 +1774,13 @@ export default {
             var f = devices[device][0];
             var name = deviceLabel(f);
             var feature = new Feature({
-              name: name + " path",
-              icon: f.get("icon"),
-              tint: f.get("tint"),
-              endTime: moment(f.get("seen")).format("MMM DD HH:mm"),
+              name: name + ' path',
+              icon: f.get('icon'),
+              tint: f.get('tint'),
+              endTime: moment(f.get('seen')).format('MMM DD HH:mm'),
               startTime: moment(
-                devices[device][devices[device].length - 1].get("seen"),
-              ).format("MMM DD HH:mm"),
+                devices[device][devices[device].length - 1].get('seen'),
+              ).format('MMM DD HH:mm'),
               geometry: new LineString(coords),
             });
             vectorSource.addFeature(feature);
@@ -1791,10 +1791,10 @@ export default {
 
     var tools = [
       {
-        name: "Resourcetracking Select",
-        label: "Select",
-        icon: "fa-mouse-pointer",
-        scope: ["tracking"],
+        name: 'Resourcetracking Select',
+        label: 'Select',
+        icon: 'fa-mouse-pointer',
+        scope: ['tracking'],
         selectedFeatures: vm.selectedFeatures,
         keepSelection: true,
         interactions: [
@@ -1826,10 +1826,10 @@ export default {
         },
         comments: [
           {
-            name: "Tips",
+            name: 'Tips',
             description: [
               "Select all features using shortcut key 'Ctrl + A'",
-              "Select features using mouse.",
+              'Select features using mouse.',
               "Hold 'Ctrl' to enable polygon selection",
               "Delete selected features using key 'Del'",
             ],
@@ -1842,9 +1842,9 @@ export default {
       vm.annotations.tools.push(tool);
     });
 
-    vm.trackingStatus.phaseEnd("initialize");
+    vm.trackingStatus.phaseEnd('initialize');
 
-    vm.trackingStatus.phaseBegin("gk-init", 30, "Listen 'gk-init' event");
+    vm.trackingStatus.phaseBegin('gk-init', 30, "Listen 'gk-init' event");
   },
 };
 </script>

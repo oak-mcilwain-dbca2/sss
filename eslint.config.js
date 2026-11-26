@@ -1,65 +1,65 @@
-import js from "@eslint/js";
-import vue from "eslint-plugin-vue";
-import globals from "globals";
-import prettier from "eslint-config-prettier";
+import js from '@eslint/js';
+import vue from 'eslint-plugin-vue';
+import globals from 'globals';
+import prettier from 'eslint-config-prettier';
 
 export default [
   {
-    ignores: ["dist/**", "coverage/**", "node_modules/**"],
+    ignores: ['dist/**', 'coverage/**', 'node_modules/**'],
   },
 
   js.configs.recommended,
-  ...vue.configs["flat/recommended"],
+  ...vue.configs['flat/recommended'],
 
   prettier,
 
   {
-    files: ["**/*.{js,mjs,cjs,vue}"],
+    files: ['**/*.{js,mjs,cjs,vue}'],
 
     languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       globals: {
         ...globals.browser,
         ...globals.node,
-        $: "readonly",
-        jQuery: "readonly",
-        moment: "readonly",
+        $: 'readonly',
+        jQuery: 'readonly',
+        moment: 'readonly',
       },
     },
     rules: {
       // Variables
-      "no-unused-vars": [
-        "warn",
+      'no-unused-vars': [
+        'warn',
         {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
         },
       ],
 
       // Console logging
-      "no-console": "off",
+      'no-console': 'off',
 
       // Relax during migration
-      eqeqeq: "off",
-      curly: "off",
+      eqeqeq: 'off',
+      curly: 'off',
 
-      "no-empty": "warn",
-      "no-prototype-builtins": "warn",
-      "no-useless-assignment": "warn",
+      'no-empty': 'warn',
+      'no-prototype-builtins': 'warn',
+      'no-useless-assignment': 'warn',
 
       // Vue
-      "vue/multi-word-component-names": "off",
-      "vue/html-self-closing": "off",
-      "vue/attributes-order": "off",
-      "vue/block-order": "off",
-      "vue/order-in-components": "off",
+      'vue/multi-word-component-names': 'off',
+      'vue/html-self-closing': 'off',
+      'vue/attributes-order': 'off',
+      'vue/block-order': 'off',
+      'vue/order-in-components': 'off',
 
       // Vue 1 legacy patterns
-      "vue/no-deprecated-events-api": "off",
+      'vue/no-deprecated-events-api': 'off',
 
       // Keep useful checks
-      "vue/no-unused-components": "warn",
+      'vue/no-unused-components': 'warn',
     },
   },
 ];

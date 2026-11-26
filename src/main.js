@@ -1,9 +1,9 @@
-import { createApp } from "vue";
-import { createPinia } from "pinia";
-import $ from "jquery";
-import moment from "moment";
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import $ from 'jquery';
+import moment from 'moment';
 
-import App from "./App.vue";
+import App from './App.vue';
 
 globalThis.$ = $;
 globalThis.jQuery = $;
@@ -13,7 +13,7 @@ const app = createApp(App);
 
 app.use(createPinia());
 
-app.mount("#app");
+app.mount('#app');
 
 app.config.errorHandler = (err) => {
   console.error(err);

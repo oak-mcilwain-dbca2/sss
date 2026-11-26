@@ -10,9 +10,9 @@ let FeatureTask = function (
   this.scope = scope;
   this.taskId = taskId;
   this.description = description;
-  this.icon = "";
-  this.statusText = "";
-  this.message = "";
+  this.icon = '';
+  this.statusText = '';
+  this.message = '';
   this.setStatus(status, message);
 };
 
@@ -34,49 +34,49 @@ FeatureTask.prototype._getIcon = function () {
     this.status === FeatureTask.FAILED ||
     this.status === FeatureTask.FAIL_CONFIRMED
   ) {
-    return "fa-close";
+    return 'fa-close';
   } else if (this.status === FeatureTask.WAITING) {
-    return "fa-pause";
+    return 'fa-pause';
   } else if (this.status === FeatureTask.RUNNING) {
-    return "fa-spinner";
+    return 'fa-spinner';
   } else if (this.status === FeatureTask.SUCCEED) {
-    return "fa-check";
+    return 'fa-check';
   } else if (this.status === FeatureTask.WARNING) {
-    return "fa-warning";
+    return 'fa-warning';
   } else if (this.status === FeatureTask.IGNORED) {
-    return "fa-minus";
+    return 'fa-minus';
   } else if (this.status === FeatureTask.MERGED) {
-    return "fa-link";
+    return 'fa-link';
   } else {
-    return "fa-spinner";
+    return 'fa-spinner';
   }
 };
 
 FeatureTask.prototype._getStatusText = function () {
   if (this.status === FeatureTask.FAILED) {
-    return "Failed";
+    return 'Failed';
   } else if (this.status === FeatureTask.WAITING) {
-    return "Waiting";
+    return 'Waiting';
   } else if (this.status === FeatureTask.RUNNING) {
-    return "Running";
+    return 'Running';
   } else if (this.status === FeatureTask.SUCCEED) {
-    return "OK";
+    return 'OK';
   } else if (this.status === FeatureTask.WARNING) {
-    return "Warning";
+    return 'Warning';
   } else if (this.status === FeatureTask.IGNORED) {
-    return "Ignored";
+    return 'Ignored';
   } else if (this.status === FeatureTask.MERGED) {
-    return "Merged";
+    return 'Merged';
   } else if (this.status === FeatureTask.FAIL_CONFIRMED) {
-    return "Failed";
+    return 'Failed';
   } else {
-    return "Running";
+    return 'Running';
   }
 };
 
 FeatureTask.prototype.setStatus = function (status, message) {
   this.status = status;
-  this.message = message || "";
+  this.message = message || '';
   this.statusText = this._getStatusText();
   this.icon = this._getIcon();
   if (this.manager && this.manager.changeCallback)
@@ -99,7 +99,7 @@ FeatureTaskManager.prototype.initTasks = function (feat) {
         );
       })
     ) {
-      alert("Feature still has running jobs.");
+      alert('Feature still has running jobs.');
       return false;
     }
   }

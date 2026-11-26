@@ -41,83 +41,83 @@
 </style>
 
 <script>
-import { isKbLayer, getLayerId, getLayerUrl } from "@/utils";
+import { isKbLayer, getLayerId, getLayerUrl } from '@/utils';
 
-import Feature from "ol/Feature";
-import View from "ol/View";
+import Feature from 'ol/Feature';
+import View from 'ol/View';
 
-import Point from "ol/geom/Point";
-import MultiPoint from "ol/geom/MultiPoint";
-import Polygon from "ol/geom/Polygon";
-import LineString from "ol/geom/LineString";
-import MultiLineString from "ol/geom/MultiLineString";
-import MultiPolygon from "ol/geom/MultiPolygon";
-import GeometryCollection from "ol/geom/GeometryCollection";
-import LinearRing from "ol/geom/LinearRing";
+import Point from 'ol/geom/Point';
+import MultiPoint from 'ol/geom/MultiPoint';
+import Polygon from 'ol/geom/Polygon';
+import LineString from 'ol/geom/LineString';
+import MultiLineString from 'ol/geom/MultiLineString';
+import MultiPolygon from 'ol/geom/MultiPolygon';
+import GeometryCollection from 'ol/geom/GeometryCollection';
+import LinearRing from 'ol/geom/LinearRing';
 
-import DragPan from "ol/interaction/DragPan";
-import DoubleClickZoom from "ol/interaction/DoubleClickZoom";
-import KeyboardPan from "ol/interaction/KeyboardPan";
-import KeyboardZoom from "ol/interaction/KeyboardZoom";
-import { defaults as defaultInteractions } from "ol/interaction";
+import DragPan from 'ol/interaction/DragPan';
+import DoubleClickZoom from 'ol/interaction/DoubleClickZoom';
+import KeyboardPan from 'ol/interaction/KeyboardPan';
+import KeyboardZoom from 'ol/interaction/KeyboardZoom';
+import { defaults as defaultInteractions } from 'ol/interaction';
 
-import Control from "ol/control/Control";
-import FullScreen from "ol/control/FullScreen";
-import Zoom from "ol/control/Zoom";
-import OverviewMap from "ol/control/OverviewMap";
-import ScaleLine from "ol/control/ScaleLine";
-import MousePosition from "ol/control/MousePosition";
-import Attribution from "ol/control/Attribution";
+import Control from 'ol/control/Control';
+import FullScreen from 'ol/control/FullScreen';
+import Zoom from 'ol/control/Zoom';
+import OverviewMap from 'ol/control/OverviewMap';
+import ScaleLine from 'ol/control/ScaleLine';
+import MousePosition from 'ol/control/MousePosition';
+import Attribution from 'ol/control/Attribution';
 
-import Stroke from "ol/style/Stroke";
+import Stroke from 'ol/style/Stroke';
 
-import TileLayer from "ol/layer/Tile";
-import VectorLayer from "ol/layer/Vector";
-import Graticule from "ol/layer/Graticule";
+import TileLayer from 'ol/layer/Tile';
+import VectorLayer from 'ol/layer/Vector';
+import Graticule from 'ol/layer/Graticule';
 
-import VectorSource from "ol/source/Vector";
-import ImageWMS from "ol/source/ImageWMS";
-import TileWMS from "ol/source/TileWMS";
+import VectorSource from 'ol/source/Vector';
+import ImageWMS from 'ol/source/ImageWMS';
+import TileWMS from 'ol/source/TileWMS';
 
-import WMTS from "ol/source/WMTS";
-import WMTSTileGrid from "ol/tilegrid/WMTS";
-import TileGrid from "ol/tilegrid/TileGrid";
+import WMTS from 'ol/source/WMTS';
+import WMTSTileGrid from 'ol/tilegrid/WMTS';
+import TileGrid from 'ol/tilegrid/TileGrid';
 
-import WMSCapabilities from "ol/format/WMSCapabilities";
+import WMSCapabilities from 'ol/format/WMSCapabilities';
 
-import { getDistance } from "ol/sphere";
+import { getDistance } from 'ol/sphere';
 
-import { degreesToStringHDMS } from "ol/coordinate";
-import { noModifierKeys } from "ol/events/condition";
+import { degreesToStringHDMS } from 'ol/coordinate';
+import { noModifierKeys } from 'ol/events/condition';
 
-import { extend, getTopLeft, getWidth, isEmpty, createEmpty } from "ol/extent";
+import { extend, getTopLeft, getWidth, isEmpty, createEmpty } from 'ol/extent';
 
-import Event from "ol/events/Event";
+import Event from 'ol/events/Event';
 
-import { get } from "ol/proj";
+import { get } from 'ol/proj';
 
-import proj4 from "proj4";
-import { bbox, buffer, point } from "@turf/turf";
+import proj4 from 'proj4';
+import { bbox, buffer, point } from '@turf/turf';
 
-import gkInfo from "./Info.vue";
-import gkScales from "./Scales.vue";
-import gkSearch from "./Search.vue";
-import gkFeaturedetail from "./FeatureDetail.vue";
-import gkMeasure from "./Measure.vue";
-import gkWeatherforecast from "./WeatherForecast.vue";
-import gkToolbox from "./Toolbox.vue";
+import gkInfo from './Info.vue';
+import gkScales from './Scales.vue';
+import gkSearch from './Search.vue';
+import gkFeaturedetail from './FeatureDetail.vue';
+import gkMeasure from './Measure.vue';
+import gkWeatherforecast from './WeatherForecast.vue';
+import gkToolbox from './Toolbox.vue';
 
-import { useMapStore } from "@/stores/map";
+import { useMapStore } from '@/stores/map';
 
 export default {
   store: {
-    fixedScales: "fixedScales",
-    resolutions: "resolutions",
-    matrixSets: "matrixSets",
-    dpmm: "dpmm",
-    view: "view",
-    displayGraticule: "settings.graticule",
-    displayResolution: "displayResolution",
+    fixedScales: 'fixedScales',
+    resolutions: 'resolutions',
+    matrixSets: 'matrixSets',
+    dpmm: 'dpmm',
+    view: 'view',
+    displayGraticule: 'settings.graticule',
+    displayResolution: 'displayResolution',
   },
   components: {
     gkInfo,
@@ -135,7 +135,7 @@ export default {
       graticule: new Graticule({
         map: this.olmap,
         strokeStyle: new Stroke({
-          color: "rgba(0, 0, 0, 0.4)",
+          color: 'rgba(0, 0, 0, 0.4)',
           width: 0.5,
           lineDash: null, // Solid line style
         }),
@@ -145,12 +145,12 @@ export default {
         latLabelPosition: 0.98,
         latLabelFormatter: function (lat) {
           var formattedLat = Math.abs(Math.round(lat * 1000) / 1000);
-          formattedLat += lat < 0 ? "S" : lat > 0 ? "N" : "";
+          formattedLat += lat < 0 ? 'S' : lat > 0 ? 'N' : '';
           return formattedLat;
         },
         lonLabelFormatter: function (lon) {
           var formattedLon = Math.abs(Math.round(lon * 1000) / 1000);
-          formattedLon += lon < 0 ? "W" : lon > 0 ? "E" : "";
+          formattedLon += lon < 0 ? 'W' : lon > 0 ? 'E' : '';
           return formattedLon;
         },
       }),
@@ -206,13 +206,13 @@ export default {
     width: {
       cache: false,
       get: function get() {
-        return $("#map").width();
+        return $('#map').width();
       },
     },
     height: {
       cache: false,
       get: function get() {
-        return $("#map").height();
+        return $('#map').height();
       },
     },
     extent: function () {
@@ -571,17 +571,17 @@ export default {
               // console.log(c);
               //vm.olmap.addControl(c)
               // START
-              var button = document.createElement("button");
-              button.innerHTML = "N";
+              var button = document.createElement('button');
+              button.innerHTML = 'N';
 
               var handleRotateNorth = function () {
                 vm.map.getView().setRotation(0);
               };
 
-              button.addEventListener("click", handleRotateNorth, false);
+              button.addEventListener('click', handleRotateNorth, false);
 
-              var element = document.createElement("div");
-              element.className = "rotate-north ol-unselectable ol-control";
+              var element = document.createElement('div');
+              element.className = 'rotate-north ol-unselectable ol-control';
               element.appendChild(button);
 
               new Control({
@@ -625,15 +625,15 @@ export default {
       // console.log("getBlob keys (many)");
       // console.log(keys)
       var toolname = undefined;
-      if (Object.prototype.hasOwnProperty.call(feature, "tool")) {
-        if (Object.prototype.hasOwnProperty.call(feature.tool, "name")) {
+      if (Object.prototype.hasOwnProperty.call(feature, 'tool')) {
+        if (Object.prototype.hasOwnProperty.call(feature.tool, 'name')) {
           // console.log(feature['tool']['name']);
-          toolname = feature["tool"]["name"];
+          toolname = feature['tool']['name'];
           // console.log(vm.annotations.getTool(toolname));
         }
-      } else if (Object.prototype.hasOwnProperty.call(feature, "values_")) {
+      } else if (Object.prototype.hasOwnProperty.call(feature, 'values_')) {
         // console.log(feature.get('toolName'))
-        toolname = feature.get("toolName");
+        toolname = feature.get('toolName');
         // console.log("getBlob toolname prop");
         // console.log(vm.annotations.getTool(toolname));
         // console.log(feature.get('toolName')?vm.annotations.getTool(feature.get('toolName')):{});
@@ -644,7 +644,7 @@ export default {
       // console.log(tool)
       var key = JSON.stringify(
         keys.map(function (k) {
-          return vm.annotations.getStyleProperty(feature, k, "default", tool);
+          return vm.annotations.getStyleProperty(feature, k, 'default', tool);
         }),
       );
       // console.log("getBlob keys (one)");
@@ -659,7 +659,7 @@ export default {
       } else if (this.jobs[key]) {
         vm.jobs[key].then(function () {
           if (feature.changed === undefined) {
-            console.log("No funcation  feature.changed()");
+            console.log('No funcation  feature.changed()');
           } else {
             feature.changed();
           }
@@ -668,14 +668,14 @@ export default {
           }
         });
       } else {
-        var dimsKey = keys.length >= 3 ? keys[2] : "dims";
-        var tintKey = keys.length >= 2 ? keys[1] : "tint";
+        var dimsKey = keys.length >= 3 ? keys[2] : 'dims';
+        var tintKey = keys.length >= 2 ? keys[1] : 'tint';
 
         var dims = tool[dimsKey] || [48, 48];
         var tint = vm.annotations.getStyleProperty(
           feature,
           tintKey,
-          "default",
+          'default',
           tool,
         );
         if (!Array.isArray(tint)) {
@@ -683,7 +683,7 @@ export default {
           tint = tintSettings && tintSettings[tint] ? tintSettings[tint] : [];
         }
         var url = vm.annotations.getStyleProperty(feature, keys[0], null, tool);
-        if (typeof tint === "string") {
+        if (typeof tint === 'string') {
           //tint is not just a color replacement, is a totally different icon;
           //will have some issue if url is a array .
           url = tint;
@@ -694,7 +694,7 @@ export default {
           //console.log("getBlob " + key)
         }).then(function () {
           if (feature.changed === undefined) {
-            console.log("No funcation  feature.changed()");
+            console.log('No funcation  feature.changed()');
           } else {
             feature.changed();
           }
@@ -732,7 +732,7 @@ export default {
         this._addSVG.prototype._draw = function () {
           this.svgToAdd -= 1;
           if (this.svgToAdd > 0) return;
-          if (typeof this.vm.svgBlobs[this.key] !== "undefined") {
+          if (typeof this.vm.svgBlobs[this.key] !== 'undefined') {
             this.pResolve();
           }
           // RACE CONDITION: MS edge inlines promises and callbacks!
@@ -794,7 +794,7 @@ export default {
               req.onerror = function () {
                 reject();
               };
-              req.open("GET", svgUrl);
+              req.open('GET', svgUrl);
               req.send();
             }).then(function () {
               self._draw();
@@ -829,7 +829,7 @@ export default {
           this.vm = vm;
         };
         this._drawSVG.prototype.draw = function () {
-          var canvas = $("<canvas>");
+          var canvas = $('<canvas>');
           canvas.attr({ width: this.dims[0], height: this.dims[1] });
           if (this.imagesToDraw === 0) return;
           if (Array.isArray(this.svgstring)) {
@@ -848,7 +848,7 @@ export default {
           // console.log(svgstr);
           canvas.drawImage({
             source:
-              "data:image/svg+xml;utf8," +
+              'data:image/svg+xml;utf8,' +
               encodeURIComponent(self.vm.tintSVG(svgstr, self.tints)),
             fromCenter: false,
             x: 0,
@@ -863,7 +863,7 @@ export default {
                   self.vm.svgBlobs[self.key] = window.URL.createObjectURL(blob);
                   //console.log("_drawSVG._drawImage svgBlobs : "  + self.key )
                   self.resolve();
-                }, "image/png");
+                }, 'image/png');
                 canvas = null;
               }
             },
@@ -898,12 +898,12 @@ export default {
             // console.log(vm.cachedStyles);
 
             //console.log(vm.annotations.getStyleProperty(feature, k, 'default'));
-            return vm.annotations.getStyleProperty(feature, k, "default");
+            return vm.annotations.getStyleProperty(feature, k, 'default');
           })
-          .join(";");
+          .join(';');
         // console.log("%ccache style key"+ key,"background: #32a852; color: #fff");
         // console.log(key);
-        key = suffix ? key + ";" + suffix : key;
+        key = suffix ? key + ';' + suffix : key;
         var style = vm.cachedStyles[key];
         if (style) {
           return style;
@@ -991,25 +991,25 @@ export default {
     // generate a human-readable scale string
     getScaleString: function (scale) {
       if (scale === null || scale === undefined || !isFinite(scale)) {
-        return "";
+        return '';
       }
       if (Math.round(scale * 100) / 100 < 10.0) {
-        return "1:" + Math.round(scale * 1000).toLocaleString();
+        return '1:' + Math.round(scale * 1000).toLocaleString();
       } else if (Math.round(scale * 100) / 100 >= 1000.0) {
-        return "1:" + Math.round(scale / 1000).toLocaleString() + " M";
+        return '1:' + Math.round(scale / 1000).toLocaleString() + ' M';
       }
-      return "1:" + Math.round(scale).toLocaleString() + " K";
+      return '1:' + Math.round(scale).toLocaleString() + ' K';
     },
     // get the decimal degrees representation of some EPSG:4326 coordinates
     getDeg: function (coords) {
-      return coords[0].toFixed(5) + ", " + coords[1].toFixed(5);
+      return coords[0].toFixed(5) + ', ' + coords[1].toFixed(5);
     },
     // get the DMS representation of some EPSG:4326 coordinates
     getDMS: function (coords) {
       return (
-        degreesToStringHDMS(coords[0], "EW", 1) +
-        ", " +
-        degreesToStringHDMS(coords[1], "NS", 1)
+        degreesToStringHDMS(coords[0], 'EW', 1) +
+        ', ' +
+        degreesToStringHDMS(coords[1], 'NS', 1)
       );
     },
     // get the MGA representation of some EPSG:4326 coordinates
@@ -1017,16 +1017,16 @@ export default {
       var mga = this.getMGARaw(coords);
       if (mga) {
         return (
-          "MGA " +
+          'MGA ' +
           mga.mgaZone +
-          " " +
+          ' ' +
           Math.round(mga.mgaEast) +
-          "E " +
+          'E ' +
           Math.round(mga.mgaNorth) +
-          "N"
+          'N'
         );
       }
-      return "";
+      return '';
     },
     getMGARaw: function (coords) {
       var results = {};
@@ -1050,7 +1050,7 @@ export default {
         // fail if not in the bounding box for MGA
         return null;
       }
-      var newCoords = proj4("EPSG:4326", "EPSG:283" + results.mgaZone).forward(
+      var newCoords = proj4('EPSG:4326', 'EPSG:283' + results.mgaZone).forward(
         coords,
       );
       results.mgaEast = newCoords[0];
@@ -1071,7 +1071,7 @@ export default {
 
       var dmsToDecimal = function (sign, deg, min, sec, dir) {
         var sg = sign ? -1 : 1;
-        sg = sg * ("wWsS".indexOf(dir) >= 0 ? -1 : 1);
+        sg = sg * ('wWsS'.indexOf(dir) >= 0 ? -1 : 1);
         var d = Number(deg);
         var m = min ? Number(min) : 0;
         var s = sec ? Number(sec) : 0;
@@ -1115,24 +1115,24 @@ export default {
         coords = coords.reverse();
       } else if (!groups[5] || !groups[10]) {
         // if only one is explicitly defined, swap if required
-        if (groups[5] && "nNsS".indexOf(groups[5]) >= 0) {
+        if (groups[5] && 'nNsS'.indexOf(groups[5]) >= 0) {
           coords = coords.reverse();
-        } else if (groups[10] && "wWeE".indexOf(groups[10]) >= 0) {
+        } else if (groups[10] && 'wWeE'.indexOf(groups[10]) >= 0) {
           coords = coords.reverse();
         }
       } else {
         // both are explicitly defined
         // bomb out if someone describes two of the same
-        if ("nNsS".indexOf(groups[5]) >= 0 && "nNsS".indexOf(groups[10]) >= 0) {
+        if ('nNsS'.indexOf(groups[5]) >= 0 && 'nNsS'.indexOf(groups[10]) >= 0) {
           return null;
         } else if (
-          "wWeE".indexOf(groups[5]) >= 0 &&
-          "wWeE".indexOf(groups[10]) >= 0
+          'wWeE'.indexOf(groups[5]) >= 0 &&
+          'wWeE'.indexOf(groups[10]) >= 0
         ) {
           return null;
         }
         // swap if defined around the other way
-        if ("nNsS".indexOf(groups[5]) >= 0 && "wWeE".indexOf(groups[10]) >= 0) {
+        if ('nNsS'.indexOf(groups[5]) >= 0 && 'wWeE'.indexOf(groups[10]) >= 0) {
           coords = coords.reverse();
         }
       }
@@ -1155,13 +1155,13 @@ export default {
         mgaEast: groups[2],
         mgaNorth: groups[4],
       };
-      if (groups[5] === "E" && groups[3] === "N") {
+      if (groups[5] === 'E' && groups[3] === 'N') {
         results.mgaEast = groups[4];
         results.mgaNorth = groups[2];
       }
       if (results.mgaEast.length === 3 && results.mgaNorth.length === 4) {
-        results.mgaEast = results.mgaEast + "000";
-        results.mgaNorth = results.mgaNorth + "000";
+        results.mgaEast = results.mgaEast + '000';
+        results.mgaNorth = results.mgaNorth + '000';
       } else if (
         results.mgaEast.length === 6 &&
         results.mgaNorth.length === 7
@@ -1173,7 +1173,7 @@ export default {
       results.mgaEast = parseInt(results.mgaEast);
       results.mgaNorth = parseInt(results.mgaNorth);
 
-      var coords = proj4("EPSG:283" + groups[1], "EPSG:4326").forward([
+      var coords = proj4('EPSG:283' + groups[1], 'EPSG:4326').forward([
         results.mgaEast,
         results.mgaNorth,
       ]);
@@ -1209,20 +1209,20 @@ export default {
       var tileLoader = tileSource.getTileLoadFunction();
       return function (tile, src) {
         if (numLoadingTiles === 0) {
-          tileLayer.progress = "loading";
+          tileLayer.progress = 'loading';
           badTiles = 0;
         }
         numLoadingTiles++;
         var image = tile.getImage();
         // to hell with you, cross origin policy!
-        image.crossOrigin = "use-credentials";
+        image.crossOrigin = 'use-credentials';
         image.onload = function () {
           numLoadingTiles--;
           if (numLoadingTiles === 0) {
             if (badTiles > 0) {
-              tileLayer.progress = "error";
+              tileLayer.progress = 'error';
             } else {
-              tileLayer.progress = "idle";
+              tileLayer.progress = 'idle';
             }
           }
         };
@@ -1243,11 +1243,11 @@ export default {
               function (tileCoord, pixelRatio, projection) {
                 return (
                   originFunc(tileCoord, pixelRatio, projection) +
-                  "&time=" +
+                  '&time=' +
                   time
                 );
               },
-              tileSource.getUrls()[0] + "?time=" + time,
+              tileSource.getUrls()[0] + '?time=' + time,
             );
           };
         })();
@@ -1261,7 +1261,7 @@ export default {
       if (!tileLayer.getSource().load) {
         tileLayer.getSource().load = function () {
           //console.log(((tileLayer.getSource().getLayer)?tileLayer.getSource().getLayer():tileLayer.getSource().getUrls()[0]) + " : Start refresh tiles")
-          tileLayer.set("updated", moment().toLocaleString());
+          tileLayer.set('updated', moment().toLocaleString());
           // changing a URL forces a fetch + redraw
           vm.setUrlTimestamp(tileLayer.getSource(), moment.utc().unix());
           // empty the tile cache so other zoom levels are also reloaded
@@ -1279,12 +1279,12 @@ export default {
       //return the refresh time, if need refresh,otherwise return null
       var _getRefreshTime = function () {
         if (!layer.lastTimelineRefreshTime) {
-          return moment.tz("Australia/Perth");
+          return moment.tz('Australia/Perth');
         } else if (
-          moment.tz("Australia/Perth") - layer.lastTimelineRefreshTime >
+          moment.tz('Australia/Perth') - layer.lastTimelineRefreshTime >
           layer.timelineRefresh * 1000
         ) {
-          return moment.tz("Australia/Perth");
+          return moment.tz('Australia/Perth');
         } else {
           return null;
         }
@@ -1292,12 +1292,12 @@ export default {
       var _getNextRefreshTime = function () {
         var nextTime;
         if (!layer.lastTimelineRefreshTime) {
-          nextTime = moment.tz("Australia/Perth");
+          nextTime = moment.tz('Australia/Perth');
         } else if (
-          moment.tz("Australia/Perth") - layer.lastTimelineRefreshTime >
+          moment.tz('Australia/Perth') - layer.lastTimelineRefreshTime >
           layer.timelineRefresh * 1000
         ) {
-          nextTime = moment.tz("Australia/Perth");
+          nextTime = moment.tz('Australia/Perth');
         } else {
           nextTime = moment(layer.lastTimelineRefreshTime);
         }
@@ -1313,15 +1313,15 @@ export default {
           if (
             previousTimeline &&
             previousTimeline.length > 0 &&
-            tileLayer.get("timeIndex") &&
-            tileLayer.get("timeIndex") < previousTimeline.length &&
-            tileLayer.get("timeIndex") >= 0
+            tileLayer.get('timeIndex') &&
+            tileLayer.get('timeIndex') < previousTimeline.length &&
+            tileLayer.get('timeIndex') >= 0
           ) {
             d = moment.fromLocaleString(
-              previousTimeline[tileLayer.get("timeIndex")][0],
+              previousTimeline[tileLayer.get('timeIndex')][0],
             );
           } else {
-            d = moment.tz("Australia/Perth");
+            d = moment.tz('Australia/Perth');
           }
           var timediff = 0;
           var timeIndex = null;
@@ -1336,7 +1336,7 @@ export default {
             }
           });
           timeIndex = timeIndex == null ? layer.timeline.length - 1 : timeIndex;
-          tileLayer.set("timeIndex", timeIndex);
+          tileLayer.set('timeIndex', timeIndex);
         };
         if (layer.setTimeIndex) {
           layer.setTimeIndex(layer, tileLayer, previousTimeline, _func);
@@ -1355,16 +1355,16 @@ export default {
           //console.log(moment().toLocaleString() + " : " + tileLayer.autoTimelineRefresh + " - Stop run because " + layer.name + " is removed from map" )
           return;
         }
-        if (!tileLayer.get("timeIndex")) {
+        if (!tileLayer.get('timeIndex')) {
           _setTimeIndex(tileLayer);
         }
         if (layer.previewLayer) {
           return;
         }
-        tileLayer.progress = "error";
+        tileLayer.progress = 'error';
         tileLayer.set(
-          "updated",
-          layer.lastUpdatetime + "\r\n" + status + " : " + statusText,
+          'updated',
+          layer.lastUpdatetime + '\r\n' + status + ' : ' + statusText,
         );
         vm.active.refreshRevision += 1;
         //console.warn(moment().toLocaleString() + " : Update the timeline of " + layer.name + " failed. code = " + status + ", reason = " + statusText )
@@ -1382,14 +1382,14 @@ export default {
           //console.log(moment().toLocaleString() + " : " + tileLayer.autoTimelineRefresh + " - Stop run because " + layer.name + " is removed from map" )
           return;
         }
-        if (!tileLayer.get("timeIndex")) {
+        if (!tileLayer.get('timeIndex')) {
           _setTimeIndex(tileLayer);
         }
         if (layer.previewLayer) {
           return;
         }
-        tileLayer.progress = "";
-        tileLayer.set("updated", layer.lastUpdatetime);
+        tileLayer.progress = '';
+        tileLayer.set('updated', layer.lastUpdatetime);
         vm.active.refreshRevision += 1;
         if (!auto) {
           return;
@@ -1405,7 +1405,7 @@ export default {
           //console.log(moment().toLocaleString() + " : " + tileLayer.autoTimelineRefresh + " - Stop run because " + layer.name + " is removed from map" )
           return;
         }
-        tileLayer.progress = "";
+        tileLayer.progress = '';
         if (postFetchTimelineFunc) {
           postFetchTimelineFunc(layer, tileLayer, timeline);
         }
@@ -1415,7 +1415,7 @@ export default {
         //get new time index for current displayed timeline layer
         _setTimeIndex(tileLayer, previousTimeline);
 
-        tileLayer.set("updated", layer.lastUpdatetime);
+        tileLayer.set('updated', layer.lastUpdatetime);
         vm.active.refreshRevision += 1;
 
         if (layer.previewLayer) {
@@ -1434,10 +1434,10 @@ export default {
       _func = function (auto) {
         var tileLayer = layer.mapLayer;
         //console.log(moment().toLocaleString() + " : " + tileLayer.autoTimelineRefresh + " - Begin to refresh the timeline of " + layer.name)
-        if (!tileLayer) throw "Maplayer is null.";
+        if (!tileLayer) throw 'Maplayer is null.';
         var currentRefreshTime = _getRefreshTime();
         if (currentRefreshTime === null) {
-          if (!tileLayer.get("timeIndex")) {
+          if (!tileLayer.get('timeIndex')) {
             _setTimeIndex(tileLayer);
           }
           if (layer.previewLayer) {
@@ -1454,12 +1454,12 @@ export default {
         } else {
           //console.log(moment().toLocaleString() + " : refresh timeline " + layer.id + "'s timeline. ")
           layer.lastTimelineRefreshTime = currentRefreshTime;
-          tileLayer.progress = "loading";
-          $.ajax(layer.fetchTimelineUrl(layer.lastUpdatetime || ""), {
+          tileLayer.progress = 'loading';
+          $.ajax(layer.fetchTimelineUrl(layer.lastUpdatetime || ''), {
             xhrFields: {
               withCredentials: true,
             },
-            dataType: "json",
+            dataType: 'json',
             success: function (data, status, jqXHR) {
               if (jqXHR.status === 290) {
                 _timelineNotChanged(layer, tileLayer, auto);
@@ -1488,8 +1488,8 @@ export default {
       var vm = this;
       options.params = $.extend(
         {
-          FORMAT: "image/jpeg",
-          SRS: "EPSG:4326",
+          FORMAT: 'image/jpeg',
+          SRS: 'EPSG:4326',
         },
         options.params || {},
       );
@@ -1512,14 +1512,14 @@ export default {
       });
 
       // hook the tile loading function to update progress indicator
-      tileLayer.progress = "";
+      tileLayer.progress = '';
       tileSource.setTileLoadFunction(
         this.tileLoaderHook(tileSource, tileLayer),
       );
 
       // hook to swap the tile layer when timeIndex changes
-      tileLayer.on("propertychange", function (event) {
-        if (event.key === "timeIndex") {
+      tileLayer.on('propertychange', function (event) {
+        if (event.key === 'timeIndex') {
           if (options.timeline && options.timeline.length > 0) {
             tileSource.updateParams({
               layers: getLayerId(
@@ -1544,14 +1544,14 @@ export default {
       }
 
       // set properties for use in layer selector
-      tileLayer.set("name", options.name);
-      tileLayer.set("id", options.mapLayerId);
+      tileLayer.set('name', options.name);
+      tileLayer.set('id', options.mapLayerId);
       tileLayer.layer = options;
       options.mapLayer = tileLayer;
 
       tileLayer.refresh = function () {
         if (!this.refreshTimeline) {
-          this.set("updated", moment().toLocaleString());
+          this.set('updated', moment().toLocaleString());
           vm.$root.active.refreshRevision += 1;
         }
       };
@@ -1576,7 +1576,7 @@ export default {
         }
 
         if (options.refresh) {
-          this.set("updated", moment().toLocaleString());
+          this.set('updated', moment().toLocaleString());
           vm.$root.active.refreshRevision += 1;
         }
         this.startAutoRefresh();
@@ -1597,37 +1597,37 @@ export default {
       if (
         !options ||
         !options.id ||
-        !options.id.includes("resource_tracking_history") ||
+        !options.id.includes('resource_tracking_history') ||
         options.cql_filter !== false
       ) {
         if (options.mapLayer) return options.mapLayer;
         var vm = this;
         var layerId = getLayerId(options.identifier || options.id);
-        var url = this.env.kmiService + "/wfs";
+        var url = this.env.kmiService + '/wfs';
         if (
           this.env.bfrsProxyUrl &&
-          (this.env.envType.toLowerCase() === "uat" ||
-            this.env.envType.toLowerCase() === "dev") &&
-          options.id.includes("bushfirelist_latest")
+          (this.env.envType.toLowerCase() === 'uat' ||
+            this.env.envType.toLowerCase() === 'dev') &&
+          options.id.includes('bushfirelist_latest')
         ) {
-          url = "/api/bfrs-proxy/";
+          url = '/api/bfrs-proxy/';
         } else if (isKbLayer(layerId)) {
-          url = getLayerUrl(layerId, this.env) + "/wfs";
+          url = getLayerUrl(layerId, this.env) + '/wfs';
         }
         var withCredentialsSetting = true;
-        if (options.id.startsWith("hotspots:")) {
+        if (options.id.startsWith('hotspots:')) {
           withCredentialsSetting = false;
-          url = this.env.hotspotsUrl + "/wfs";
+          url = this.env.hotspotsUrl + '/wfs';
         }
 
         // default overridable params sent to the WFS source
         options.params = $.extend(
           {
-            version: "1.1.0",
-            service: "WFS",
-            request: "GetFeature",
-            outputFormat: "application/json",
-            srsname: "EPSG:4326",
+            version: '1.1.0',
+            service: 'WFS',
+            request: 'GetFeature',
+            outputFormat: 'application/json',
+            srsname: 'EPSG:4326',
             typename: layerId,
             //cql_filter: options.cqlFilter
           },
@@ -1646,7 +1646,7 @@ export default {
           getFeatureInfo: options.getFeatureInfo,
         });
 
-        vector.progress = ""; // NB can add properties to object this way
+        vector.progress = ''; // NB can add properties to object this way
         vectorSource.retrieveFeatures = function (filter, onSuccess, onError) {
           var params = $.extend({}, options.params);
 
@@ -1657,7 +1657,7 @@ export default {
           }
 
           $.ajax({
-            url: url + "?" + $.param(params),
+            url: url + '?' + $.param(params),
             success: function (response) {
               var features = vm.$root.geojson.readFeatures(response);
               onSuccess(features);
@@ -1667,7 +1667,7 @@ export default {
                 onError(status);
               }
             },
-            dataType: "json",
+            dataType: 'json',
             xhrFields: {
               //withCredentials: true
               withCredentials: withCredentialsSetting,
@@ -1682,12 +1682,12 @@ export default {
             delete options.params.cql_filter;
           }
           vm.$root.active.refreshRevision += 1;
-          vector.progress = "loading";
+          vector.progress = 'loading';
           if (options.hotspotFilter) {
             options.params.cql_filter = options.hotspotFilter;
           }
           $.ajax({
-            url: url + "?" + $.param(options.params),
+            url: url + '?' + $.param(options.params),
             success: function (response) {
               var features = vm.$root.geojson.readFeatures(response);
               var defaultOnload = function (loadType, source, features) {
@@ -1702,30 +1702,30 @@ export default {
               }
 
               vm.$root.active.refreshRevision += 1;
-              vector.progress = "idle";
+              vector.progress = 'idle';
               if (options.getUpdatedTime) {
                 var time = options.getUpdatedTime(features);
                 if (time) {
-                  vector.set("updated", time.toLocaleString());
+                  vector.set('updated', time.toLocaleString());
                 } else {
-                  vector.set("updated", "");
+                  vector.set('updated', '');
                 }
               } else {
-                vector.set("updated", moment().toLocaleString());
+                vector.set('updated', moment().toLocaleString());
               }
-              vectorSource.dispatchEvent("loadsource");
+              vectorSource.dispatchEvent('loadsource');
               if (onSuccess) {
                 onSuccess();
               }
             },
             error: function (jqXHR, status, message) {
               vm.$root.active.refreshRevision += 1;
-              vector.progress = "error";
+              vector.progress = 'error';
               if (options.onerror) {
                 options.onerror(status, message);
               }
             },
-            dataType: "json",
+            dataType: 'json',
             xhrFields: {
               //withCredentials: true
               withCredentials: withCredentialsSetting,
@@ -1734,13 +1734,13 @@ export default {
         };
 
         if (options.onadd) {
-          vectorSource.on("addfeature", function (event) {
+          vectorSource.on('addfeature', function (event) {
             options.onadd(event.feature);
           });
         }
 
-        vector.set("name", options.name);
-        vector.set("id", options.mapLayerId);
+        vector.set('name', options.name);
+        vector.set('id', options.mapLayerId);
         vector.layer = options;
         options.mapLayer = vector;
 
@@ -1749,7 +1749,7 @@ export default {
         };
 
         vector.refresh = function (type) {
-          vectorSource.loadSource(type || "auto");
+          vectorSource.loadSource(type || 'auto');
         };
 
         vector.startAutoRefresh = function () {
@@ -1769,7 +1769,7 @@ export default {
             options.initialLoad === undefined ||
             options.initialLoad === true
           ) {
-            vectorSource.loadSource("initial");
+            vectorSource.loadSource('initial');
           }
         };
 
@@ -1787,12 +1787,12 @@ export default {
       var vm = this;
       var parser = new WMSCapabilities();
       var layerNames = []; // Will be used to hold names of all layers in geoserver hotspots.dbca.wa.gov.au
-      var mosaicLayersString = ""; // Will be used to form string of layers passed in (mosaicLayers) which exist on geoserver
+      var mosaicLayersString = ''; // Will be used to form string of layers passed in (mosaicLayers) which exist on geoserver
       // Fill layerNames (all geoserver layer names)
 
       $.get(
         this.env.hotspotsUrl +
-          "/hotspots/ows?service=WMS&version=1.1.1&request=GetCapabilities",
+          '/hotspots/ows?service=WMS&version=1.1.1&request=GetCapabilities',
       ).then(function (response) {
         var capabilities = parser.read(response);
         $.each(
@@ -1803,58 +1803,58 @@ export default {
           },
         );
         if (dateInfo.length == 0) {
-          mosaicLayersString += "vrt-test";
+          mosaicLayersString += 'vrt-test';
         } else if (dateInfo.length == 1) {
           $.each(layerNames, function (index) {
-            if (layerNames[index].startsWith("FireFlight_" + dateInfo[0])) {
-              if (mosaicLayersString == "") {
+            if (layerNames[index].startsWith('FireFlight_' + dateInfo[0])) {
+              if (mosaicLayersString == '') {
                 mosaicLayersString += layerNames[index];
               } else {
-                mosaicLayersString += "," + layerNames[index];
+                mosaicLayersString += ',' + layerNames[index];
               }
             }
           });
         } else if (dateInfo.length == 2) {
           $.each(layerNames, function (index) {
-            if (dateInfo[1] == "now") {
+            if (dateInfo[1] == 'now') {
               if (
-                layerNames[index].startsWith("FireFlight_") &&
-                layerNames[index] >= "FireFlight_" + dateInfo[0]
+                layerNames[index].startsWith('FireFlight_') &&
+                layerNames[index] >= 'FireFlight_' + dateInfo[0]
               ) {
-                if (mosaicLayersString == "") {
+                if (mosaicLayersString == '') {
                   mosaicLayersString += layerNames[index];
                 } else {
-                  mosaicLayersString += "," + layerNames[index];
+                  mosaicLayersString += ',' + layerNames[index];
                 }
               }
             } else {
               if (
-                layerNames[index] >= "FireFlight_" + dateInfo[0] &&
-                layerNames[index] <= "FireFlight_" + dateInfo[1]
+                layerNames[index] >= 'FireFlight_' + dateInfo[0] &&
+                layerNames[index] <= 'FireFlight_' + dateInfo[1]
               ) {
-                if (mosaicLayersString == "") {
+                if (mosaicLayersString == '') {
                   mosaicLayersString += layerNames[index];
                 } else {
-                  mosaicLayersString += "," + layerNames[index];
+                  mosaicLayersString += ',' + layerNames[index];
                 }
               }
             }
           });
         }
-        if (mosaicLayersString === "") {
+        if (mosaicLayersString === '') {
           return;
         }
         // Create map layer NB this.env.hotSpotService does not work inside $get so URL is created from the GetCapabilities run above
-        const layerId = "hotspots: flight_mosaics";
-        const layerName = "Flight mosaics";
+        const layerId = 'hotspots: flight_mosaics';
+        const layerName = 'Flight mosaics';
         var imgSource = new ImageWMS({
-          url: vm.env.hotspotsUrl + "/hotspots/wms",
-          serverType: "geoserver",
-          crossOrigin: "anonymous",
+          url: vm.env.hotspotsUrl + '/hotspots/wms',
+          serverType: 'geoserver',
+          crossOrigin: 'anonymous',
           params: {
             LAYERS: mosaicLayersString,
           },
-          projection: "EPSG:28350",
+          projection: 'EPSG:28350',
         });
 
         var imgLayer = new Image({
@@ -1886,16 +1886,16 @@ export default {
       // Added Nov/Dec 2020 to enable loading of hotspot imagery
       //position is the position within the map layers array in which the mosaic layers should be loaded (immediately below hotspots and footprints)
       var vm = this;
-      const layerId = "hotspots: " + flight_datetime + "_img_" + image_name;
-      const layerName = "Hotspot image " + flight_datetime + " " + hotspot_no;
+      const layerId = 'hotspots: ' + flight_datetime + '_img_' + image_name;
+      const layerName = 'Hotspot image ' + flight_datetime + ' ' + hotspot_no;
       var imgSource = new ImageWMS({
-        url: this.env.hotspotsUrl + "/wms",
-        serverType: "geoserver",
-        crossOrigin: "anonymous",
+        url: this.env.hotspotsUrl + '/wms',
+        serverType: 'geoserver',
+        crossOrigin: 'anonymous',
         params: {
-          LAYERS: flight_datetime + "_img_" + image_name,
+          LAYERS: flight_datetime + '_img_' + image_name,
         },
-        projection: "EPSG:28350",
+        projection: 'EPSG:28350',
       });
       var imgLayer = new Image({
         opacity: 1,
@@ -1921,20 +1921,20 @@ export default {
       //position is the position within the map layers array in which the mosaic layers should be loaded (immediately below hotspots and footprints)
       var vm = this;
       var imgSource = new ImageWMS({
-        url: this.env.hotspotsUrl + "/wms",
-        serverType: "geoserver",
-        crossOrigin: "anonymous",
+        url: this.env.hotspotsUrl + '/wms',
+        serverType: 'geoserver',
+        crossOrigin: 'anonymous',
         params: {
-          LAYERS: "hotspot_centroids_uat",
+          LAYERS: 'hotspot_centroids_uat',
           cql_filter: filter,
         },
-        projection: "EPSG:4326",
+        projection: 'EPSG:4326',
       });
       var imgLayer = new Image({
         opacity: 1,
         source: imgSource,
-        name: "Thermal Imaging Hotspots",
-        id: "hotspots:hotspot_centroids_two",
+        name: 'Thermal Imaging Hotspots',
+        id: 'hotspots:hotspot_centroids_two',
       });
       vm.olmap.getLayers().insertAt(insertPosition, imgLayer);
       // imgLayer.progress = ''
@@ -1942,7 +1942,7 @@ export default {
     },
 
     createAnnotations: function (layer) {
-      if (!this.annotations.featureOverlay["layer"]) {
+      if (!this.annotations.featureOverlay['layer']) {
         this.annotations.featureOverlay.layer = layer;
         layer.mapLayer = this.annotations.featureOverlay;
       }
@@ -1952,7 +1952,7 @@ export default {
       if (options.mapLayer) return options.mapLayer;
       var vm = this;
       if (options.base) {
-        options.format = "image/jpeg";
+        options.format = 'image/jpeg';
       }
       var layer_id = getLayerId(options.identifier || options.id);
       var layerUrl = isKbLayer(layer_id)
@@ -1965,12 +1965,12 @@ export default {
           //id: this.env.overviewLayer,
           name: options.title,
           id: layer_id,
-          format: "image/png",
+          format: 'image/png',
           //tileSize: 1024,
           tileSize: 1024,
           //style: '',
-          projection: "EPSG:4326",
-          wmts_url: layerUrl + "/gwc/service/wmts",
+          projection: 'EPSG:4326',
+          wmts_url: layerUrl + '/gwc/service/wmts',
         },
         options,
       );
@@ -2031,16 +2031,16 @@ export default {
       //   opacity: layer.opacity || 1,
       //   source: tileSource
       // })
-      var projection = get("EPSG:4326");
+      var projection = get('EPSG:4326');
       var projectionExtent = projection.getExtent();
 
       var s = getWidth(projectionExtent) / 1024;
-      var matrixSet = "mercator";
+      var matrixSet = 'mercator';
       var resolutions = new Array(21);
       var matrixIds = new Array(21);
       for (var c = 0; c < 21; ++c)
         ((resolutions[c] = s / Math.pow(2, c)),
-          (matrixIds[c] = matrixSet + ":" + c));
+          (matrixIds[c] = matrixSet + ':' + c));
       var m = new WMTSTileGrid({
         origin: getTopLeft(projectionExtent),
         resolutions: resolutions,
@@ -2059,15 +2059,15 @@ export default {
       //       tileGrid: m
       // })
 
-      var wmsVersion = options.service_type_version || "1.1.1";
+      var wmsVersion = options.service_type_version || '1.1.1';
 
       var tileSource = new TileWMS({
-        url: layerUrl + "/gwc/service/wms",
+        url: layerUrl + '/gwc/service/wms',
         params: {
-          FORMAT: "image/png",
+          FORMAT: 'image/png',
           VERSION: wmsVersion,
           tiled: true,
-          STYLES: "",
+          STYLES: '',
           LAYERS: layer_id,
         },
         tileGrid: m,
@@ -2076,7 +2076,7 @@ export default {
       var tileLayer = new TileLayer({
         //name: "street",
         name: options.title,
-        canDelete: "no",
+        canDelete: 'no',
         visible: !0,
         source: tileSource,
         // source: new WMTS({
@@ -2089,21 +2089,21 @@ export default {
       });
 
       // hook the tile loading function to update progress indicator
-      tileLayer.progress = "";
+      tileLayer.progress = '';
 
       // set properties for use in layer selector
-      tileLayer.set("name", layer.name, false);
-      tileLayer.set("id", layer.mapLayerId, false);
+      tileLayer.set('name', layer.name, false);
+      tileLayer.set('id', layer.mapLayerId, false);
       tileLayer.layer = options;
       options.mapLayer = tileLayer;
 
       if (options.lastUpdatetime) {
-        tileLayer.set("updated", layer.lastUpdatetime);
+        tileLayer.set('updated', layer.lastUpdatetime);
       }
 
       // hook to swap the tile layer when timeIndex changes
-      tileLayer.on("propertychange", function (event) {
-        if (event.key === "timeIndex") {
+      tileLayer.on('propertychange', function (event) {
+        if (event.key === 'timeIndex') {
           if (options.timeline && options.timeline.length > 0) {
             if (!options.timeline[event.target.get(event.key)][2]) {
               options.timeline[event.target.get(event.key)][2] = new WMTS({
@@ -2187,7 +2187,7 @@ export default {
         // to force a reload of the tile content
         this.startAutoRefresh();
         if (options.refresh) {
-          tileLayer.set("updated", moment().toLocaleString());
+          tileLayer.set('updated', moment().toLocaleString());
           vm.$root.active.refreshRevision += 1;
         }
       };
@@ -2202,7 +2202,7 @@ export default {
 
       tileLayer.refresh = function () {
         if (!this.refreshTimeline) {
-          this.set("updated", moment().toLocaleString());
+          this.set('updated', moment().toLocaleString());
           vm.$root.active.refreshRevision += 1;
         }
         vm.refreshLayerTile(this);
@@ -2224,25 +2224,25 @@ export default {
       if (options.mapLayer) return options.mapLayer;
       var vm = this;
       if (options.base) {
-        options.format = "image/jpeg";
+        options.format = 'image/jpeg';
       }
       var layer_id = getLayerId(options.identifier || options.id);
       const url = getLayerUrl(layer_id, this.env);
       var layer = $.extend(
         {
           opacity: 1,
-          name: "Mapbox Outdoors",
+          name: 'Mapbox Outdoors',
           id: this.env.overviewLayer,
-          format: "image/png",
+          format: 'image/png',
           tileSize: 1024,
-          style: "",
-          projection: "EPSG:4326",
-          wmts_url: url + "/gwc/service/wmts",
+          style: '',
+          projection: 'EPSG:4326',
+          wmts_url: url + '/gwc/service/wmts',
         },
         options,
       );
       if (isKbLayer(layer_id)) {
-        layer.wmts_url = url + "/gwc/service/wmts";
+        layer.wmts_url = url + '/gwc/service/wmts';
       }
       // // wmts_url: this.env.kmiService+ "/gwc/service/wmts"
       // create a tile grid using the stock KMI resolutions
@@ -2331,27 +2331,27 @@ export default {
       var tileLayer = new TileLayer({
         //name: "street",
         name: options.title,
-        canDelete: "no",
+        canDelete: 'no',
         visible: !0,
         source: tileSource,
       });
 
       // hook the tile loading function to update progress indicator
-      tileLayer.progress = "";
+      tileLayer.progress = '';
 
       // set properties for use in layer selector
-      tileLayer.set("name", layer.name, false);
-      tileLayer.set("id", layer.mapLayerId, false);
+      tileLayer.set('name', layer.name, false);
+      tileLayer.set('id', layer.mapLayerId, false);
       tileLayer.layer = options;
       options.mapLayer = tileLayer;
 
       if (options.lastUpdatetime) {
-        tileLayer.set("updated", layer.lastUpdatetime);
+        tileLayer.set('updated', layer.lastUpdatetime);
       }
 
       // hook to swap the tile layer when timeIndex changes
-      tileLayer.on("propertychange", function (event) {
-        if (event.key === "timeIndex") {
+      tileLayer.on('propertychange', function (event) {
+        if (event.key === 'timeIndex') {
           if (options.timeline && options.timeline.length > 0) {
             if (!options.timeline[event.target.get(event.key)][2]) {
               options.timeline[event.target.get(event.key)][2] = new WMTS({
@@ -2435,7 +2435,7 @@ export default {
         // to force a reload of the tile content
         this.startAutoRefresh();
         if (options.refresh) {
-          tileLayer.set("updated", moment().toLocaleString());
+          tileLayer.set('updated', moment().toLocaleString());
           vm.$root.active.refreshRevision += 1;
         }
       };
@@ -2450,7 +2450,7 @@ export default {
 
       tileLayer.refresh = function () {
         if (!this.refreshTimeline) {
-          this.set("updated", moment().toLocaleString());
+          this.set('updated', moment().toLocaleString());
           vm.$root.active.refreshRevision += 1;
         }
         vm.refreshLayerTile(this);
@@ -2476,7 +2476,7 @@ export default {
       if (options.mapLayer) return options.mapLayer;
       var vm = this;
       if (options.base) {
-        options.format = "image/jpeg";
+        options.format = 'image/jpeg';
       }
       var layerId = getLayerId(options.identifier || options.id);
       var layerUrl = isKbLayer(layerId)
@@ -2485,18 +2485,18 @@ export default {
       var layer = $.extend(
         {
           opacity: 1,
-          name: "Mapbox Outdoors",
+          name: 'Mapbox Outdoors',
           id: this.env.overviewLayer,
-          format: "image/png",
+          format: 'image/png',
           tileSize: 1024,
-          style: "",
-          projection: "EPSG:4326",
-          wmts_url: layerUrl + "/gwc/service/wmts",
+          style: '',
+          projection: 'EPSG:4326',
+          wmts_url: layerUrl + '/gwc/service/wmts',
         },
         options,
       );
       if (isKbLayer(layerId)) {
-        layer.wmts_url = layerUrl + "/gwc/service/wmts";
+        layer.wmts_url = layerUrl + '/gwc/service/wmts';
       }
       // wmts_url: this.env.kmiService+ "/gwc/service/wmts"
       // create a tile grid using the stock KMI resolutions
@@ -2536,21 +2536,21 @@ export default {
       });
 
       // hook the tile loading function to update progress indicator
-      tileLayer.progress = "";
+      tileLayer.progress = '';
 
       // set properties for use in layer selector
-      tileLayer.set("name", layer.name, false);
-      tileLayer.set("id", layer.mapLayerId, false);
+      tileLayer.set('name', layer.name, false);
+      tileLayer.set('id', layer.mapLayerId, false);
       tileLayer.layer = options;
       options.mapLayer = tileLayer;
 
       if (options.lastUpdatetime) {
-        tileLayer.set("updated", layer.lastUpdatetime);
+        tileLayer.set('updated', layer.lastUpdatetime);
       }
 
       // hook to swap the tile layer when timeIndex changes
-      tileLayer.on("propertychange", function (event) {
-        if (event.key === "timeIndex") {
+      tileLayer.on('propertychange', function (event) {
+        if (event.key === 'timeIndex') {
           if (options.timeline && options.timeline.length > 0) {
             if (!options.timeline[event.target.get(event.key)][2]) {
               options.timeline[event.target.get(event.key)][2] = new WMTS({
@@ -2634,7 +2634,7 @@ export default {
         // to force a reload of the tile content
         this.startAutoRefresh();
         if (options.refresh) {
-          tileLayer.set("updated", moment().toLocaleString());
+          tileLayer.set('updated', moment().toLocaleString());
           vm.$root.active.refreshRevision += 1;
         }
       };
@@ -2649,7 +2649,7 @@ export default {
 
       tileLayer.refresh = function () {
         if (!this.refreshTimeline) {
-          this.set("updated", moment().toLocaleString());
+          this.set('updated', moment().toLocaleString());
           vm.$root.active.refreshRevision += 1;
         }
         vm.refreshLayerTile(this);
@@ -2674,7 +2674,7 @@ export default {
       var vm = this;
       var url;
       if (options.base) {
-        options.format = "image/jpeg";
+        options.format = 'image/jpeg';
       }
       if (isKbLayer(options.identifier || options.id)) {
         url = getLayerUrl(options.identifier || options.id, this.env);
@@ -2687,24 +2687,24 @@ export default {
       var layer = $.extend(
         {
           opacity: 1,
-          name: "Mapbox Outdoors",
+          name: 'Mapbox Outdoors',
           id: this.env.overviewLayer,
-          format: "image/png",
+          format: 'image/png',
           tileSize: 1024,
-          style: "",
-          projection: "EPSG:4326",
-          wms_url: url + "/wms",
+          style: '',
+          projection: 'EPSG:4326',
+          wms_url: url + '/wms',
         },
         options,
       );
       if (isKbLayer(options.identifier || options.id)) {
-        layer.wms_url = url + "/wms";
+        layer.wms_url = url + '/wms';
       }
       // create a tile source
       var imgSource = new ImageWMS({
         url: layer.wms_url,
-        crossOrigin: "use-credentials",
-        serverType: "geoserver",
+        crossOrigin: 'use-credentials',
+        serverType: 'geoserver',
         params: {
           LAYERS: getLayerId(layer.identifier || layer.id),
           styles: layer.style,
@@ -2718,7 +2718,7 @@ export default {
       });
 
       // hook the tile loading function to update progress indicator
-      imgLayer.progress = "";
+      imgLayer.progress = '';
 
       imgLayer.postRemove = function () {
         vm._postRemove(this);
@@ -2727,28 +2727,28 @@ export default {
       imgLayer.setParams = function (options) {
         var params = imgSource.getParams();
         $.extend(params, options);
-        params["timestamp"] = moment.utc().unix();
+        params['timestamp'] = moment.utc().unix();
         imgSource.updateParams(params);
       };
 
       imgLayer.refresh = function () {
         if (options.refresh) {
-          imgLayer.set("updated", moment().toLocaleString());
+          imgLayer.set('updated', moment().toLocaleString());
           vm.$root.active.refreshRevision += 1;
         }
         var params = imgSource.getParams();
-        params["timestamp"] = moment.utc().unix();
+        params['timestamp'] = moment.utc().unix();
         imgSource.updateParams(params);
       };
 
       // set properties for use in layer selector
-      imgLayer.set("name", layer.name, false);
-      imgLayer.set("id", layer.mapLayerId, false);
+      imgLayer.set('name', layer.name, false);
+      imgLayer.set('id', layer.mapLayerId, false);
       imgLayer.layer = options;
       options.mapLayer = imgLayer;
 
       if (options.lastUpdatetime) {
-        imgLayer.set("updated", layer.lastUpdatetime);
+        imgLayer.set('updated', layer.lastUpdatetime);
       }
 
       imgLayer.stopAutoRefresh = function () {
@@ -2764,7 +2764,7 @@ export default {
         // to force a reload of the tile content
         this.startAutoRefresh();
         if (options.refresh) {
-          imgLayer.set("updated", moment().toLocaleString());
+          imgLayer.set('updated', moment().toLocaleString());
           vm.$root.active.refreshRevision += 1;
         }
       };
@@ -2825,7 +2825,7 @@ export default {
           vm.olmap.getLayers().insertAt(index, l.mapLayer);
           l.mapLayer.show = true;
           vm.olmap.dispatchEvent(
-            vm.createEvent(vm, "addLayer", { mapLayer: l.mapLayer }),
+            vm.createEvent(vm, 'addLayer', { mapLayer: l.mapLayer }),
           );
           break;
         } else if (l.mapLayer.show) {
@@ -2846,12 +2846,12 @@ export default {
         .getArray()
         .find(function (layer) {
           if (
-            id == "hotspots:hotspot_centroids" &&
-            layer.get("id") == "hotspots:hotspot_centroids_two"
+            id == 'hotspots:hotspot_centroids' &&
+            layer.get('id') == 'hotspots:hotspot_centroids_two'
           ) {
             return true;
           } else {
-            return layer.get("id") === id;
+            return layer.get('id') === id;
           }
         });
     },
@@ -2862,50 +2862,50 @@ export default {
 
       // add some extra projections
       proj4.defs(
-        "EPSG:28349",
-        "+proj=utm +zone=49 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+        'EPSG:28349',
+        '+proj=utm +zone=49 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
       );
       proj4.defs(
-        "EPSG:28350",
-        "+proj=utm +zone=50 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+        'EPSG:28350',
+        '+proj=utm +zone=50 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
       );
       proj4.defs(
-        "EPSG:28351",
-        "+proj=utm +zone=51 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+        'EPSG:28351',
+        '+proj=utm +zone=51 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
       );
       proj4.defs(
-        "EPSG:28352",
-        "+proj=utm +zone=52 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+        'EPSG:28352',
+        '+proj=utm +zone=52 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
       );
       proj4.defs(
-        "EPSG:28353",
-        "+proj=utm +zone=53 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+        'EPSG:28353',
+        '+proj=utm +zone=53 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
       );
       proj4.defs(
-        "EPSG:28354",
-        "+proj=utm +zone=54 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+        'EPSG:28354',
+        '+proj=utm +zone=54 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
       );
       proj4.defs(
-        "EPSG:28355",
-        "+proj=utm +zone=55 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+        'EPSG:28355',
+        '+proj=utm +zone=55 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
       );
       proj4.defs(
-        "EPSG:28356",
-        "+proj=utm +zone=56 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+        'EPSG:28356',
+        '+proj=utm +zone=56 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
       );
 
       // bump search bar over if there's no fullscreen button
       if (!FullScreen.isFullScreenSupportedLegacy()) {
-        $("#map-search").addClass("noFullScreen");
-        $("#map-search-button").addClass("noFullScreen");
+        $('#map-search').addClass('noFullScreen');
+        $('#map-search-button').addClass('noFullScreen');
       }
 
       this.olmap = new Map({
         logo: false,
-        renderer: "canvas",
-        target: "map",
+        renderer: 'canvas',
+        target: 'map',
         view: new View({
-          projection: "EPSG:4326",
+          projection: 'EPSG:4326',
           center: vm.view.center,
           // center: [118, -33],
           zoom: 6,
@@ -2935,32 +2935,32 @@ export default {
       this.graticule.setMap(this.olmap);
 
       // setup scale events
-      this.olmap.on("postrender", function () {
+      this.olmap.on('postrender', function () {
         var s = vm.getScale();
         if (s !== null) {
           vm.scale = s;
         }
       });
 
-      vm.olmap.getLayers().on("remove", function (ev) {
+      vm.olmap.getLayers().on('remove', function (ev) {
         // vm.olmap.on("removeLayer",function(ev){
         if (ev.element.postRemove) ev.element.postRemove();
         if (ev.element.layer && ev.element.layer.dependentLayers) {
           $.each(ev.layer.dependentLayers, function (index, dependentLayer) {
-            if (!dependentLayer["element"]) {
+            if (!dependentLayer['element']) {
               return;
             }
-            if (dependentLayer["element"].show) {
-              delete dependentLayer["element"]["show"];
-              vm.active.removeLayer(dependentLayer["element"]);
-            } else if (dependentLayer["element"].postRemove) {
-              dependentLayer["element"].postRemove();
+            if (dependentLayer['element'].show) {
+              delete dependentLayer['element']['show'];
+              vm.active.removeLayer(dependentLayer['element']);
+            } else if (dependentLayer['element'].postRemove) {
+              dependentLayer['element'].postRemove();
             }
           });
         }
       });
 
-      vm.olmap.getLayers().on("add", function (ev) {
+      vm.olmap.getLayers().on('add', function (ev) {
         // vm.olmap.on("addLayer", function(ev) {
 
         if (ev.element.postAdd) ev.element.postAdd();
@@ -2987,7 +2987,7 @@ export default {
                 }
               }
               if (!l.element) {
-                l.element = vm["create" + l.type](l);
+                l.element = vm['create' + l.type](l);
                 l.element.setOpacity(l.opacity || 1);
                 l.element.dependentLayer = true;
               }
@@ -2995,26 +2995,26 @@ export default {
               vm.olmap.getLayers().insertAt(position++, l.element);
               l.element.show = true;
               vm.olmap.dispatchEvent(
-                vm.createEvent(vm, "addLayer", { mapLayer: l.mapLayer }),
+                vm.createEvent(vm, 'addLayer', { mapLayer: l.mapLayer }),
               );
             });
           }
         }
       });
 
-      vm.olmap.on("changeLayerOrder", function (ev) {
+      vm.olmap.on('changeLayerOrder', function (ev) {
         if (ev.mapLayer.layer && ev.mapLayer.layer.dependentLayers) {
           //remove dependentlayer first
           $.each(
             ev.mapLayer.layer.dependentLayers,
             function (index, dependentLayer) {
               if (
-                !dependentLayer["mapLayer"] ||
-                !dependentLayer["mapLayer"].show
+                !dependentLayer['mapLayer'] ||
+                !dependentLayer['mapLayer'].show
               ) {
                 return;
               }
-              vm.olmap.removeLayer(dependentLayer["mapLayer"]);
+              vm.olmap.removeLayer(dependentLayer['mapLayer']);
             },
           );
           //add dependentlayer at the correct position
@@ -3041,14 +3041,14 @@ export default {
             ev.mapLayer.layer.dependentLayers,
             function (index, dependentLayer) {
               if (
-                !dependentLayer["mapLayer"] ||
-                !dependentLayer["mapLayer"].show ||
+                !dependentLayer['mapLayer'] ||
+                !dependentLayer['mapLayer'].show ||
                 !dependentLayer.dependentLayers
               ) {
                 return;
               }
               vm.olmap.dispatchEvent(
-                vm.createEvent(vm, "changeLayerOrder", {
+                vm.createEvent(vm, 'changeLayerOrder', {
                   mapLayer: dependentLayer.mapLayer,
                 }),
               );
@@ -3070,9 +3070,9 @@ export default {
         if (catLayer) {
           //fixed layer already exist, update the properties
           $.extend(catLayer, fixedLayer, {
-            name: catLayer["name"] || fixedLayer["name"],
-            title: catLayer["title"] || fixedLayer["title"],
-            abstract: catLayer["abstract"] || fixedLayer["abstract"],
+            name: catLayer['name'] || fixedLayer['name'],
+            title: catLayer['title'] || fixedLayer['title'],
+            abstract: catLayer['abstract'] || fixedLayer['abstract'],
           });
           if (catLayer.dependentLayers) {
             $.each(catLayer.dependentLayers, function (index, layer) {
@@ -3111,16 +3111,16 @@ export default {
       });
       //enable controls
       // ADD FROM V3 START
-      var projection = get("EPSG:3857");
+      var projection = get('EPSG:3857');
       var projectionExtent = projection.getExtent();
       var s = getWidth(projectionExtent) / 256;
 
-      var matrixSet = "mercator";
+      var matrixSet = 'mercator';
       var resolutions = new Array(21);
       var matrixIds = new Array(21);
       for (var c = 0; c < 21; ++c)
         ((resolutions[c] = s / Math.pow(2, c)),
-          (matrixIds[c] = matrixSet + ":" + c));
+          (matrixIds[c] = matrixSet + ':' + c));
       new WMTS({
         origin: getTopLeft(projectionExtent),
         resolutions: resolutions,
@@ -3133,14 +3133,14 @@ export default {
           enabled: false,
           autoenable: false,
           controls: new Zoom({
-            target: $("#external-controls").get(0),
+            target: $('#external-controls').get(0),
           }),
         },
         overviewMap: {
           enabled: false,
           autoenable: false,
           controls: new OverviewMap({
-            className: "ol-overviewmap ol-custom-overviewmap",
+            className: 'ol-overviewmap ol-custom-overviewmap',
             layers: [],
             // source: new WMTS({
             //         url: "https://kmi.dpaw.wa.gov.au/geoserver/gwc/service/wmts",
@@ -3152,11 +3152,11 @@ export default {
             //         projection: projection,
             //         tileGrid: m
             // }),
-            collapseLabel: "\u00BB",
-            label: "\u00AB",
+            collapseLabel: '\u00BB',
+            label: '\u00AB',
             collapsed: false,
             view: new View({
-              projection: "EPSG:4326",
+              projection: 'EPSG:4326',
             }),
           }),
           preenable: function (enable) {
@@ -3165,7 +3165,7 @@ export default {
                 this.controls
                   .getOverviewMap()
                   .addLayer(
-                    vm["create" + vm._overviewLayer.type](vm._overviewLayer),
+                    vm['create' + vm._overviewLayer.type](vm._overviewLayer),
                   );
                 // new ol.Map().addLayer(vm['create' + vm._overviewLayer.type](vm._overviewLayer))
                 vm._overviewLayer.mapLayer.postAdd();
@@ -3242,9 +3242,9 @@ export default {
             coordinateFormat: function (coordinate) {
               return (
                 vm.getDeg(coordinate) +
-                "<br/>" +
+                '<br/>' +
                 vm.getDMS(coordinate) +
-                "<br/>" +
+                '<br/>' +
                 vm.getMGA(coordinate)
               );
             },
@@ -3253,10 +3253,10 @@ export default {
         fullScreen: {
           enabled: false,
           controls: new FullScreen({
-            source: $("body").get(0),
-            target: $("#external-controls").get(0),
-            label: $("<i/>", {
-              class: "fa fa-expand",
+            source: $('body').get(0),
+            target: $('#external-controls').get(0),
+            label: $('<i/>', {
+              class: 'fa fa-expand',
             })[0],
           }),
         },
@@ -3264,8 +3264,8 @@ export default {
           enabled: false,
           autoenable: false,
           controls: new Control({
-            element: $("#menu-scale").get(0),
-            target: $("#external-controls").get(0),
+            element: $('#menu-scale').get(0),
+            target: $('#external-controls').get(0),
           }),
         },
         attribution: {
@@ -3336,43 +3336,43 @@ export default {
         layers = [layers];
       }
       var _getFeature = function (index) {
-        const layer_id = getLayerId(layers[index]["id"]);
+        const layer_id = getLayerId(layers[index]['id']);
         var url = getLayerUrl(layer_id, vm.env);
         // KB layers use different geometry/attribute names; use the layer's 'kb' overrides when routed to KB
         const layer =
-          url === vm.env.kbService && layers[index]["kb"]
-            ? Object.assign({}, layers[index], layers[index]["kb"])
+          url === vm.env.kbService && layers[index]['kb']
+            ? Object.assign({}, layers[index], layers[index]['kb'])
             : layers[index];
         $.ajax({
           url:
             url +
-            "/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=" +
+            '/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=' +
             layer_id +
-            "&outputFormat=json&cql_filter=CONTAINS(" +
-            (layer["geom_field"] || "wkb_geometry") +
-            ",POINT(" +
+            '&outputFormat=json&cql_filter=CONTAINS(' +
+            (layer['geom_field'] || 'wkb_geometry') +
+            ',POINT(' +
             coordinate[1] +
-            " " +
+            ' ' +
             coordinate[0] +
-            "))",
-          dataType: "json",
+            '))',
+          dataType: 'json',
           success: function (response) {
             if (response.totalFeatures === 0) {
               if (index === layers.length - 1) {
                 if (successCallback) {
                   successCallback(null);
                 } else {
-                  alert("No found");
+                  alert('No found');
                 }
               } else {
                 _getFeature(index + 1);
               }
             } else {
               var feature = null;
-              if (layer["properties"]) {
+              if (layer['properties']) {
                 feature = {};
-                $.each(layer["properties"], function (field, column) {
-                  feature[field] = response.features[0]["properties"][column];
+                $.each(layer['properties'], function (field, column) {
+                  feature[field] = response.features[0]['properties'][column];
                 });
               } else {
                 feature = response.features[0];
@@ -3386,10 +3386,10 @@ export default {
           },
           error: function (xhr, status, message) {
             if (failedCallback) {
-              alert(xhr.status + " : " + (xhr.responseText || message));
+              alert(xhr.status + ' : ' + (xhr.responseText || message));
             } else {
               failedCallback(
-                xhr.status + " : " + (xhr.responseText || message),
+                xhr.status + ' : ' + (xhr.responseText || message),
               );
             }
           },
@@ -3415,56 +3415,56 @@ export default {
       var vm = this;
       var feat = new Feature({ geometry: new Point(coordinate) });
       $.ajax({
-        url: "/api/spatial",
-        dataType: "json",
+        url: '/api/spatial',
+        dataType: 'json',
         data: {
           features: vm.$root.geojson.writeFeatures([feat]),
           options: JSON.stringify({
             grid: {
-              action: "getClosestFeature",
+              action: 'getClosestFeature',
               layers: [
                 {
-                  id: "fd_grid_points",
+                  id: 'fd_grid_points',
                   layerid: vm.env.fdGridPointsLayer,
                   kmiservice: getLayerUrl(vm.env.fdGridPointsLayer, vm.env),
                   buffer: 120,
                   properties: {
-                    grid: "FDGRID",
+                    grid: 'FDGRID',
                   },
                 },
                 {
-                  id: "pilbara_grid_1km",
+                  id: 'pilbara_grid_1km',
                   layerid: vm.env.pilbaraGrid1kmLayer,
                   buffer: 800,
                   kmiservice: getLayerUrl(vm.env.pilbaraGrid1kmLayer, vm.env),
                   properties: {
-                    grid: "ID",
+                    grid: 'ID',
                   },
                 },
               ],
             },
           }),
         },
-        method: "POST",
+        method: 'POST',
         success: function (response) {
-          if (response.features[0]["grid"]["failed"]) {
-            failedCallback(response.features[0]["grid"]["failed"]);
-          } else if (response.features[0]["grid"]["id"] === "fd_grid_points") {
+          if (response.features[0]['grid']['failed']) {
+            failedCallback(response.features[0]['grid']['failed']);
+          } else if (response.features[0]['grid']['id'] === 'fd_grid_points') {
             successCallback(
-              "FD:" + response.features[0]["grid"]["feature"]["grid"],
+              'FD:' + response.features[0]['grid']['feature']['grid'],
             );
           } else if (
-            response.features[0]["grid"]["id"] === "pilbara_grid_1km"
+            response.features[0]['grid']['id'] === 'pilbara_grid_1km'
           ) {
             successCallback(
-              "PIL:" + response.features[0]["grid"]["feature"]["grid"],
+              'PIL:' + response.features[0]['grid']['feature']['grid'],
             );
           } else {
             successCallback(null);
           }
         },
         error: function (xhr, status, message) {
-          failedCallback(xhr.status + " : " + (xhr.responseText || message));
+          failedCallback(xhr.status + ' : ' + (xhr.responseText || message));
         },
         xhrFields: {
           withCredentials: true,
@@ -3485,10 +3485,10 @@ export default {
         if (!raw) {
           return null;
         }
-        if (typeof raw === "object") {
+        if (typeof raw === 'object') {
           return raw;
         }
-        if (typeof raw !== "string") {
+        if (typeof raw !== 'string') {
           return null;
         }
 
@@ -3504,8 +3504,8 @@ export default {
         }
 
         // Some proxy paths prepend status text like "200: { ... }".
-        var start = text.indexOf("{");
-        var end = text.lastIndexOf("}");
+        var start = text.indexOf('{');
+        var end = text.lastIndexOf('}');
         if (start >= 0 && end > start) {
           return JSON.parse(text.substring(start, end + 1));
         }
@@ -3544,11 +3544,11 @@ export default {
             }
           }
         });
-        nearestDistance = vm.measure.formatLength(nearestDistance, "km");
+        nearestDistance = vm.measure.formatLength(nearestDistance, 'km');
         var bearing;
         var position;
         if (nearestDistance === 0) {
-          position = "0m of " + nearestTown.properties["name"];
+          position = '0m of ' + nearestTown.properties['name'];
         } else {
           bearing = vm.measure.getBearing(
             nearestTown.geometry.coordinates,
@@ -3556,10 +3556,10 @@ export default {
           );
           position =
             nearestDistance +
-            " " +
+            ' ' +
             vm.measure.getDirection(bearing, 16) +
-            " of " +
-            nearestTown.properties["name"];
+            ' of ' +
+            nearestTown.properties['name'];
         }
         successCallback(position);
       };
@@ -3569,24 +3569,24 @@ export default {
           return;
         }
         var buffered = bbox(
-          buffer(point(coordinate), buffers[index], "kilometers"),
+          buffer(point(coordinate), buffers[index], 'kilometers'),
         );
         var townsiteLayerId = vm.env.townsitePointsLayer;
         var url = getLayerUrl(townsiteLayerId, vm.env);
         $.ajax({
           url:
             url +
-            "/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=" +
+            '/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=' +
             townsiteLayerId +
-            "&outputFormat=json&bbox=" +
+            '&outputFormat=json&bbox=' +
             buffered[1] +
-            "," +
+            ',' +
             buffered[0] +
-            "," +
+            ',' +
             buffered[3] +
-            "," +
+            ',' +
             buffered[2],
-          dataType: "json",
+          dataType: 'json',
           success: function (response) {
             processPositionResponse(response, index);
           },
@@ -3603,16 +3603,16 @@ export default {
 
             if (
               recoveredResponse &&
-              (recoveredResponse.type === "FeatureCollection" ||
+              (recoveredResponse.type === 'FeatureCollection' ||
                 Array.isArray(recoveredResponse.features) ||
                 recoveredResponse.totalFeatures !== undefined)
             ) {
               processPositionResponse(recoveredResponse, index);
               return;
             }
-            var errorStatus = xhr ? xhr.status : "error";
+            var errorStatus = xhr ? xhr.status : 'error';
             var errorText = xhr ? xhr.responseText || message : message;
-            failedCallback(errorStatus + " : " + errorText);
+            failedCallback(errorStatus + ' : ' + errorText);
           },
           xhrFields: {
             withCredentials: true,
@@ -3624,8 +3624,8 @@ export default {
   },
   mounted() {
     var vm = this;
-    var mapStatus = this.loading.register("olmap", "Open layer map Component");
-    mapStatus.phaseBegin("initialize", 20, "Initialize");
+    var mapStatus = this.loading.register('olmap', 'Open layer map Component');
+    mapStatus.phaseBegin('initialize', 20, 'Initialize');
     this.svgBlobs = {};
     this.svgTemplates = {};
     this.cachedStyles = {};
@@ -3636,7 +3636,7 @@ export default {
       if (layer.dependentLayers) {
         $.each(layer.dependentLayers, function (index, dependentLayer) {
           if (dependentLayer.inheritRefresh) {
-            dependentLayer["mapLayer"].stopAutoRefresh();
+            dependentLayer['mapLayer'].stopAutoRefresh();
           }
         });
       }
@@ -3648,8 +3648,8 @@ export default {
       }
       if (olLayer.dependentLayers) {
         $.each(olLayer.dependentLayers, function (index, dependentLayer) {
-          if (dependentLayer["mapLayer"]) {
-            dependentLayer["mapLayer"].stopAutoRefresh();
+          if (dependentLayer['mapLayer']) {
+            dependentLayer['mapLayer'].stopAutoRefresh();
           }
         });
       }
@@ -3665,8 +3665,8 @@ export default {
       }
       if (olLayer.dependentLayers) {
         $.each(olLayer.dependentLayers, function (index, dependentLayer) {
-          if (dependentLayer["mapLayer"] && dependentLayer["mapLayer"].show) {
-            dependentLayer["mapLayer"].startAutoRefresh();
+          if (dependentLayer['mapLayer'] && dependentLayer['mapLayer'].show) {
+            dependentLayer['mapLayer'].startAutoRefresh();
           }
         });
       }
@@ -3679,8 +3679,8 @@ export default {
         olLayer.autoTimelineRefresh = null;
       }
       if (!olLayer.dependentLayer) {
-        delete olLayer["mapLayer"];
-        delete olLayer["layer"];
+        delete olLayer['mapLayer'];
+        delete olLayer['layer'];
       }
     };
 
@@ -3689,36 +3689,36 @@ export default {
       $.each(innerMatrixSets, function (tileSize, matrixSet) {
         var matrixIds = new Array(matrixSet.maxLevel - matrixSet.minLevel + 1);
         for (var z = matrixSet.minLevel; z <= matrixSet.maxLevel; ++z) {
-          matrixIds[z] = matrixSet.name + ":" + z;
+          matrixIds[z] = matrixSet.name + ':' + z;
         }
         matrixSet.matrixIds = matrixIds;
       });
     });
-    mapStatus.phaseEnd("initialize");
-    mapStatus.phaseBegin("gk-init", 60, "Listen 'gk-init' event", true, true);
-    this.$on("gk-init", function () {
-      mapStatus.phaseEnd("gk-init");
+    mapStatus.phaseEnd('initialize');
+    mapStatus.phaseBegin('gk-init', 60, "Listen 'gk-init' event", true, true);
+    this.$on('gk-init', function () {
+      mapStatus.phaseEnd('gk-init');
 
-      mapStatus.phaseBegin("post-init", 20, "Post initialize");
-      if ($("#map .ol-viewport canvas").attr("width")) {
+      mapStatus.phaseBegin('post-init', 20, 'Post initialize');
+      if ($('#map .ol-viewport canvas').attr('width')) {
         vm.displayResolution[0] =
           Math.round(
-            ($("#map .ol-viewport canvas").attr("width") /
-              $("#map .ol-viewport canvas").width()) *
+            ($('#map .ol-viewport canvas').attr('width') /
+              $('#map .ol-viewport canvas').width()) *
               100,
           ) / 100;
       }
-      if ($("#map .ol-viewport canvas").attr("height")) {
+      if ($('#map .ol-viewport canvas').attr('height')) {
         vm.displayResolution[1] =
           Math.round(
-            ($("#map .ol-viewport canvas").attr("height") /
-              $("#map .ol-viewport canvas").height()) *
+            ($('#map .ol-viewport canvas').attr('height') /
+              $('#map .ol-viewport canvas').height()) *
               100,
           ) / 100;
       }
       vm.showGraticule(vm.displayGraticule);
 
-      mapStatus.phaseEnd("post-init");
+      mapStatus.phaseEnd('post-init');
       return true;
     });
   },

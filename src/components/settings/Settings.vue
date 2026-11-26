@@ -24,13 +24,13 @@
 </template>
 
 <script>
-import gkSystemsetting from "@/components/settings/SystemSetting.vue";
-import gkWeatheroutlook from "@/components/weather/WeatherOutlook.vue";
+import gkSystemsetting from '@/components/settings/SystemSetting.vue';
+import gkWeatheroutlook from '@/components/weather/WeatherOutlook.vue';
 
 export default {
   store: {
-    activeMenu: "activeMenu",
-    activeSubmenu: "activeSubmenu",
+    activeMenu: 'activeMenu',
+    activeSubmenu: 'activeSubmenu',
   },
   data: function () {
     return {
@@ -54,7 +54,7 @@ export default {
       }
     },
     switchMenu: function (menu) {
-      menu = menu || "systemsetting";
+      menu = menu || 'systemsetting';
       if (this.activeSubmenu === menu || (!this.activeSubmenu && !menu)) {
         //new active submenu is equal to current active submenu, do nothing
         return;
@@ -71,8 +71,8 @@ export default {
   },
   mounted() {
     var vm = this;
-    $("#settings-tabs").on("change.zf.tabs", function (target, selectedTab) {
-      var menu = selectedTab.attr("menu");
+    $('#settings-tabs').on('change.zf.tabs', function (target, selectedTab) {
+      var menu = selectedTab.attr('menu');
       vm.info.hoverable.splice(0, vm.info.hoverable.length);
       vm.switchMenu(menu);
       vm.$root.menuChanged();

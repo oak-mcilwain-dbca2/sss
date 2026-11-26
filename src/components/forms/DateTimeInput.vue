@@ -12,7 +12,7 @@
 
 <script>
 export default {
-  name: "DateTimeInput",
+  name: 'DateTimeInput',
 
   props: {
     modelValue: {
@@ -21,14 +21,14 @@ export default {
     },
     min: {
       type: String,
-      default: "",
+      default: '',
     },
     max: {
       type: String,
-      default: "",
+      default: '',
     },
   },
 
-  emits: ["update:modelValue"],
+  emits: ['update:modelValue'],
 };
 </script>

@@ -1,15 +1,15 @@
 // stores/settings.js
 
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
-export const useStateStore = defineStore("state", {
+export const useStateStore = defineStore('state', {
   state: () => ({
     fixedLayers: [],
     drawingLogs: [],
     redoPointer: 0,
     drawingSequence: 0,
     annotations: {
-      type: "FeatureCollection",
+      type: 'FeatureCollection',
       features: [],
     },
     hints: [],

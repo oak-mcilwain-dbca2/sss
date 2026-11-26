@@ -2,7 +2,7 @@
   <img :src="legendSvg" />
 </template>
 <script>
-import legendSvg from "@/assets/images/legend.svg";
+import legendSvg from '@/assets/images/legend.svg';
 
 export default {
   // TODO: Currently not referenced by Export.vue template.

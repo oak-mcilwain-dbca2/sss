@@ -1,8 +1,8 @@
 // stores/systemSetting.js
 
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
-export const useSystemSettingStore = defineStore("systemSetting", {
+export const useSystemSettingStore = defineStore('systemSetting', {
   state: () => ({
     component: null,
   }),

@@ -33,7 +33,7 @@
             :disabled="messageAttr(message, 'disabled')"
             :id="`userdialog-button-${message[0]}`"
           >
-            {{ messageAttr("title") }}
+            {{ messageAttr('title') }}
           </button>
           <img
             v-if="messageType(message) === 'img'"
@@ -113,7 +113,7 @@
           style="cursor: pointer"
           :id="`userdialog-button-${message[0]}`"
         >
-          {{ messageAttr(message, "title") }}
+          {{ messageAttr(message, 'title') }}
         </button>
         <img
           v-if="messageType(message) === 'img'"
@@ -165,15 +165,15 @@
 </template>
 
 <script>
-import { editResource, getHeight } from "@/utils";
+import { editResource, getHeight } from '@/utils';
 
-import { useLoadingStore } from "@/stores/loading";
+import { useLoadingStore } from '@/stores/loading';
 
 export default {
   data: function () {
     return {
-      classes: "small",
-      title: "",
+      classes: 'small',
+      title: '',
       dialogStatus: null,
       _messages: [],
       _footer: [],
@@ -213,7 +213,7 @@ export default {
       );
     },
     fillstyle: function () {
-      return "width:" + (this.completedTasks / this.tasks) * 100 + "%";
+      return 'width:' + (this.completedTasks / this.tasks) * 100 + '%';
     },
     messages: function () {
       return this.revision && this._messages;
@@ -240,12 +240,12 @@ export default {
     },
     show: function (options) {
       if (options === undefined) {
-        $("#userdialog").foundation("open");
+        $('#userdialog').foundation('open');
         return;
       }
       var vm = this;
-      this.classes = options.classes || "small";
-      this.title = options.title || "";
+      this.classes = options.classes || 'small';
+      this.title = options.title || '';
       this._messages.splice(0, this._messages.length);
       if (Array.isArray(options.messages)) {
         $.each(options.messages, function (index, line) {
@@ -278,18 +278,18 @@ export default {
         if (vm._initFunc) {
           vm._initFunc();
         }
-        $("#userdialog").foundation("open");
+        $('#userdialog').foundation('open');
       });
     },
     close: function (button) {
-      if (button && button[2]["is_valid"]) {
-        if (button[2]["is_valid"](button, this.getData()) === false) {
+      if (button && button[2]['is_valid']) {
+        if (button[2]['is_valid'](button, this.getData()) === false) {
           return;
         }
       }
       this.option =
         button && button[0] !== undefined ? button[0] : this.defaultOption;
-      $("#userdialog").foundation("close");
+      $('#userdialog').foundation('close');
     },
     rerend: function () {
       var messages = this._messages;
@@ -347,13 +347,13 @@ export default {
       return msg[2] && msg[2][attr] ? msg[2][attr] : defaultValue;
     },
     messageClass: function (msg) {
-      return this.messageAttr(msg, "class", "");
+      return this.messageAttr(msg, 'class', '');
     },
     messageType: function (msg) {
-      return this.messageAttr(msg, "type", "show");
+      return this.messageAttr(msg, 'type', 'show');
     },
     messageName: function (msg) {
-      return this.messageAttr(msg, "name", "");
+      return this.messageAttr(msg, 'name', '');
     },
     getValue: function (msg) {
       if (this._initData && this.messageName(msg) in this._initData) {
@@ -371,36 +371,36 @@ export default {
           return value === msg[0];
         }
       } else {
-        return this.messageAttr(msg, "checked", false);
+        return this.messageAttr(msg, 'checked', false);
       }
     },
     getData: function () {
       let result = {};
-      $("#userdialog input").each(function () {
-        if ($(this).prop("disabled")) {
+      $('#userdialog input').each(function () {
+        if ($(this).prop('disabled')) {
           //is disabled,ignore
           return;
         } else if ($(this).val().trim().length === 0) {
           //is empty,ignore
           return;
         } else if (
-          ["radio", "checkbox"].indexOf($(this).prop("type").toLowerCase()) >=
+          ['radio', 'checkbox'].indexOf($(this).prop('type').toLowerCase()) >=
             0 &&
-          !$(this).prop("checked")
+          !$(this).prop('checked')
         ) {
           //is not checked
-        } else if (!($(this).prop("name") in result)) {
+        } else if (!($(this).prop('name') in result)) {
           // is not in results
-          result[$(this).prop("name")] = $(this).val().trim();
-        } else if (typeof result[$(this).prop("name")] === "string") {
+          result[$(this).prop('name')] = $(this).val().trim();
+        } else if (typeof result[$(this).prop('name')] === 'string') {
           //is string value, change it to array
-          result[$(this).prop("name")] = [
-            result[$(this).prop("name")],
+          result[$(this).prop('name')] = [
+            result[$(this).prop('name')],
             $(this).val().trim(),
           ];
         } else {
           //is array value, append the new value
-          result[$(this).prop("name")].push($(this).val().trim());
+          result[$(this).prop('name')].push($(this).val().trim());
         }
       });
       return result;
@@ -409,7 +409,7 @@ export default {
       var eventHandler = this.messageAttr(message, event_key);
       if (!eventHandler) {
         return;
-      } else if (eventHandler === "close") {
+      } else if (eventHandler === 'close') {
         this.close(message);
       } else {
         eventHandler.call(this, ev, message);
@@ -420,20 +420,20 @@ export default {
     var vm = this;
     this._messages = [];
     this._footer = [];
-    this.dialogStatus = this.loading.register("dialog", "Dialog Component");
-    this.dialogStatus.phaseBegin("initialize", 100, "Initialize");
+    this.dialogStatus = this.loading.register('dialog', 'Dialog Component');
+    this.dialogStatus.phaseBegin('initialize', 100, 'Initialize');
 
-    $("#userdialog").on("open.zf.reveal", function () {
-      $("#userdialog").css(
-        "top",
+    $('#userdialog').on('open.zf.reveal', function () {
+      $('#userdialog').css(
+        'top',
         Math.floor(
-          ($("#userdialog").parent().height() - getHeight($("#userdialog"))) /
+          ($('#userdialog').parent().height() - getHeight($('#userdialog'))) /
             2,
-        ) + "px",
+        ) + 'px',
       );
     });
 
-    $("#userdialog").on("closed.zf.reveal", function () {
+    $('#userdialog').on('closed.zf.reveal', function () {
       vm._messages.splice(0, vm._messages.length);
       vm._footer.splice(0, vm._footer.length);
       vm.revision += 1;
@@ -449,7 +449,7 @@ export default {
       }
     });
 
-    this.dialogStatus.phaseEnd("initialize");
+    this.dialogStatus.phaseEnd('initialize');
   },
 };
 </script>

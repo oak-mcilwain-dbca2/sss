@@ -1,4 +1,4 @@
-import moment from "moment";
+import moment from 'moment';
 
 //verify the user input date string.
 //event, the dom event trigger this verification
@@ -19,7 +19,7 @@ export function verifyDate(event, inputPattern, pattern) {
       return false;
     } else {
       element.value = m.format(pattern);
-      $(element).trigger("change");
+      $(element).trigger('change');
       return true;
     }
   } else {
@@ -36,8 +36,8 @@ export function verifyDate(event, inputPattern, pattern) {
 //  3: The first datetime is consisted with current date and the nearest time after current time in timesInDay
 //startDate: the start datetime of the forecast,if missing, current datetime will be used
 export function getDatetimes(timesInDay, size, strategy, startDate) {
-  startDate = startDate || moment().tz("Australia/Perth");
-  var currentDate = startDate.format("YYYY-MM-DD");
+  startDate = startDate || moment().tz('Australia/Perth');
+  var currentDate = startDate.format('YYYY-MM-DD');
   strategy = strategy || 2;
 
   var result;
@@ -46,7 +46,7 @@ export function getDatetimes(timesInDay, size, strategy, startDate) {
     $.each(timesInDay, function (index, time) {
       if (
         strategy === 2 &&
-        startDate < moment.tz(currentDate + " " + time, "Australia/Perth")
+        startDate < moment.tz(currentDate + ' ' + time, 'Australia/Perth')
       ) {
         if (index === 0) {
           timeIndex = timesInDay.length - 1;
@@ -57,7 +57,7 @@ export function getDatetimes(timesInDay, size, strategy, startDate) {
         return false;
       } else if (
         strategy === 3 &&
-        startDate < moment.tz(currentDate + " " + time, "Australia/Perth")
+        startDate < moment.tz(currentDate + ' ' + time, 'Australia/Perth')
       ) {
         // Legacy code had "furstIndex" here.
         // Appears to be a typo; timeIndex is used throughout the method.
@@ -76,8 +76,8 @@ export function getDatetimes(timesInDay, size, strategy, startDate) {
   while (result.length < size) {
     result.push(
       moment.tz(
-        startDate.format("YYYY-MM-DD") + " " + timesInDay[timeIndex],
-        "Australia/Perth",
+        startDate.format('YYYY-MM-DD') + ' ' + timesInDay[timeIndex],
+        'Australia/Perth',
       ),
     );
     timeIndex += 1;
@@ -94,25 +94,25 @@ var _precisionMap = {};
 export function getDateFormatPrecision(format) {
   var precision = _precisionMap[format];
   if (!precision) {
-    var d = moment("2018-02-02 01:01:01.001", "YYYY-MM-DD HH:mm:ss.SSS");
+    var d = moment('2018-02-02 01:01:01.001', 'YYYY-MM-DD HH:mm:ss.SSS');
     var d2 = moment(d.format(format), format);
     var diff = d - d2;
     if (diff === 0) {
-      precision = "milliseconds";
+      precision = 'milliseconds';
     } else if (diff === 1) {
-      precision = "seconds";
+      precision = 'seconds';
     } else if (diff === 1001) {
-      precision = "minutes";
+      precision = 'minutes';
     } else if (diff === 61001) {
-      precision = "hours";
+      precision = 'hours';
     } else if (diff === 3661001) {
-      precision = "days";
+      precision = 'days';
     } else if (diff === 90061001) {
-      precision = "months";
+      precision = 'months';
     } else if (diff === 2768461001) {
-      precision = "years";
+      precision = 'years';
     } else {
-      throw "Precision time interval (" + precision + ") Not Support";
+      throw 'Precision time interval (' + precision + ') Not Support';
     }
     _precisionMap[format] = precision;
   }
@@ -139,10 +139,10 @@ export function getDateRange(range, format) {
   } else if (isNaN(dateRange)) {
     throw "Invalid date range '" + range + "'.";
   } else if (dateRange >= 1000000 || dateRange < 10000) {
-    throw "Range (" + range + ") Not Support";
+    throw 'Range (' + range + ') Not Support';
   }
 
-  format = format || "YYYY-MM-DD";
+  format = format || 'YYYY-MM-DD';
   var resultFormat;
   var precision;
   if (dateRange >= 100000) {
@@ -151,34 +151,34 @@ export function getDateRange(range, format) {
     dateRange = dateRange % 100000;
     resultFormat = format || null;
     if (precision === 1) {
-      precision = "minutes";
-      format = "YYYY-MM-DD HH:mm";
+      precision = 'minutes';
+      format = 'YYYY-MM-DD HH:mm';
     } else if (precision === 2) {
-      precision = "hours";
-      format = "YYYY-MM-DD HH";
+      precision = 'hours';
+      format = 'YYYY-MM-DD HH';
     } else if (precision === 3) {
-      precision = "days";
-      format = "YYYY-MM-DD";
+      precision = 'days';
+      format = 'YYYY-MM-DD';
     } else if (precision === 5) {
-      precision = "months";
-      format = "YYYY-MM";
+      precision = 'months';
+      format = 'YYYY-MM';
     } else if (precision === 6) {
-      precision = "years";
-      format = "YYYY";
+      precision = 'years';
+      format = 'YYYY';
     } else if (precision === 8) {
-      precision = "seconds";
-      format = "YYYY-MM-DD HH:mm:ss";
+      precision = 'seconds';
+      format = 'YYYY-MM-DD HH:mm:ss';
     } else if (precision === 9) {
-      precision = "milliseconds";
-      format = "YYYY-MM-DD HH:mm:ss.SSS";
+      precision = 'milliseconds';
+      format = 'YYYY-MM-DD HH:mm:ss.SSS';
     } else {
-      throw "Precision type (" + precision + ") Not Support";
+      throw 'Precision type (' + precision + ') Not Support';
     }
     if (!resultFormat) {
       resultFormat = format;
     }
   } else {
-    format = format || "YYYY-MM-DD";
+    format = format || 'YYYY-MM-DD';
     resultFormat = format;
     precision = getDateFormatPrecision(format);
   }
@@ -187,46 +187,46 @@ export function getDateRange(range, format) {
   if (dateRange > 21000 && dateRange <= 21999) {
     //Last XX hours
     endDate = moment(moment().format(format), format);
-    if (precision === "hours") {
-      startDate = moment(endDate).subtract(dateRange - 21000 - 1, "hours");
-    } else if (["milliseconds", "seconds", "minutes"].indexOf(precision) >= 0) {
-      startDate = moment(endDate).subtract(dateRange - 21000, "hours");
+    if (precision === 'hours') {
+      startDate = moment(endDate).subtract(dateRange - 21000 - 1, 'hours');
+    } else if (['milliseconds', 'seconds', 'minutes'].indexOf(precision) >= 0) {
+      startDate = moment(endDate).subtract(dateRange - 21000, 'hours');
     } else {
-      startDate = moment(endDate).subtract(dateRange - 21000, "hours");
+      startDate = moment(endDate).subtract(dateRange - 21000, 'hours');
     }
     endDate = null;
   } else if (dateRange === 30001) {
     //today
-    startDate = moment().startOf("day");
+    startDate = moment().startOf('day');
     endDate = null;
   } else if (dateRange > 31000 && dateRange <= 31999) {
     //last XXX days
     endDate = moment(moment().format(format), format);
-    if (precision === "days") {
-      startDate = moment(endDate).subtract(dateRange - 31000 - 1, "days");
+    if (precision === 'days') {
+      startDate = moment(endDate).subtract(dateRange - 31000 - 1, 'days');
     } else if (
-      ["milliseconds", "seconds", "minutes", "hours"].indexOf(precision) >= 0
+      ['milliseconds', 'seconds', 'minutes', 'hours'].indexOf(precision) >= 0
     ) {
-      startDate = moment(endDate).subtract(dateRange - 31000, "days");
+      startDate = moment(endDate).subtract(dateRange - 31000, 'days');
     } else {
-      startDate = moment(endDate).subtract(dateRange - 31000, "days");
+      startDate = moment(endDate).subtract(dateRange - 31000, 'days');
     }
     endDate = null;
   } else if (dateRange === 40001) {
     //current week
-    startDate = moment().startOf("week");
+    startDate = moment().startOf('week');
     endDate = null;
   } else if (dateRange > 41000 && dateRange <= 41999) {
     //last XXX weeks
     endDate = moment(moment().format(format), format);
-    if (precision === "days") {
-      startDate = moment(endDate).subtract((dateRange - 41000) * 7 - 1, "days");
+    if (precision === 'days') {
+      startDate = moment(endDate).subtract((dateRange - 41000) * 7 - 1, 'days');
     } else if (
-      ["milliseconds", "seconds", "minutes", "hours"].indexOf(precision) >= 0
+      ['milliseconds', 'seconds', 'minutes', 'hours'].indexOf(precision) >= 0
     ) {
-      startDate = moment(endDate).subtract((dateRange - 41000) * 7, "days");
+      startDate = moment(endDate).subtract((dateRange - 41000) * 7, 'days');
     } else {
-      startDate = moment(endDate).subtract((dateRange - 41000) * 7, "days");
+      startDate = moment(endDate).subtract((dateRange - 41000) * 7, 'days');
     }
     endDate = null;
   } else if (dateRange === 70001) {
@@ -236,9 +236,9 @@ export function getDateRange(range, format) {
     } else {
       startDate = moment(`${now.year() - 1}-07-01`);
     }
-    endDate = moment(startDate).add(1, "year").subtract(1, "day").endOf("day");
+    endDate = moment(startDate).add(1, 'year').subtract(1, 'day').endOf('day');
   } else {
-    throw "Date range (" + dateRange + ") Not Support";
+    throw 'Date range (' + dateRange + ') Not Support';
   }
   return [
     startDate ? startDate.format(resultFormat) : null,

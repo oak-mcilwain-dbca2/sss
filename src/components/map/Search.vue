@@ -36,29 +36,29 @@
 </style>
 
 <script>
-import Feature from "ol/Feature";
-import Collection from "ol/Collection";
+import Feature from 'ol/Feature';
+import Collection from 'ol/Collection';
 
-import Point from "ol/geom/Point";
+import Point from 'ol/geom/Point';
 
-import Control from "ol/control/Control";
+import Control from 'ol/control/Control';
 
-import Style from "ol/style/Style";
-import Fill from "ol/style/Fill";
-import Stroke from "ol/style/Stroke";
-import Circle from "ol/style/Circle";
+import Style from 'ol/style/Style';
+import Fill from 'ol/style/Fill';
+import Stroke from 'ol/style/Stroke';
+import Circle from 'ol/style/Circle';
 
-import VectorSource from "ol/source/Vector";
-import VectorLayer from "ol/layer/Vector";
+import VectorSource from 'ol/source/Vector';
+import VectorLayer from 'ol/layer/Vector';
 
-import { containsCoordinate } from "ol/extent";
+import { containsCoordinate } from 'ol/extent';
 
-import { getLayerUrl } from "@/utils";
+import { getLayerUrl } from '@/utils';
 
-import { useMapStore } from "@/stores/map";
+import { useMapStore } from '@/stores/map';
 
 export default {
-  store: ["resolutions"],
+  store: ['resolutions'],
   data: function () {
     return {};
   },
@@ -92,12 +92,12 @@ export default {
         enabled: false,
         controls: [
           new Control({
-            element: $("#map-search").get(0),
-            target: $("#external-controls").get(0),
+            element: $('#map-search').get(0),
+            target: $('#external-controls').get(0),
           }),
           new Control({
-            element: $("#map-search-button").get(0),
-            target: $("#external-controls").get(0),
+            element: $('#map-search-button').get(0),
+            target: $('#external-controls').get(0),
           }),
         ],
       };
@@ -119,34 +119,34 @@ export default {
     runSearch: function () {
       var vm = this;
       var map = this.$root.map;
-      $("#map-search, #map-search-button").removeClass("alert success");
-      var query = $("#map-search").get(0).value;
+      $('#map-search, #map-search-button').removeClass('alert success');
+      var query = $('#map-search').get(0).value;
       if (!query) {
         this.clearSearchPoint();
         return;
       }
 
       var victory = function (searchMethod, coords, name, update_name) {
-        $("#map-search, #map-search-button").addClass("success");
+        $('#map-search, #map-search-button').addClass('success');
         // map.animate({center:coords},{resolution:vm.resolutions[10]})
         if (Array.isArray(coords) && Array.isArray(coords[0])) {
           coords = coords[0];
         }
         map.animate(coords);
         if (update_name) {
-          $("#map-search").val(update_name);
+          $('#map-search').val(update_name);
         }
         if (
           vm.$root.weatheroutlook &&
           vm.annotations.tool &&
-          vm.annotations.toname === "WeatherOutlook"
+          vm.annotations.toname === 'WeatherOutlook'
         ) {
           //weather outlook tool is activated.
           vm.$root.weatheroutlook.setPosition(coords);
         } else if (
           vm.$root.weatherforecast &&
           vm.annotations.tool &&
-          vm.annotations.toname === "WeatherForecast"
+          vm.annotations.toname === 'WeatherForecast'
         ) {
           //weather forecast tool is activated.
           vm.$root.weatherforecast.setPosition(coords);
@@ -166,29 +166,29 @@ export default {
       };
 
       var failure = function () {
-        $("#map-search, #map-search-button").addClass("alert");
+        $('#map-search, #map-search-button').addClass('alert');
         //console.log(reason)
       };
 
       // check for EPSG:4326 coordinates
       var dms = map.parseDMSString(query);
       if (dms) {
-        victory("DMS", dms, name);
+        victory('DMS', dms, name);
         return;
       }
 
       // check for MGA coordinates
       var mga = map.parseMGAString(query);
       if (mga) {
-        victory("MGA", mga.coords, map.getMGA(mga.coords));
+        victory('MGA', mga.coords, map.getMGA(mga.coords));
         return;
       }
 
       // check for Grid Reference
       var gd = map.parseGridString(query);
       if (gd) {
-        if (gd.gridType === "FD") {
-          this.queryFD(gd.gridNorth + " " + gd.gridEast, victory, failure);
+        if (gd.gridType === 'FD') {
+          this.queryFD(gd.gridNorth + ' ' + gd.gridEast, victory, failure);
         } else {
           this.queryPIL(gd.gridNorth + gd.gridEast, victory, failure);
         }
@@ -204,25 +204,25 @@ export default {
       $.ajax({
         url:
           getLayerUrl(layerId, vm.env) +
-          "/wfs?" +
+          '/wfs?' +
           $.param({
-            version: "1.1.0",
-            service: "WFS",
-            request: "GetFeature",
-            outputFormat: "application/json",
-            srsname: "EPSG:4326",
+            version: '1.1.0',
+            service: 'WFS',
+            request: 'GetFeature',
+            outputFormat: 'application/json',
+            srsname: 'EPSG:4326',
             typename: layerId,
             cql_filter: "(FDGRID = '" + fdStr + "')",
           }),
-        dataType: "json",
+        dataType: 'json',
         xhrFields: {
           withCredentials: true,
         },
         success: function (data) {
           if (data.features.length) {
-            victory("FD", data.features[0].geometry.coordinates, "FD " + fdStr);
+            victory('FD', data.features[0].geometry.coordinates, 'FD ' + fdStr);
           } else {
-            failure("No Forest Department Grid reference found for " + fdStr);
+            failure('No Forest Department Grid reference found for ' + fdStr);
           }
         },
       });
@@ -233,29 +233,29 @@ export default {
       $.ajax({
         url:
           getLayerUrl(layerId, vm.env) +
-          "/wfs?" +
+          '/wfs?' +
           $.param({
-            version: "1.1.0",
-            service: "WFS",
-            request: "GetFeature",
-            outputFormat: "application/json",
-            srsname: "EPSG:4326",
+            version: '1.1.0',
+            service: 'WFS',
+            request: 'GetFeature',
+            outputFormat: 'application/json',
+            srsname: 'EPSG:4326',
             typename: layerId,
             cql_filter: "(grid = '" + pilStr + "')",
           }),
-        dataType: "json",
+        dataType: 'json',
         xhrFields: {
           withCredentials: true,
         },
         success: function (data) {
           if (data.features.length) {
             victory(
-              "PIL",
+              'PIL',
               data.features[0].geometry.coordinates,
-              "PIL " + pilStr,
+              'PIL ' + pilStr,
             );
           } else {
-            failure("No Pilbara Grid reference found for " + pilStr);
+            failure('No Pilbara Grid reference found for ' + pilStr);
           }
         },
       });
@@ -268,15 +268,15 @@ export default {
       }
       $.ajax({
         url:
-          "/api/mapbox.json?" +
+          '/api/mapbox.json?' +
           $.param({
             geo_str: encodeURIComponent(geoStr),
-            country: "au",
+            country: 'au',
             //types: 'country,region,postcode,place,locality,address',
-            proximity: "" + center[0] + "," + center[1],
+            proximity: '' + center[0] + ',' + center[1],
           }),
-        method: "GET",
-        dataType: "json",
+        method: 'GET',
+        dataType: 'json',
         success: function (data) {
           if (data.features.length) {
             var feature = null;
@@ -291,13 +291,13 @@ export default {
             });
 
             victory(
-              "GEOCODE",
+              'GEOCODE',
               feature.center,
               feature.text,
               feature.place_name,
             );
           } else {
-            failure("No location match found for " + geoStr);
+            failure('No location match found for ' + geoStr);
           }
         },
       });
@@ -312,20 +312,20 @@ export default {
         image: new Circle({
           radius: 5,
           fill: new Fill({
-            color: "rgb(255, 255, 255)",
+            color: 'rgb(255, 255, 255)',
           }),
           stroke: new Stroke({
             width: 2,
-            color: "rgb(114, 193, 0)",
+            color: 'rgb(114, 193, 0)',
           }),
         }),
         text: new Text({
           offsetX: 12,
-          text: feature.get("name"),
-          textAlign: "left",
-          font: "12px Helvetica,Roboto,Arial,sans-serif",
+          text: feature.get('name'),
+          textAlign: 'left',
+          font: '12px Helvetica,Roboto,Arial,sans-serif',
           stroke: new Stroke({
-            color: "#fff",
+            color: '#fff',
             width: 4,
           }),
         }),

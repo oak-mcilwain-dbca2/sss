@@ -88,26 +88,26 @@
 </template>
 
 <script>
-import gkMap from "@/components/map/Map.vue";
-import gkLayers from "@/components/layers/Layers.vue";
-import gkAnnotations from "@/components/annotations/Annotations.vue";
-import gkTracking from "@/components/sss/Tracking.vue";
-import gkThermal from "@/components/sss/Thermal.vue";
-import gkLoading from "@/components/loading/Loading.vue";
-import gkSettings from "@/components/settings/Settings.vue";
-import gkBfrs from "@/components/sss/BFRS.vue";
-import gkDialog from "@/components/dialog/Dialog.vue";
+import gkMap from '@/components/map/Map.vue';
+import gkLayers from '@/components/layers/Layers.vue';
+import gkAnnotations from '@/components/annotations/Annotations.vue';
+import gkTracking from '@/components/sss/Tracking.vue';
+import gkThermal from '@/components/sss/Thermal.vue';
+import gkLoading from '@/components/loading/Loading.vue';
+import gkSettings from '@/components/settings/Settings.vue';
+import gkBfrs from '@/components/sss/BFRS.vue';
+import gkDialog from '@/components/dialog/Dialog.vue';
 
-import questionMarkPng from "@/assets/images/question-mark.png";
-import spriteUrlSvg from "@/assets/images/iD-sprite.svg";
+import questionMarkPng from '@/assets/images/question-mark.png';
+import spriteUrlSvg from '@/assets/images/iD-sprite.svg';
 
-import { useStateStore } from "@/stores/state";
+import { useStateStore } from '@/stores/state';
 
 export default {
   store: {
-    activeMenu: "activeMenu",
-    activeSubmenu: "activeSubmenu",
-    hints: "hints",
+    activeMenu: 'activeMenu',
+    activeSubmenu: 'activeSubmenu',
+    hints: 'hints',
   },
   components: {
     gkMap,
@@ -161,7 +161,7 @@ export default {
       if (this.activeMenu && this.$root[this.activeMenu].setup) {
         this.$root[this.activeMenu].setup();
       }
-      if (["layers", "settings"].indexOf(menu) < 0) {
+      if (['layers', 'settings'].indexOf(menu) < 0) {
         this.activeSubmenu = null;
       }
       this.$root.menuChanged();
@@ -169,8 +169,8 @@ export default {
   },
   mounted() {
     var vm = this;
-    $("#menu-tabs").on("change.zf.tabs", function (target, selectedTab) {
-      var menu = selectedTab.attr("menu");
+    $('#menu-tabs').on('change.zf.tabs', function (target, selectedTab) {
+      var menu = selectedTab.attr('menu');
       vm.info.hoverable.splice(0, vm.info.hoverable.length);
       vm.switchMenu(menu);
     });

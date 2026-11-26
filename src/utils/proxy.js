@@ -8,9 +8,9 @@ export function proxy(classname, object, attrs) {
     var methods = [];
     var ProxyClass;
     for (let key in object) {
-      if (key[0] === "_") {
+      if (key[0] === '_') {
         continue;
-      } else if (typeof object[key] !== "function") {
+      } else if (typeof object[key] !== 'function') {
         properties.push(key);
       } else if (Object.prototype.hasOwnProperty.call(object, key)) {
         methods.push(key);
@@ -43,7 +43,7 @@ export function proxy(classname, object, attrs) {
       return this._object;
     };
     for (let key in Object.getPrototypeOf(object)) {
-      if (["constructor"].indexOf(key) < 0 && (!attrs || !(key in attrs))) {
+      if (['constructor'].indexOf(key) < 0 && (!attrs || !(key in attrs))) {
         ProxyClass.prototype[key] = function (...args) {
           return this._objectPrototype[key].apply(this._object, args);
         };

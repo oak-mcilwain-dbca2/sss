@@ -1,8 +1,8 @@
 // stores/featureDetail.js
 
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
-export const useFeatureDetailStore = defineStore("featureDetail", {
+export const useFeatureDetailStore = defineStore('featureDetail', {
   state: () => ({
     component: null,
   }),

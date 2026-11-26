@@ -422,7 +422,7 @@
                             {{
                               ds.metadata.refresh_time
                                 ? ds.metadata.refresh_time.toLocaleString()
-                                : ""
+                                : ''
                             }}
                           </div>
                         </div>
@@ -488,39 +488,39 @@
 </style>
 
 <script>
-import { saveAs } from "file-saver";
+import { saveAs } from 'file-saver';
 
-import Draw from "ol/interaction/Draw";
+import Draw from 'ol/interaction/Draw';
 
-import Collection from "ol/Collection";
-import Feature from "ol/Feature";
+import Collection from 'ol/Collection';
+import Feature from 'ol/Feature';
 
-import Style from "ol/style/Style";
-import Icon from "ol/style/Icon";
+import Style from 'ol/style/Style';
+import Icon from 'ol/style/Icon';
 
-import Point from "ol/geom/Point";
+import Point from 'ol/geom/Point';
 
-import VectorSource from "ol/source/Vector";
+import VectorSource from 'ol/source/Vector';
 
-import VectorLayer from "ol/layer/Vector";
+import VectorLayer from 'ol/layer/Vector';
 
-import { getDatetimes, submitForm } from "@/utils";
+import { getDatetimes, submitForm } from '@/utils';
 
-import pinSvg from "@/assets/images/pin.svg";
-import weatherOutlookDefaultSvg from "@/assets/images/weather-outlook-default.svg";
-import weatherOutlookCustomizedSvg from "@/assets/images/weather-outlook-customized.svg";
-import weatherOutlookAmicusSvg from "@/assets/images/weather-outlook-amicus.svg";
+import pinSvg from '@/assets/images/pin.svg';
+import weatherOutlookDefaultSvg from '@/assets/images/weather-outlook-default.svg';
+import weatherOutlookCustomizedSvg from '@/assets/images/weather-outlook-customized.svg';
+import weatherOutlookAmicusSvg from '@/assets/images/weather-outlook-amicus.svg';
 
-import { useAnnotationsStore } from "@/stores/annotations";
+import { useAnnotationsStore } from '@/stores/annotations';
 
-import { useSettingsStore } from "@/stores/settings";
+import { useSettingsStore } from '@/stores/settings';
 
 export default {
   store: {
-    screenHeight: "layout.screenHeight",
-    leftPanelHeadHeight: "layout.leftPanelHeadHeight",
-    activeMenu: "activeMenu",
-    activeSubmenu: "activeSubmenu",
+    screenHeight: 'layout.screenHeight',
+    leftPanelHeadHeight: 'layout.leftPanelHeadHeight',
+    activeMenu: 'activeMenu',
+    activeSubmenu: 'activeSubmenu',
   },
   setup() {
     return {
@@ -532,12 +532,12 @@ export default {
   },
   data: function () {
     return {
-      format: "html",
+      format: 'html',
       initialized: false,
       showDailyDatasources: false,
-      editingReportHours: "",
-      editingColumnTitle: "",
-      editingColumnGroup: "",
+      editingReportHours: '',
+      editingColumnTitle: '',
+      editingColumnGroup: '',
       selectedRow: null,
       selectedDatasource: {},
       selectedIndex: -1,
@@ -546,20 +546,20 @@ export default {
       outlookTool: {},
       outlookTools: [
         {
-          toolid: "weather-outlook-default",
-          title: "Default 4 Day Weather Outlook",
+          toolid: 'weather-outlook-default',
+          title: 'Default 4 Day Weather Outlook',
           icon: weatherOutlookDefaultSvg,
           fixed_columns: true,
         },
         {
-          toolid: "weather-outlook-customized",
-          title: "Customized Weather Outlook",
+          toolid: 'weather-outlook-customized',
+          title: 'Customized Weather Outlook',
           icon: weatherOutlookCustomizedSvg,
           fixed_columns: false,
         },
         {
-          toolid: "weather-outlook-amicus",
-          title: "Weather Outlook Amicus Export",
+          toolid: 'weather-outlook-amicus',
+          title: 'Weather Outlook Amicus Export',
           icon: weatherOutlookAmicusSvg,
           fixed_columns: true,
         },
@@ -603,28 +603,28 @@ export default {
     dailyDatasources: function () {
       return (
         this.columnRevision &&
-        (this._datasources ? this._datasources["dailyDatasources"] : [])
+        (this._datasources ? this._datasources['dailyDatasources'] : [])
       );
     },
     datasources: function () {
       return (
         this.columnRevision &&
-        (this._datasources ? this._datasources["datasources"] : [])
+        (this._datasources ? this._datasources['datasources'] : [])
       );
     },
     isDayReadonly: function () {
-      return this.outlookTool.toolid === "weather-outlook-default";
+      return this.outlookTool.toolid === 'weather-outlook-default';
     },
     isDailyTitleReadonly: function () {
-      return this.outlookTool.toolid !== "weather-outlook-customized";
+      return this.outlookTool.toolid !== 'weather-outlook-customized';
     },
     isTimeReadonly: function () {
-      return this.outlookTool.toolid === "weather-outlook-default";
+      return this.outlookTool.toolid === 'weather-outlook-default';
     },
     isColumnsReadonly: function () {
       return (
         !this.initialized ||
-        this.outlookTool.toolid !== "weather-outlook-customized"
+        this.outlookTool.toolid !== 'weather-outlook-customized'
       );
     },
     outlookTitle: function () {
@@ -709,7 +709,7 @@ export default {
     selectedColumnTitle: {
       get: function () {
         if (this.selectedColumn === null || this.selectedColumn.group) {
-          return "";
+          return '';
         }
         return (
           (this.selectedColumn.options && this.selectedColumn.options.title) ||
@@ -724,13 +724,13 @@ export default {
         if (!value || this.selectedDatasource.options.title === value) {
           if (
             this.selectedColumn.options &&
-            "title" in this.selectedColumn.options
+            'title' in this.selectedColumn.options
           ) {
-            delete this.selectedColumn.options["title"];
+            delete this.selectedColumn.options['title'];
           }
         } else {
           this.selectedColumn.options = this.selectedColumn.options || {};
-          this.selectedColumn.options["title"] = value;
+          this.selectedColumn.options['title'] = value;
         }
       },
     },
@@ -753,7 +753,7 @@ export default {
       this.adjustHeight();
     },
     outlookSetting: function (newValue) {
-      this.editingReportHours = newValue ? newValue.reportHours : "";
+      this.editingReportHours = newValue ? newValue.reportHours : '';
     },
     reportType: function (newValue, oldValue) {
       if (newValue === 0 || oldValue === 0) {
@@ -766,33 +766,33 @@ export default {
     getDatetimes,
     adjustHeight: function () {
       if (
-        this.activeMenu === "settings" &&
-        this.activeSubmenu === "weatheroutlook"
+        this.activeMenu === 'settings' &&
+        this.activeSubmenu === 'weatheroutlook'
       ) {
         //the 'chosen columns' is selected by default, so the first time when the user entries into the sportoutlook setting panel, the 'column editor' should have valid height value.
         this._columnEditorHeight =
           this._columnEditorHeight ||
-          $("#weatheroutlook-column-editor").height();
+          $('#weatheroutlook-column-editor').height();
         var height =
           this.screenHeight -
           this.leftPanelHeadHeight -
-          $("#weatheroutlook-settings").height() -
+          $('#weatheroutlook-settings').height() -
           200;
-        $("#weatheroutlook-header").height(height);
-        $("#weatheroutlook-columns").height(height - this._columnEditorHeight);
-        $("#weatheroutlook-datasources").height(height);
+        $('#weatheroutlook-header').height(height);
+        $('#weatheroutlook-columns').height(height - this._columnEditorHeight);
+        $('#weatheroutlook-datasources').height(height);
       }
     },
     open: function () {
       //active this module
-      if (this.activeMenu !== "settings") {
-        $("#menu-tab-settings-label").trigger("click");
+      if (this.activeMenu !== 'settings') {
+        $('#menu-tab-settings-label').trigger('click');
       }
-      if (this.activeSubmenu !== "weatheroutlook") {
-        $("#weatheroutlook-label").trigger("click");
+      if (this.activeSubmenu !== 'weatheroutlook') {
+        $('#weatheroutlook-label').trigger('click');
       }
-      if (!$("#offCanvasLeft").hasClass("reveal-responsive")) {
-        $("#offCanvasLeft").toggleClass("reveal-responsive");
+      if (!$('#offCanvasLeft').hasClass('reveal-responsive')) {
+        $('#offCanvasLeft').toggleClass('reveal-responsive');
         this.map.olmap.updateSize();
       }
     },
@@ -806,7 +806,7 @@ export default {
     getOutlookSetting(toolid) {
       toolid = toolid || this.outlookTool.toolid;
 
-      if (toolid === "weather-outlook-default") {
+      if (toolid === 'weather-outlook-default') {
         return this.revision && this._defaultOutlookSetting;
       }
 
@@ -825,10 +825,10 @@ export default {
         outlookSetting.reportType === null ||
         outlookSetting.reportType === undefined
       ) {
-        if (toolid === "weather-outlook-default") {
+        if (toolid === 'weather-outlook-default') {
           this.setReportType(0, toolid); //others
-          this.setReportHours("9,12,15,18", toolid);
-        } else if (toolid === "weather-outlook-customized") {
+          this.setReportHours('9,12,15,18', toolid);
+        } else if (toolid === 'weather-outlook-customized') {
           this.setReportType(3, toolid); //3 hourly
         } else {
           this.setReportType(1, toolid); //hourly
@@ -849,7 +849,7 @@ export default {
       if (this.getReportType(toolid) === 0) {
         return this.getOutlookSetting(toolid).reportHours;
       } else {
-        return "";
+        return '';
       }
     },
     setReportHours: function (value, toolid) {
@@ -868,12 +868,12 @@ export default {
         : this.outlookSetting;
       toolid = toolid || this.outlookTool.toolid;
       if (!outlookSetting.dailyTitle) {
-        if (toolid === "weather-outlook-default") {
-          this.setDailyTitle("{date} {weather}", toolid);
-        } else if (toolid === "weather-outlook-customized") {
-          this.setDailyTitle("{date} {weather}", toolid);
+        if (toolid === 'weather-outlook-default') {
+          this.setDailyTitle('{date} {weather}', toolid);
+        } else if (toolid === 'weather-outlook-customized') {
+          this.setDailyTitle('{date} {weather}', toolid);
         } else {
-          this.setDailyTitle("{date}", toolid);
+          this.setDailyTitle('{date}', toolid);
         }
       }
       return outlookSetting.dailyTitle;
@@ -891,9 +891,9 @@ export default {
       toolid = toolid || this.outlookTool.toolid;
 
       if (!outlookSetting.outlookDays) {
-        if (toolid === "weather-outlook-default") {
+        if (toolid === 'weather-outlook-default') {
           this.setOutlookDays(4, toolid); // 4 days
-        } else if (toolid === "weather-outlook-customized") {
+        } else if (toolid === 'weather-outlook-customized') {
           this.setOutlookDays(4, toolid); // 4 days
         } else {
           this.setOutlookDays(2, toolid); // 2 days
@@ -928,208 +928,208 @@ export default {
       // console.log("toolID");
       // console.log(toolid);
       if (!columns || columns.length === 0) {
-        if (toolid === "weather-outlook-default") {
+        if (toolid === 'weather-outlook-default') {
           columns = [
             {
-              workspace: "bom",
-              id: "IDW71034_WA_WxIcon_SFC_ICON",
+              workspace: 'bom',
+              id: 'IDW71034_WA_WxIcon_SFC_ICON',
             },
             {
-              workspace: "bom",
-              id: "IDW71000_WA_T_SFC",
+              workspace: 'bom',
+              id: 'IDW71000_WA_T_SFC',
             },
             {
-              workspace: "bom",
-              id: "IDW71001_WA_Td_SFC",
+              workspace: 'bom',
+              id: 'IDW71001_WA_Td_SFC',
             },
             {
-              workspace: "bom",
-              id: "IDW71018_WA_RH_SFC",
+              workspace: 'bom',
+              id: 'IDW71018_WA_RH_SFC',
             },
             {
-              group: "10m Wind",
+              group: '10m Wind',
               datasources: [
                 {
-                  workspace: "bom",
-                  id: "IDW71089_WA_Wind_Dir_SFC",
+                  workspace: 'bom',
+                  id: 'IDW71089_WA_Wind_Dir_SFC',
                 },
                 {
-                  workspace: "bom",
-                  id: "IDW71071_WA_WindMagKmh_SFC",
+                  workspace: 'bom',
+                  id: 'IDW71071_WA_WindMagKmh_SFC',
                 },
                 {
-                  workspace: "bom",
-                  id: "IDW71072_WA_WindGustKmh_SFC",
+                  workspace: 'bom',
+                  id: 'IDW71072_WA_WindGustKmh_SFC',
                 },
               ],
             },
             {
-              workspace: "bom",
-              id: "IDW71127_WA_DF_SFC",
+              workspace: 'bom',
+              id: 'IDW71127_WA_DF_SFC',
             },
             {
-              workspace: "bom",
-              id: "IDW71139_WA_Curing_SFC",
+              workspace: 'bom',
+              id: 'IDW71139_WA_Curing_SFC',
             },
             {
-              workspace: "bom",
-              id: "IDZ10135_AUS_AFDRS_fbi_SFC",
+              workspace: 'bom',
+              id: 'IDZ10135_AUS_AFDRS_fbi_SFC',
             },
             {
-              workspace: "bom",
-              id: "IDZ10134_AUS_AFDRS_fdr_SFC_HTML",
+              workspace: 'bom',
+              id: 'IDZ10134_AUS_AFDRS_fdr_SFC_HTML',
             },
           ];
-        } else if (toolid === "weather-outlook-customized") {
+        } else if (toolid === 'weather-outlook-customized') {
           columns = [
             {
-              workspace: "bom",
-              id: "IDW71034_WA_WxIcon_SFC_ICON",
+              workspace: 'bom',
+              id: 'IDW71034_WA_WxIcon_SFC_ICON',
             },
             {
-              workspace: "bom",
-              id: "IDW71000_WA_T_SFC",
+              workspace: 'bom',
+              id: 'IDW71000_WA_T_SFC',
             },
             {
-              workspace: "bom",
-              id: "IDW71001_WA_Td_SFC",
+              workspace: 'bom',
+              id: 'IDW71001_WA_Td_SFC',
             },
             {
-              workspace: "bom",
-              id: "IDW71018_WA_RH_SFC",
+              workspace: 'bom',
+              id: 'IDW71018_WA_RH_SFC',
             },
             {
-              group: "10m Wind",
+              group: '10m Wind',
               datasources: [
                 {
-                  workspace: "bom",
-                  id: "IDW71089_WA_Wind_Dir_SFC",
+                  workspace: 'bom',
+                  id: 'IDW71089_WA_Wind_Dir_SFC',
                 },
                 {
-                  workspace: "bom",
-                  id: "IDW71071_WA_WindMagKmh_SFC",
+                  workspace: 'bom',
+                  id: 'IDW71071_WA_WindMagKmh_SFC',
                 },
                 {
-                  workspace: "bom",
-                  id: "IDW71072_WA_WindGustKmh_SFC",
+                  workspace: 'bom',
+                  id: 'IDW71072_WA_WindGustKmh_SFC',
                 },
               ],
             },
             {
-              workspace: "bom",
-              id: "IDW71127_WA_DF_SFC",
+              workspace: 'bom',
+              id: 'IDW71127_WA_DF_SFC',
             },
             {
-              workspace: "bom",
-              id: "IDW71139_WA_Curing_SFC",
+              workspace: 'bom',
+              id: 'IDW71139_WA_Curing_SFC',
             },
             {
-              workspace: "bom",
-              id: "IDZ10135_AUS_AFDRS_fbi_SFC",
+              workspace: 'bom',
+              id: 'IDZ10135_AUS_AFDRS_fbi_SFC',
             },
             {
-              workspace: "bom",
-              id: "IDZ10134_AUS_AFDRS_fdr_SFC_HTML",
+              workspace: 'bom',
+              id: 'IDZ10134_AUS_AFDRS_fdr_SFC_HTML',
             },
           ];
         } else {
           columns = [
             {
-              workspace: "bom",
-              id: "IDW71000_WA_T_SFC",
+              workspace: 'bom',
+              id: 'IDW71000_WA_T_SFC',
               options: {
-                title: "air_temperature",
+                title: 'air_temperature',
               },
             },
             {
-              workspace: "bom",
-              id: "IDW71001_WA_Td_SFC",
+              workspace: 'bom',
+              id: 'IDW71001_WA_Td_SFC',
               options: {
-                title: "dewpoint_temperature",
+                title: 'dewpoint_temperature',
               },
             },
             {
-              workspace: "bom",
-              id: "IDW71018_WA_RH_SFC",
+              workspace: 'bom',
+              id: 'IDW71018_WA_RH_SFC',
               options: {
-                title: "relative_humidity",
+                title: 'relative_humidity',
               },
             },
             {
-              workspace: "bom",
-              id: "IDW71089_WA_Wind_Dir_SFC",
+              workspace: 'bom',
+              id: 'IDW71089_WA_Wind_Dir_SFC',
               options: {
-                title: "wind_direction",
+                title: 'wind_direction',
               },
             },
             {
-              workspace: "bom",
-              id: "IDW71071_WA_WindMagKmh_SFC",
+              workspace: 'bom',
+              id: 'IDW71071_WA_WindMagKmh_SFC',
               options: {
-                title: "wind_speed",
+                title: 'wind_speed',
               },
             },
             {
-              workspace: "bom",
-              id: "IDW71072_WA_WindGustKmh_SFC",
+              workspace: 'bom',
+              id: 'IDW71072_WA_WindGustKmh_SFC',
               options: {
-                title: "wind_gust_speed",
+                title: 'wind_gust_speed',
               },
             },
             {
-              workspace: "bom",
-              id: "IDW71111_WA_Wind_Dir_1500mAMSL",
+              workspace: 'bom',
+              id: 'IDW71111_WA_Wind_Dir_1500mAMSL',
               options: {
-                title: "wind_direction_850hpa",
+                title: 'wind_direction_850hpa',
               },
             },
             {
-              workspace: "bom",
-              id: "IDW71110_WA_WindMagKmh_1500mAMSL",
+              workspace: 'bom',
+              id: 'IDW71110_WA_WindMagKmh_1500mAMSL',
               options: {
-                title: "wind_speed_850hpa",
+                title: 'wind_speed_850hpa',
               },
             },
             {
-              workspace: "bom",
-              id: "IDW71117_WA_FFDI_SFC",
+              workspace: 'bom',
+              id: 'IDW71117_WA_FFDI_SFC',
               options: {
-                title: "forest_fire_danger_index",
+                title: 'forest_fire_danger_index',
               },
             },
             {
-              workspace: "bom",
-              id: "IDW71122_WA_GFDI_SFC",
+              workspace: 'bom',
+              id: 'IDW71122_WA_GFDI_SFC',
               options: {
-                title: "grassland_fire_danger_index",
+                title: 'grassland_fire_danger_index',
               },
             },
             {
-              workspace: "bom",
-              id: "IDZ10134_AUS_AFDRS_fdr_SFC_NOHTML",
+              workspace: 'bom',
+              id: 'IDZ10134_AUS_AFDRS_fdr_SFC_NOHTML',
               options: {
-                title: "FDR",
+                title: 'FDR',
               },
             },
             {
-              workspace: "bom",
-              id: "IDW71127_WA_DF_SFC",
+              workspace: 'bom',
+              id: 'IDW71127_WA_DF_SFC',
               options: {
-                title: "DF",
+                title: 'DF',
               },
             },
             {
-              workspace: "bom",
-              id: "IDW71139_WA_Curing_SFC",
+              workspace: 'bom',
+              id: 'IDW71139_WA_Curing_SFC',
               options: {
-                title: "Curing",
+                title: 'Curing',
               },
             },
             {
-              workspace: "bom",
-              id: "IDZ10135_AUS_AFDRS_fbi_SFC",
+              workspace: 'bom',
+              id: 'IDZ10135_AUS_AFDRS_fbi_SFC',
               options: {
-                title: "FBI",
+                title: 'FBI',
               },
             },
           ];
@@ -1143,11 +1143,11 @@ export default {
       if (columnGroups.length > 0) {
         columnGroups.length = 0;
       }
-      $.each(vm._datasources["datasources"], function (index, ds) {
-        if (!("selected" in ds)) {
-          ds["selected"] = {};
+      $.each(vm._datasources['datasources'], function (index, ds) {
+        if (!('selected' in ds)) {
+          ds['selected'] = {};
         }
-        ds["selected"][toolid] = false;
+        ds['selected'][toolid] = false;
       });
 
       var required;
@@ -1165,25 +1165,25 @@ export default {
             subindex--
           ) {
             let subcolumn = column.datasources[subindex];
-            var ds = vm._datasources["datasources"].find(function (o) {
+            var ds = vm._datasources['datasources'].find(function (o) {
               return (
-                o["workspace"] === subcolumn["workspace"] &&
-                o["id"] === subcolumn["id"]
+                o['workspace'] === subcolumn['workspace'] &&
+                o['id'] === subcolumn['id']
               );
             });
             if (ds) {
-              ds["selected"][toolid] = true;
-              subcolumn["name"] = ds["name"];
-              subcolumn["required"] = ds["required"] ? true : false;
-              required = required || subcolumn["required"];
+              ds['selected'][toolid] = true;
+              subcolumn['name'] = ds['name'];
+              subcolumn['required'] = ds['required'] ? true : false;
+              required = required || subcolumn['required'];
             } else {
               //column is unavailable
               column.datasources.splice(subindex, 1);
             }
           }
-          column["required"] = required;
+          column['required'] = required;
           var groupIndex = columnGroups.findIndex(function (o) {
-            return o === column["group"];
+            return o === column['group'];
           });
           if (column.datasources.length === 0) {
             vm.outlookColumns.splice(index, 1);
@@ -1191,18 +1191,18 @@ export default {
               columnGroups.splice(groupIndex, 1);
             }
           } else if (groupIndex < 0) {
-            columnGroups.push(column["group"]);
+            columnGroups.push(column['group']);
           }
         } else {
-          ds = vm._datasources["datasources"].find(function (o) {
+          ds = vm._datasources['datasources'].find(function (o) {
             return (
-              o["workspace"] === column["workspace"] && o["id"] === column["id"]
+              o['workspace'] === column['workspace'] && o['id'] === column['id']
             );
           });
           if (ds) {
-            ds["selected"][toolid] = true;
-            column["name"] = ds["name"];
-            column["required"] = ds["required"] ? true : false;
+            ds['selected'][toolid] = true;
+            column['name'] = ds['name'];
+            column['required'] = ds['required'] ? true : false;
           } else {
             //column is unavailable
             outlookSetting.outlookColumns.splice(index, 1);
@@ -1211,8 +1211,8 @@ export default {
       }
       //add required columns if the outlook tools's columns is not  fixed
       if (!outlookTool.fixed_columns) {
-        $.each(vm._datasources["datasources"], function (index, ds) {
-          if (ds["required"] && !ds["selected"][toolid]) {
+        $.each(vm._datasources['datasources'], function (index, ds) {
+          if (ds['required'] && !ds['selected'][toolid]) {
             vm.toggleDatasource(ds, true, null, null, toolid);
           }
         });
@@ -1220,8 +1220,8 @@ export default {
 
       columnGroups.sort();
       if (toolid === this.outlookTool.toolid) {
-        this.editingColumnTitle = "";
-        this.editingColumnGroup = "";
+        this.editingColumnTitle = '';
+        this.editingColumnGroup = '';
         this.selectedRow = null;
         this.selectedDatasource = null;
         this.selectedIndex = -1;
@@ -1252,9 +1252,9 @@ export default {
           while (hour < 24) {
             if (hour % reportType === 0) {
               if (hour < 10) {
-                reportTimes.push("0" + hour + ":00:00");
+                reportTimes.push('0' + hour + ':00:00');
               } else {
-                reportTimes.push(hour + ":00:00");
+                reportTimes.push(hour + ':00:00');
               }
             }
             hour += 1;
@@ -1262,13 +1262,13 @@ export default {
         } else {
           var reportHours = this.getReportHours(toolid);
           if (reportHours != null) {
-            var hours = this.reportHours + "";
+            var hours = this.reportHours + '';
             if (hours.length > 0) {
-              $.each(hours.split(","), function (index, hour) {
+              $.each(hours.split(','), function (index, hour) {
                 if (hour < 10) {
-                  reportTimes.push("0" + hour + ":00:00");
+                  reportTimes.push('0' + hour + ':00:00');
                 } else {
-                  reportTimes.push(hour + ":00:00");
+                  reportTimes.push(hour + ':00:00');
                 }
               });
             }
@@ -1286,12 +1286,12 @@ export default {
     },
     changeOutlookToolTitle: function (toolid) {
       var outlookTool = this.getOutlookTool(toolid);
-      if (outlookTool.toolid === "weather-outlook-customized") {
+      if (outlookTool.toolid === 'weather-outlook-customized') {
         outlookTool.title =
-          "Customised " + this.getOutlookDays(toolid) + " Day Weather Outlook";
-      } else if (outlookTool.toolid === "weather-outlook-amicus") {
+          'Customised ' + this.getOutlookDays(toolid) + ' Day Weather Outlook';
+      } else if (outlookTool.toolid === 'weather-outlook-amicus') {
         outlookTool.title =
-          this.getOutlookDays(toolid) + " Day Weather Outlook Amicus Export";
+          this.getOutlookDays(toolid) + ' Day Weather Outlook Amicus Export';
       }
     },
     selectSetting: function (s) {
@@ -1302,7 +1302,7 @@ export default {
       this.outlookTool = s;
     },
     selectTool: function (tool) {
-      if (tool.toolid !== "weather-outlook-default") {
+      if (tool.toolid !== 'weather-outlook-default') {
         this.open();
       }
       if (this.outlookTool === tool) {
@@ -1337,11 +1337,11 @@ export default {
       return this.isControlSelected;
     },
     isDegreeUnit: function (ds) {
-      return ds.metadata.unit === "C";
+      return ds.metadata.unit === 'C';
     },
     selectColumn: function (index, subindex, column) {
       if (this.selectedRow) {
-        this.selectedRow.removeClass("feature-selected");
+        this.selectedRow.removeClass('feature-selected');
       }
       this.selectedIndex = index;
       this.selectedSubindex =
@@ -1350,35 +1350,35 @@ export default {
           : subindex;
       this.selectedRow =
         this.selectedSubindex == -1
-          ? $("#active-column-" + this.selectedIndex)
+          ? $('#active-column-' + this.selectedIndex)
           : $(
-              "#active-column-" +
+              '#active-column-' +
                 this.selectedIndex +
-                "-" +
+                '-' +
                 this.selectedSubindex,
             );
       this.selectedColumn = column;
       if (column.group) {
         //the selected column is a group
         this.selectedDatasource = null;
-        this.editingColumnTitle = "";
+        this.editingColumnTitle = '';
         this.editingColumnGroup = column.group;
       } else {
         //the selected column is a column
-        this.selectedDatasource = this._datasources["datasources"].find(
+        this.selectedDatasource = this._datasources['datasources'].find(
           function (o) {
             return o.id === column.id;
           },
         );
         this.editingColumnTitle = this.selectedColumnTitle;
         this.editingColumnGroup =
-          subindex >= 0 ? this.outlookColumns[index]["group"] : "";
+          subindex >= 0 ? this.outlookColumns[index]['group'] : '';
       }
 
-      this.selectedRow.addClass("feature-selected");
+      this.selectedRow.addClass('feature-selected');
     },
     changeColumnTitle: function (event) {
-      if (event && event.type === "keyup" && event.keyCode !== 13) {
+      if (event && event.type === 'keyup' && event.keyCode !== 13) {
         return;
       }
       if (this.selectedColumnTitle === this.editingColumnTitle) {
@@ -1389,7 +1389,7 @@ export default {
       this.systemsetting.saveState(10000);
     },
     changeColumnGroup: function (event) {
-      if (event && event.type === "keyup" && event.keyCode !== 13) {
+      if (event && event.type === 'keyup' && event.keyCode !== 13) {
         return;
       }
       this.editingColumnGroup = this.editingColumnGroup.trim();
@@ -1400,7 +1400,7 @@ export default {
         }
         //remove the old group
         var groupIndex = this.columnGroups.findIndex(function (o) {
-          return o === vm.selectedColumn["group"];
+          return o === vm.selectedColumn['group'];
         });
         if (groupIndex >= 0) {
           this.columnGroups.splice(groupIndex, 1);
@@ -1429,10 +1429,10 @@ export default {
             this.selectedColumn = this.outlookColumns[groupIndex];
             this.selectedRow = null;
             this.selectedDatasource = null;
-            this.editingColumnTitle = "";
+            this.editingColumnTitle = '';
           } else {
             //group does not exist, rename the group
-            this.outlookColumns[vm.selectedIndex]["group"] =
+            this.outlookColumns[vm.selectedIndex]['group'] =
               this.editingColumnGroup;
             this.columnGroups.push(this.editingColumnGroup);
             this.columnGroups.sort();
@@ -1448,14 +1448,14 @@ export default {
           this.selectedColumn = null;
           this.selectedRow = null;
           this.selectedDatasource = null;
-          this.editingColumnTitle = "";
-          this.editingColumnGroup = "";
+          this.editingColumnTitle = '';
+          this.editingColumnGroup = '';
         }
       } else {
         if (this.editingColumnGroup) {
           if (
             this.selectedSubindex >= 0 &&
-            this.outlookColumns[this.selectedIndex]["group"] ===
+            this.outlookColumns[this.selectedIndex]['group'] ===
               this.editingColumnGroup
           ) {
             //not changed
@@ -1468,16 +1468,16 @@ export default {
         //group changed
         if (this.selectedSubindex >= 0) {
           //already in a group, remove it from old group
-          this.outlookColumns[this.selectedIndex]["datasources"].splice(
+          this.outlookColumns[this.selectedIndex]['datasources'].splice(
             this.selectedSubindex,
             1,
           );
           if (
-            this.outlookColumns[this.selectedIndex]["datasources"].length === 0
+            this.outlookColumns[this.selectedIndex]['datasources'].length === 0
           ) {
             //group is empty, remove it
             groupIndex = this.columnGroups.findIndex(function (o) {
-              return o === vm.outlookColumns[vm.selectedIndex]["group"];
+              return o === vm.outlookColumns[vm.selectedIndex]['group'];
             });
             if (groupIndex >= 0) {
               this.columnGroups.splice(groupIndex, 1);
@@ -1496,12 +1496,12 @@ export default {
           });
           if (groupIndex >= 0) {
             //new  group already exist, add it into the existing group
-            this.outlookColumns[groupIndex]["datasources"].push(
+            this.outlookColumns[groupIndex]['datasources'].push(
               this.selectedColumn,
             );
             this.selectedIndex = groupIndex;
             this.selectedSubindex =
-              this.outlookColumns[groupIndex]["datasources"].length - 1;
+              this.outlookColumns[groupIndex]['datasources'].length - 1;
           } else {
             //group doesn't exist, add a new group
             this.outlookColumns.splice(this.selectedIndex, 0, {
@@ -1536,17 +1536,17 @@ export default {
       toolid = toolid || this.outlookTool.toolid;
       if (ds) {
         if (add === undefined || add === null) {
-          ds["selected"][toolid] = !(ds["selected"][toolid] || false);
+          ds['selected'][toolid] = !(ds['selected'][toolid] || false);
         } else {
-          ds["selected"][toolid] = add;
+          ds['selected'][toolid] = add;
         }
       }
       var vm = this;
-      if (ds && ds["selected"][toolid]) {
+      if (ds && ds['selected'][toolid]) {
         //add
-        if (ds["options"] && ds["options"]["group"]) {
+        if (ds['options'] && ds['options']['group']) {
           //has default group
-          let group = ds["options"] && ds["options"]["group"];
+          let group = ds['options'] && ds['options']['group'];
           var groupIndex = outlookSetting.outlookColumns.findIndex(
             function (o) {
               return o.group ? o.group === group : false;
@@ -1554,15 +1554,15 @@ export default {
           );
           if (groupIndex >= 0) {
             //group already exist
-            outlookSetting.outlookColumns[groupIndex]["required"] =
-              outlookSetting.outlookColumns[groupIndex]["required"] ||
-              ds["required"] ||
+            outlookSetting.outlookColumns[groupIndex]['required'] =
+              outlookSetting.outlookColumns[groupIndex]['required'] ||
+              ds['required'] ||
               false;
-            outlookSetting.outlookColumns[groupIndex]["datasources"].push({
-              workspace: ds["workspace"],
-              id: ds["id"],
-              name: ds["name"],
-              required: ds["required"] || false,
+            outlookSetting.outlookColumns[groupIndex]['datasources'].push({
+              workspace: ds['workspace'],
+              id: ds['id'],
+              name: ds['name'],
+              required: ds['required'] || false,
             });
           } else {
             //group does not exist
@@ -1570,10 +1570,10 @@ export default {
               group: group,
               datasources: [
                 {
-                  workspace: ds["workspace"],
-                  id: ds["id"],
-                  name: ds["name"],
-                  required: ds["required"] || false,
+                  workspace: ds['workspace'],
+                  id: ds['id'],
+                  name: ds['name'],
+                  required: ds['required'] || false,
                 },
               ],
             });
@@ -1589,15 +1589,15 @@ export default {
         } else {
           //no default group
           outlookSetting.outlookColumns.push({
-            workspace: ds["workspace"],
-            id: ds["id"],
-            name: ds["name"],
-            required: ds["required"] || false,
+            workspace: ds['workspace'],
+            id: ds['id'],
+            name: ds['name'],
+            required: ds['required'] || false,
           });
         }
       } else {
         //remove
-        if (ds["required"]) {
+        if (ds['required']) {
           //required column, can't remove
           return;
         }
@@ -1606,7 +1606,7 @@ export default {
             if (column.group) {
               let j = column.datasources.findIndex(function (o) {
                 return (
-                  o["workspace"] === ds["workspace"] && o["id"] === ds["id"]
+                  o['workspace'] === ds['workspace'] && o['id'] === ds['id']
                 );
               });
               if (j >= 0) {
@@ -1615,8 +1615,8 @@ export default {
                 return false;
               }
             } else if (
-              column["workspace"] === ds["workspace"] &&
-              column["id"] === ds["id"]
+              column['workspace'] === ds['workspace'] &&
+              column['id'] === ds['id']
             ) {
               index = i;
               subindex = -1;
@@ -1625,7 +1625,7 @@ export default {
           });
         }
         if (subindex >= 0) {
-          outlookSetting.outlookColumns[index]["datasources"].splice(
+          outlookSetting.outlookColumns[index]['datasources'].splice(
             subindex,
             1,
           );
@@ -1639,8 +1639,8 @@ export default {
               this.selectedColumn = null;
               this.selectedRow = null;
               this.selectedDatasource = null;
-              this.editingColumnTitle = "";
-              this.editingColumnGroup = "";
+              this.editingColumnTitle = '';
+              this.editingColumnGroup = '';
             } else if (
               this.selectedIndex === index &&
               this.selectedSubindex > subindex
@@ -1649,11 +1649,11 @@ export default {
             }
           }
           if (
-            outlookSetting.outlookColumns[index]["datasources"].length === 0
+            outlookSetting.outlookColumns[index]['datasources'].length === 0
           ) {
             columnGroups = this.getColumnGroups(toolid);
             groupIndex = columnGroups.findIndex(function (o) {
-              return o === vm.outlookColumns[index]["group"];
+              return o === vm.outlookColumns[index]['group'];
             });
             if (groupIndex >= 0) {
               columnGroups.splice(groupIndex, 1);
@@ -1674,8 +1674,8 @@ export default {
               this.selectedColumn = null;
               this.selectedRow = null;
               this.selectedDatasource = null;
-              this.editingColumnTitle = "";
-              this.editingColumnGroup = "";
+              this.editingColumnTitle = '';
+              this.editingColumnGroup = '';
             } else if (this.selectedIndex > index) {
               this.selectedIndex -= 1;
             }
@@ -1693,7 +1693,7 @@ export default {
           return;
         }
         if (
-          subindex >= this.outlookColumns[index]["datasources"].length - 1 ||
+          subindex >= this.outlookColumns[index]['datasources'].length - 1 ||
           subindex < 0
         ) {
           return;
@@ -1704,9 +1704,9 @@ export default {
         }
       }
       if (subindex >= 0) {
-        this.outlookColumns[index]["datasources"][subindex] =
-          this.outlookColumns[index]["datasources"][subindex + 1];
-        this.outlookColumns[index]["datasources"][subindex + 1] = column;
+        this.outlookColumns[index]['datasources'][subindex] =
+          this.outlookColumns[index]['datasources'][subindex + 1];
+        this.outlookColumns[index]['datasources'][subindex + 1] = column;
         if (this.selectedSubindex === subindex) {
           this.selectedSubindex += 1;
         } else if (this.selectedSubindex === subindex - 1) {
@@ -1731,7 +1731,7 @@ export default {
           return;
         }
         if (
-          subindex >= this.outlookColumns[index]["datasources"].length ||
+          subindex >= this.outlookColumns[index]['datasources'].length ||
           subindex <= 0
         ) {
           return;
@@ -1742,9 +1742,9 @@ export default {
         }
       }
       if (subindex >= 0) {
-        this.outlookColumns[index]["datasources"][subindex] =
-          this.outlookColumns[index]["datasources"][subindex - 1];
-        this.outlookColumns[index]["datasources"][subindex - 1] = column;
+        this.outlookColumns[index]['datasources'][subindex] =
+          this.outlookColumns[index]['datasources'][subindex - 1];
+        this.outlookColumns[index]['datasources'][subindex - 1] = column;
         if (this.selectedSubindex === subindex) {
           this.selectedSubindex -= 1;
         } else if (this.selectedSubindex === subindex - 1) {
@@ -1772,18 +1772,18 @@ export default {
           subindex >= 0;
           subindex--
         ) {
-          var datasource = vm._datasources["datasources"].find(function (o) {
+          var datasource = vm._datasources['datasources'].find(function (o) {
             return (
-              column.datasources[subindex]["workspace"] === o["workspace"] &&
-              column.datasources[subindex]["id"] === o["id"]
+              column.datasources[subindex]['workspace'] === o['workspace'] &&
+              column.datasources[subindex]['id'] === o['id']
             );
           });
           vm.toggleDatasource(datasource, false, index, subindex);
         }
       } else {
-        datasource = this._datasources["datasources"].find(function (o) {
+        datasource = this._datasources['datasources'].find(function (o) {
           return (
-            column["workspace"] === o["workspace"] && column["id"] === o["id"]
+            column['workspace'] === o['workspace'] && column['id'] === o['id']
           );
         });
         this.toggleDatasource(datasource, false, index, subindex);
@@ -1791,26 +1791,26 @@ export default {
     },
     isDatasourceSelected: function (ds) {
       try {
-        return this.columnRevision && ds["selected"][this.outlookTool.toolid];
+        return this.columnRevision && ds['selected'][this.outlookTool.toolid];
       } catch {
         return false;
       }
     },
     isShow: function (ds) {
-      return ds["metadata"]["type"] != "Daily" || this.showDailyDatasources;
+      return ds['metadata']['type'] != 'Daily' || this.showDailyDatasources;
     },
     formatReportHours(event) {
-      if (event && event.type === "keyup" && event.keyCode !== 13) {
+      if (event && event.type === 'keyup' && event.keyCode !== 13) {
         return;
       }
-      var hours = "";
-      $.each(this.editingReportHours.split(","), function (index, hour) {
+      var hours = '';
+      $.each(this.editingReportHours.split(','), function (index, hour) {
         hour = parseInt(hour.trim());
         if (!isNaN(hour) && hour >= 0 && hour < 24) {
-          if (hours === "") {
+          if (hours === '') {
             hours = hour;
           } else {
-            hours += "," + hour;
+            hours += ',' + hour;
           }
         }
       });
@@ -1837,26 +1837,26 @@ export default {
         while (rerun) {
           varPattern = /\{([^}]+)\}/g;
           rerun = false;
-          while ((result = varPattern.exec(title || ""))) {
-            if (result[1] === "date") {
+          while ((result = varPattern.exec(title || ''))) {
+            if (result[1] === 'date') {
               // TODO: Why empty block?
             } else if (
-              !(ds = this._datasources["dailyDatasources"].find(function (ds) {
-                return ds["var"] === result[1];
+              !(ds = this._datasources['dailyDatasources'].find(function (ds) {
+                return ds['var'] === result[1];
               }))
             ) {
               if (unavailableVars === null) {
                 unavailableVars = result[1];
               } else {
-                unavailableVars += " , " + result[1];
+                unavailableVars += ' , ' + result[1];
               }
-              title = title.replace(result[0], "N/A");
+              title = title.replace(result[0], 'N/A');
               rerun = true;
               break;
             } else {
               dailyVars[result[1]] = {
-                workspace: ds["workspace"],
-                id: ds["id"],
+                workspace: ds['workspace'],
+                id: ds['id'],
               };
             }
           }
@@ -1866,19 +1866,19 @@ export default {
       return this._dailyData[toolid];
     },
     checkDailyTitle(event) {
-      if (event.type === "keyup" && event.keyCode !== 13) {
+      if (event.type === 'keyup' && event.keyCode !== 13) {
         this._dailyData[this.outlookTool.toolid] = null;
         return;
       }
-      $("#daily-title").removeClass("alert");
+      $('#daily-title').removeClass('alert');
       var dailyData = this.getDailyData(true);
       // TODO: During the front end upgrade, the alert line below was referring to a variable that was not defined. I have corrected it to refer to the correct variable.
       // Double check this is functioning as expected.
       const unavailableVars = dailyData[2];
 
       if (unavailableVars !== null) {
-        $("#daily-title").addClass("alert");
-        alert("The variables (" + unavailableVars + ") are unavailable");
+        $('#daily-title').addClass('alert');
+        alert('The variables (' + unavailableVars + ') are unavailable');
       } else {
         this.systemsetting.saveState(10000);
       }
@@ -1886,21 +1886,21 @@ export default {
     loadDatasources: function () {
       var vm = this;
       this._weatheroutlookStatus.phaseBegin(
-        "load_datasources",
+        'load_datasources',
         80,
-        "Load datasources",
+        'Load datasources',
       );
       this.refreshDatasources(
         true,
         function () {
-          vm._weatheroutlookStatus.phaseEnd("load_datasources");
+          vm._weatheroutlookStatus.phaseEnd('load_datasources');
           vm.initialized = true;
           vm.columnRevision += 1;
         },
         function (msg) {
           vm._weatheroutlookStatus.phaseFailed(
-            "load_datasources",
-            "Failed to loading datasources. status = " + msg,
+            'load_datasources',
+            'Failed to loading datasources. status = ' + msg,
           );
         },
       );
@@ -1910,29 +1910,29 @@ export default {
       this._datasources = [];
       $.ajax({
         // url: vm.env.gokartService + "/outlookmetadata" + (refresh?"?refresh=true":""),
-        url: "/api/outlookmetadata" + (refresh ? "?refresh=true" : ""),
-        method: "GET",
-        dataType: "json",
+        url: '/api/outlookmetadata' + (refresh ? '?refresh=true' : ''),
+        method: 'GET',
+        dataType: 'json',
         success: function (response) {
-          $.each(response["datasources"], function (index, datasource) {
+          $.each(response['datasources'], function (index, datasource) {
             if (
-              datasource["metadata"] &&
-              datasource["metadata"]["refresh_time"]
+              datasource['metadata'] &&
+              datasource['metadata']['refresh_time']
             ) {
-              datasource["metadata"]["refresh_time"] = moment.tz(
-                datasource["metadata"]["refresh_time"],
-                "YYYY-MM-DD HH:mm:ss",
-                "Australia/Perth",
+              datasource['metadata']['refresh_time'] = moment.tz(
+                datasource['metadata']['refresh_time'],
+                'YYYY-MM-DD HH:mm:ss',
+                'Australia/Perth',
               );
             }
           });
           vm._datasources = {
-            datasources: response["datasources"],
+            datasources: response['datasources'],
             dailyDatasources: [],
           };
-          $.each(vm._datasources["datasources"], function (index, ds) {
-            if (ds["var"] && ds["metadata"]["type"] === "Daily") {
-              vm._datasources["dailyDatasources"].push(ds);
+          $.each(vm._datasources['datasources'], function (index, ds) {
+            if (ds['var'] && ds['metadata']['type'] === 'Daily') {
+              vm._datasources['dailyDatasources'].push(ds);
             }
           });
           vm.columnRevision += 1;
@@ -1960,7 +1960,7 @@ export default {
           }
         },
         error: function (xhr, status, message) {
-          var msg = xhr.status + " : " + (xhr.responseText || message);
+          var msg = xhr.status + ' : ' + (xhr.responseText || message);
           alert(msg);
           if (failedCallback) {
             failedCallback(msg);
@@ -1977,7 +1977,7 @@ export default {
     },
     getWeatherOutlook: function (coordinate) {
       if (this.reportTimes.length === 0) {
-        alert("No weather outlook times are configured in settings module");
+        alert('No weather outlook times are configured in settings module');
         return;
       }
       var vm = this;
@@ -1987,42 +1987,42 @@ export default {
         var dailyData = vm.getDailyData();
         if (
           dailyData[2] !== null &&
-          dailyData[2] !== "" &&
+          dailyData[2] !== '' &&
           !confirm(
-            "The variables (" +
+            'The variables (' +
               dailyData[2] +
-              ") are unavailable.\r\nDo you want to continue?",
+              ') are unavailable.\r\nDo you want to continue?',
           )
         ) {
           return;
         }
-        if (vm.outlookTool.toolid === "weather-outlook-amicus") {
+        if (vm.outlookTool.toolid === 'weather-outlook-amicus') {
           requestData = {
             point: coordinate,
             options: {
               title:
                 vm.outlookDays +
-                " Day Weather Outlook for " +
+                ' Day Weather Outlook for ' +
                 position +
-                "(" +
+                '(' +
                 Math.round(coordinate[0] * 10000) / 10000 +
-                "," +
+                ',' +
                 Math.round(coordinate[1] * 10000) / 10000 +
-                ")",
+                ')',
               position: position,
               latitude: Math.round(coordinate[1] * 10000) / 10000,
               longitude: Math.round(coordinate[0] * 10000) / 10000,
-              no_data: "",
+              no_data: '',
             },
             outlooks: [
               {
-                days: getDatetimes(["00:00:00"], vm.outlookDays, 1).map(
+                days: getDatetimes(['00:00:00'], vm.outlookDays, 1).map(
                   function (dt) {
-                    return dt.format("YYYY-MM-DD");
+                    return dt.format('YYYY-MM-DD');
                   },
                 ),
                 times: vm.reportTimes,
-                min_time: moment().format("YYYY-MM-DD HH:00:00"),
+                min_time: moment().format('YYYY-MM-DD HH:00:00'),
                 options: {
                   expired: 1, //unit:hour, the exipre time of each outlook in times
                 },
@@ -2030,31 +2030,31 @@ export default {
               },
             ],
           };
-          format = "amicus";
+          format = 'amicus';
         } else {
           requestData = {
             point: coordinate,
             options: {
               title:
                 vm.outlookDays +
-                " Day Weather Outlook for " +
+                ' Day Weather Outlook for ' +
                 position +
-                "(" +
+                '(' +
                 Math.round(coordinate[0] * 10000) / 10000 +
-                "," +
+                ',' +
                 Math.round(coordinate[1] * 10000) / 10000 +
-                ")",
+                ')',
             },
             outlooks: [
               {
-                days: getDatetimes(["00:00:00"], vm.outlookDays, 1).map(
+                days: getDatetimes(['00:00:00'], vm.outlookDays, 1).map(
                   function (dt) {
-                    return dt.format("YYYY-MM-DD");
+                    return dt.format('YYYY-MM-DD');
                   },
                 ),
                 times: vm.reportTimes,
                 options: {
-                  daily_title_pattern: dailyData[0] || "{date}",
+                  daily_title_pattern: dailyData[0] || '{date}',
                 },
                 daily_data: dailyData[1] || {},
                 times_data: vm.outlookColumns,
@@ -2062,10 +2062,10 @@ export default {
             ],
           };
         }
-        if (format === "html") {
-          $("#weatheroutlook_data").val(JSON.stringify(requestData));
+        if (format === 'html') {
+          $('#weatheroutlook_data').val(JSON.stringify(requestData));
           submitForm(
-            "get_weatheroutlook",
+            'get_weatheroutlook',
             {
               width: screen.width > 1890 ? 1890 : screen.width,
               height: screen.height > 1060 ? 1060 : screen.height,
@@ -2076,30 +2076,30 @@ export default {
           try {
             var req = new window.XMLHttpRequest();
             //req.open('POST', vm.env.gokartService + "/weatheroutlook/" + format)
-            req.open("POST", "/weatheroutlook/" + format);
-            req.responseType = "blob";
+            req.open('POST', '/weatheroutlook/' + format);
+            req.responseType = 'blob';
             req.withCredentials = true;
             req.onload = function () {
               try {
                 if (req.status >= 400) {
                   var reader = new FileReader();
-                  reader.addEventListener("loadend", function (e) {
+                  reader.addEventListener('loadend', function (e) {
                     alert(e.target.result);
                   });
                   reader.readAsText(req.response);
                 } else {
                   var filename = null;
-                  if (req.getResponseHeader("Content-Disposition")) {
+                  if (req.getResponseHeader('Content-Disposition')) {
                     var matches = vm._filename_re.exec(
-                      req.getResponseHeader("Content-Disposition"),
+                      req.getResponseHeader('Content-Disposition'),
                     );
                     filename = matches && matches[1] ? matches[1] : null;
                   }
                   if (!filename) {
                     filename =
-                      "weather_outlook_" +
-                      moment().format("YYYYMMDD_HHmm") +
-                      "." +
+                      'weather_outlook_' +
+                      moment().format('YYYYMMDD_HHmm') +
+                      '.' +
                       format;
                   }
                   saveAs(req.response, filename);
@@ -2109,7 +2109,7 @@ export default {
               }
             };
             var formData = new window.FormData();
-            formData.append("data", JSON.stringify(requestData));
+            formData.append('data', JSON.stringify(requestData));
             req.send(formData);
           } catch (ex) {
             // TODO: Changed from callback(false, ex.message || ex) to alert(false, ex.message || ex) to fix the error handling
@@ -2128,28 +2128,28 @@ export default {
   },
   ready: function () {
     var vm = this;
-    this._filename_re = new RegExp("filename=['\"](.+)['\"]");
+    this._filename_re = new RegExp('filename=[\'"](.+)[\'"]');
     this._weatheroutlookStatus = vm.loading.register(
-      "weatheroutlook",
-      "BOM Spot Outlook Component",
+      'weatheroutlook',
+      'BOM Spot Outlook Component',
     );
 
-    this._weatheroutlookStatus.phaseBegin("initialize", 20, "Initialize");
+    this._weatheroutlookStatus.phaseBegin('initialize', 20, 'Initialize');
 
     this.editingReportHours = this.reportHours;
 
     this.loadDatasources();
 
     this._features = new Collection();
-    this._features.on("add", function (event) {
+    this._features.on('add', function (event) {
       vm.getWeatherOutlook(event.element.getGeometry().getCoordinates());
     });
     this._style = new Style({
       image: new Icon({
         src: pinSvg,
-        anchorOrigin: "bottom-left",
-        anchorXUnits: "pixels",
-        anchorYUnits: "pixels",
+        anchorOrigin: 'bottom-left',
+        anchorXUnits: 'pixels',
+        anchorYUnits: 'pixels',
         anchor: [8, 0],
       }),
     });
@@ -2164,12 +2164,12 @@ export default {
     //initialize the overlay and interactions
     var weatheroutlookInter = new Draw({
       source: this._source,
-      type: "Point",
+      type: 'Point',
       style: this._style,
     });
 
     weatheroutlookInter.on(
-      "drawend",
+      'drawend',
       function () {
         vm._features.clear();
       },
@@ -2177,7 +2177,7 @@ export default {
     );
 
     this._weatheroutlookTool = {
-      name: "WeatherOutlook",
+      name: 'WeatherOutlook',
       keepSelection: true,
       interactions: [weatheroutlookInter],
     };
@@ -2190,7 +2190,7 @@ export default {
       vm.changeOutlookToolTitle(tool.toolid);
     });
 
-    this._weatheroutlookStatus.phaseEnd("initialize");
+    this._weatheroutlookStatus.phaseEnd('initialize');
   },
 };
 </script>

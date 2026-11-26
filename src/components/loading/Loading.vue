@@ -82,7 +82,7 @@
 <script>
 export default {
   store: {
-    screenHeight: "layout.screenHeight",
+    screenHeight: 'layout.screenHeight',
   },
   data: function () {
     return {
@@ -112,7 +112,7 @@ export default {
     },
     appStatus: function () {
       if (!this.app) {
-        this.register("app", this.application);
+        this.register('app', this.application);
       }
       return this.revision && this.app;
     },
@@ -130,13 +130,13 @@ export default {
   },
   methods: {
     adjustHeight: function () {
-      if ($("#loading-status").length === 0 || this.screenHeight === 0) {
+      if ($('#loading-status').length === 0 || this.screenHeight === 0) {
         //closed
         return;
       }
       var maxHeight = Math.floor(this.screenHeight * 0.95);
-      var height = $("#loading-status").height();
-      var bodyHeight = $("#loading-status-body").height();
+      var height = $('#loading-status').height();
+      var bodyHeight = $('#loading-status-body').height();
       if (bodyHeight < 200) {
         bodyHeight = 200;
       }
@@ -150,12 +150,12 @@ export default {
       } else {
         height = maxHeight;
       }
-      $("#loading-status").height(height);
+      $('#loading-status').height(height);
     },
     close: function () {
       ++this.revision;
-      $("#loading-status-overlay").remove();
-      $("#loading-status").remove();
+      $('#loading-status-overlay').remove();
+      $('#loading-status').remove();
     },
     phaseStatus: function (status) {
       return this.revision && status;
@@ -170,7 +170,7 @@ export default {
       var vm = this;
       if (!vm.Status) {
         vm.Status = function (componentId, componentName) {
-          if (componentId === "app") {
+          if (componentId === 'app') {
             vm.app = this;
             vm.revision += 1;
           } else {
@@ -253,8 +253,8 @@ export default {
           });
           if (!phase) return;
           this.processed += phase.weight;
-          phase["reason"] = reason;
-          phase["failed"] = true;
+          phase['reason'] = reason;
+          phase['failed'] = true;
           this._change();
         };
         vm.Status.prototype.failedPhases = function () {
@@ -277,10 +277,10 @@ export default {
           );
         };
         vm.Status.prototype.failedMessage = function () {
-          var messages = "";
+          var messages = '';
           $.each(this.failedPhases, function (index, p) {
             if (index > 0) {
-              messages += "\r\n";
+              messages += '\r\n';
             }
             messages += p.reason;
           });
@@ -294,7 +294,7 @@ export default {
     var vm = this;
 
     window.alert = function (msg) {
-      console.warn("ALERT:", msg);
+      console.warn('ALERT:', msg);
     };
 
     // TODO: make sure to bring this back from the dead if it's important
@@ -310,15 +310,15 @@ export default {
     // })();
     //vm.register("app",this.application)
     var loadingStatus = vm.register(
-      "LoadingStatus",
-      "Loading Status Component",
+      'LoadingStatus',
+      'Loading Status Component',
     );
-    loadingStatus.phaseBegin("initialize", 100, "Override console");
+    loadingStatus.phaseBegin('initialize', 100, 'Override console');
     vm._sequence = 0;
     var addMessage = function (message) {
       if (message && message.length > 0) {
         vm.revision += 1;
-        vm.errors.push(++vm._sequence + " : " + message);
+        vm.errors.push(++vm._sequence + ' : ' + message);
       }
     };
     //override console.error
@@ -384,7 +384,7 @@ export default {
     //     return originFunc(err, vm);
     //   };
     // })();
-    loadingStatus.phaseEnd("initialize");
+    loadingStatus.phaseEnd('initialize');
   },
 };
 </script>

@@ -19,14 +19,14 @@ export function extend() {
           if (
             value !== null &&
             value !== undefined &&
-            typeof value === "object" &&
+            typeof value === 'object' &&
             !Array.isArray(value)
           ) {
             //is a json object
             if (
               o[key] !== null &&
               o[key] !== undefined &&
-              typeof o[key] === "object" &&
+              typeof o[key] === 'object' &&
               !Array.isArray(o[key])
             ) {
               //the same key in result object is a json object
@@ -61,7 +61,7 @@ export function extract(jsonTemplate, obj) {
     if (
       value !== null &&
       value !== undefined &&
-      typeof value === "object" &&
+      typeof value === 'object' &&
       !Array.isArray(value)
     ) {
       //is a json object

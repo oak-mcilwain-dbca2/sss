@@ -3,40 +3,40 @@
 </template>
 
 <script>
-import Collection from "ol/Collection";
-import Overlay from "ol/Overlay";
+import Collection from 'ol/Collection';
+import Overlay from 'ol/Overlay';
 
-import Point from "ol/geom/Point";
-import MultiPoint from "ol/geom/MultiPoint";
-import Polygon from "ol/geom/Polygon";
-import LineString from "ol/geom/LineString";
-import MultiLineString from "ol/geom/MultiLineString";
-import MultiPolygon from "ol/geom/MultiPolygon";
-import GeometryCollection from "ol/geom/GeometryCollection";
+import Point from 'ol/geom/Point';
+import MultiPoint from 'ol/geom/MultiPoint';
+import Polygon from 'ol/geom/Polygon';
+import LineString from 'ol/geom/LineString';
+import MultiLineString from 'ol/geom/MultiLineString';
+import MultiPolygon from 'ol/geom/MultiPolygon';
+import GeometryCollection from 'ol/geom/GeometryCollection';
 
-import Style from "ol/style/Style";
-import Fill from "ol/style/Fill";
-import Stroke from "ol/style/Stroke";
-import Circle from "ol/style/Circle";
+import Style from 'ol/style/Style';
+import Fill from 'ol/style/Fill';
+import Stroke from 'ol/style/Stroke';
+import Circle from 'ol/style/Circle';
 
-import Draw from "ol/interaction/Draw";
-import Snap from "ol/interaction/Snap";
-import Translate from "ol/interaction/Translate";
-import Modify from "ol/interaction/Modify";
-import VectorSource from "ol/source/Vector";
-import VectorLayer from "ol/layer/Vector";
+import Draw from 'ol/interaction/Draw';
+import Snap from 'ol/interaction/Snap';
+import Translate from 'ol/interaction/Translate';
+import Modify from 'ol/interaction/Modify';
+import VectorSource from 'ol/source/Vector';
+import VectorLayer from 'ol/layer/Vector';
 
-import { getDistance, getArea } from "ol/sphere";
+import { getDistance, getArea } from 'ol/sphere';
 
-import { transform } from "ol/proj";
+import { transform } from 'ol/proj';
 
-import { useActiveStore } from "@/stores/active";
-import { useSettingsStore } from "@/stores/settings";
-import { useAnnotationsStore } from "@/stores/annotations";
-import { useLoadingStore } from "@/stores/loading";
-import { useMapStore } from "@/stores/map";
-import { useCatalogueStore } from "@/stores/catalogue";
-import { useFeatureDetailStore } from "@/stores/featureDetail";
+import { useActiveStore } from '@/stores/active';
+import { useSettingsStore } from '@/stores/settings';
+import { useAnnotationsStore } from '@/stores/annotations';
+import { useLoadingStore } from '@/stores/loading';
+import { useMapStore } from '@/stores/map';
+import { useCatalogueStore } from '@/stores/catalogue';
+import { useFeatureDetailStore } from '@/stores/featureDetail';
 
 export default {
   data: function () {
@@ -78,29 +78,29 @@ export default {
     },
     measureType: function () {
       if (!this.annotationsReady) {
-        return "";
+        return '';
       }
       if (
-        ["MeasureLength", "MeasureArea", "MeasureBearing"].indexOf(
+        ['MeasureLength', 'MeasureArea', 'MeasureBearing'].indexOf(
           this.annotations.tool.name,
         ) >= 0
       ) {
         return this.annotations.tool.name;
       } else {
-        return "";
+        return '';
       }
     },
     showClear: function () {
-      return this.measureType != "" && this.features.getLength();
+      return this.measureType != '' && this.features.getLength();
     },
     isMeasureLength: function () {
-      return this.measureType === "MeasureLength";
+      return this.measureType === 'MeasureLength';
     },
     isMeasureArea: function () {
-      return this.measureType === "MeasureArea";
+      return this.measureType === 'MeasureArea';
     },
     isMeasureBearing: function () {
-      return this.measureType === "MeasureBearing";
+      return this.measureType === 'MeasureBearing';
     },
     lengthUnit: function () {
       return this.settings?.lengthUnit;
@@ -114,38 +114,38 @@ export default {
     tools: function () {
       return [
         {
-          toolid: "MeasureLength",
-          title: "Measure Length",
-          icon: "/static/dist/static/images/measure-length.svg",
+          toolid: 'MeasureLength',
+          title: 'Measure Length',
+          icon: '/static/dist/static/images/measure-length.svg',
           assistantButtons: [
             {
-              name: "Clear",
-              title: "Clear Measurements",
-              icon: "/static/dist/static/images/clear.svg",
+              name: 'Clear',
+              title: 'Clear Measurements',
+              icon: '/static/dist/static/images/clear.svg',
             },
           ],
         },
         {
-          toolid: "MeasureArea",
-          title: "Measure Area",
-          icon: "/static/dist/static/images/measure-area.svg",
+          toolid: 'MeasureArea',
+          title: 'Measure Area',
+          icon: '/static/dist/static/images/measure-area.svg',
           assistantButtons: [
             {
-              name: "Clear",
-              title: "Clear Measurements",
-              icon: "/static/dist/static/images/clear.svg",
+              name: 'Clear',
+              title: 'Clear Measurements',
+              icon: '/static/dist/static/images/clear.svg',
             },
           ],
         },
         {
-          toolid: "MeasureBearing",
-          title: "Measure Bearing",
-          icon: "/static/dist/static/images/measure-bearing.svg",
+          toolid: 'MeasureBearing',
+          title: 'Measure Bearing',
+          icon: '/static/dist/static/images/measure-bearing.svg',
           assistantButtons: [
             {
-              name: "Clear",
-              title: "Clear Measurements",
-              icon: "/static/dist/static/images/clear.svg",
+              name: 'Clear',
+              title: 'Clear Measurements',
+              icon: '/static/dist/static/images/clear.svg',
             },
           ],
         },
@@ -181,12 +181,12 @@ export default {
     lengthUnit: function () {
       var vm = this;
       this.features.forEach(function (feature) {
-        vm.measuring(feature, null, true, false, false, "changeUnit", true);
+        vm.measuring(feature, null, true, false, false, 'changeUnit', true);
       });
 
       $.each(vm._measureLayers, function (index, layer) {
         layer[1].forEach(function (feature) {
-          var tool = vm.annotations.getTool(feature.get("toolName"));
+          var tool = vm.annotations.getTool(feature.get('toolName'));
           if (tool.measureLength) {
             vm.measuring(
               feature,
@@ -194,7 +194,7 @@ export default {
               true,
               false,
               false,
-              "changeUnit",
+              'changeUnit',
             );
           }
         });
@@ -203,12 +203,12 @@ export default {
     areaUnit: function () {
       var vm = this;
       this.features.forEach(function (feature) {
-        vm.measuring(feature, null, false, true, false, "changeUnit", true);
+        vm.measuring(feature, null, false, true, false, 'changeUnit', true);
       });
 
       $.each(vm._measureLayers, function (index, layer) {
         layer[1].forEach(function (feature) {
-          var tool = vm.annotations.getTool(feature.get("toolName"));
+          var tool = vm.annotations.getTool(feature.get('toolName'));
           if (tool.measureArea) {
             vm.measuring(
               feature,
@@ -216,7 +216,7 @@ export default {
               false,
               true,
               false,
-              "changeUnit",
+              'changeUnit',
             );
           }
         });
@@ -232,7 +232,7 @@ export default {
       });
     },
     measureType: function (newVal, oldVal) {
-      if (newVal === "") {
+      if (newVal === '') {
         //switchoff
         if (this.overlay) {
           this.overlay.setMap(null);
@@ -243,7 +243,7 @@ export default {
         }
         //hidden measuretips
         this.showTooltip(this.features, false);
-      } else if (oldVal === "") {
+      } else if (oldVal === '') {
         //switchon
         this.overlay.setMap(this.map.olmap);
         this.showTooltip(this.features, true);
@@ -278,7 +278,7 @@ export default {
 
       var measureLengthInter = new Draw({
         source: this.source,
-        type: "LineString",
+        type: 'LineString',
         style: this.style,
       });
 
@@ -287,14 +287,14 @@ export default {
         vm.drawingFeature = null;
       };
       measureLengthInter.on(
-        "drawstart",
+        'drawstart',
         this.startMeasureFunc(true, false, false),
         this,
       );
-      measureLengthInter.on("drawend", drawendHandler, this);
+      measureLengthInter.on('drawend', drawendHandler, this);
 
       var measureLength = {
-        name: "MeasureLength",
+        name: 'MeasureLength',
         keepSelection: true,
         interactions: [
           //vm.map.dragPanInter,
@@ -309,7 +309,7 @@ export default {
 
       var measureBearingInter = new Draw({
         source: this.source,
-        type: "LineString",
+        type: 'LineString',
         style: this.style,
         freehand: false,
         maxPoints: 2,
@@ -317,14 +317,14 @@ export default {
       });
 
       measureBearingInter.on(
-        "drawstart",
+        'drawstart',
         this.startMeasureFunc(false, false, true),
         this,
       );
-      measureBearingInter.on("drawend", drawendHandler, this);
+      measureBearingInter.on('drawend', drawendHandler, this);
 
       var measureBearing = {
-        name: "MeasureBearing",
+        name: 'MeasureBearing',
         keepSelection: true,
         interactions: [
           //vm.map.dragPanInter,
@@ -339,18 +339,18 @@ export default {
 
       var measureAreaInter = new Draw({
         source: this.source,
-        type: "Polygon",
+        type: 'Polygon',
         style: this.style,
       });
       measureAreaInter.on(
-        "drawstart",
+        'drawstart',
         this.startMeasureFunc(true, true, false),
         this,
       );
-      measureAreaInter.on("drawend", drawendHandler, this);
+      measureAreaInter.on('drawend', drawendHandler, this);
 
       var measureArea = {
-        name: "MeasureArea",
+        name: 'MeasureArea',
         keepSelection: true,
         interactions: [
           //vm.map.dragPanInter,
@@ -368,20 +368,20 @@ export default {
           return;
         }
         if (ev.target.get(ev.key) === 0) {
-          vm.enableLayerMeasurement(ev.target.get("id"), false);
+          vm.enableLayerMeasurement(ev.target.get('id'), false);
         } else if (ev.oldValue === 0) {
-          vm.enableLayerMeasurement(ev.target.get("id"), true);
+          vm.enableLayerMeasurement(ev.target.get('id'), true);
         }
       };
       vm._featureChanged = function (feature) {
-        var tool = vm.annotations.getTool(feature.get("toolName"));
+        var tool = vm.annotations.getTool(feature.get('toolName'));
         if (!tool) {
           return;
         }
         if (!(tool.measureLength || tool.measureArea || tool.measureBearing)) {
           return;
         }
-        feature.unset("measurement", true);
+        feature.unset('measurement', true);
         if (feature.tooltip) {
           if (vm.measureFeature) {
             vm.measuring(
@@ -390,11 +390,11 @@ export default {
               tool.measureLength,
               tool.measureArea,
               false,
-              "show",
+              'show',
             );
             //console.log("Recalculated")
           } else {
-            feature.unset("measurement", true);
+            feature.unset('measurement', true);
             //console.log("Remove tooltip because feature is changed")
           }
         }
@@ -411,7 +411,7 @@ export default {
       //   vm._featureChanged(ev.feature);
       // };
       var addFeatureGeometryListener = function (ev) {
-        var tool = ev.feature.get("toolName");
+        var tool = ev.feature.get('toolName');
         tool = tool ? vm.annotations.getTool(tool) : null;
         if (!tool) {
           return;
@@ -435,13 +435,13 @@ export default {
           tool.measureLength,
           tool.measureArea,
           false,
-          vm.measureFeature ? "show" : "measure",
+          vm.measureFeature ? 'show' : 'measure',
           vm.measureFeature,
           ev.indexes,
         );
       };
       var deleteFeatureGeometryListener = function (ev) {
-        var tool = ev.feature.get("toolName");
+        var tool = ev.feature.get('toolName');
         tool = tool ? vm.annotations.getTool(tool) : null;
         if (!tool) {
           return;
@@ -453,14 +453,14 @@ export default {
         vm.removeTooltip(ev.feature, true, ev.indexes);
         vm.removeMeasurementObject(
           ev.feature,
-          "measurement",
+          'measurement',
           ev.indexes,
           null,
           true,
         );
       };
       var deleteFeatureAllGeometriesListener = function (ev) {
-        var tool = ev.feature.get("toolName");
+        var tool = ev.feature.get('toolName');
         tool = tool ? vm.annotations.getTool(tool) : null;
         if (!tool) {
           return;
@@ -470,7 +470,7 @@ export default {
         }
 
         vm.removeTooltip(ev.feature, true);
-        ev.feature.unset("measurement", true);
+        ev.feature.unset('measurement', true);
       };
 
       this.annotations.tools.push(measureArea);
@@ -478,17 +478,17 @@ export default {
     initialiseMeasureMapEvents() {
       const vm = this;
 
-      this.measureStatus.phaseEnd("gk-init");
+      this.measureStatus.phaseEnd('gk-init');
 
       this.measureStatus.phaseBegin(
-        "attach_event_to_olmap",
+        'attach_event_to_olmap',
         10,
-        "Attach event to olmap",
+        'Attach event to olmap',
       );
       //add measure tooltips when adding annotation layer and measureFeature is true
-      vm.map.olmap.on("addLayer", function (ev) {
+      vm.map.olmap.on('addLayer', function (ev) {
         var layer = vm._measureLayers.find(function (l) {
-          return l[0] === ev.mapLayer.get("id");
+          return l[0] === ev.mapLayer.get('id');
         });
         if (layer) {
           if (vm.measureFeature) {
@@ -496,14 +496,14 @@ export default {
           }
           ev.mapLayer._change_opacity =
             ev.mapLayer._change_opacity ||
-            ev.mapLayer.on("change:opacity", vm._changeOpacityHandler);
+            ev.mapLayer.on('change:opacity', vm._changeOpacityHandler);
         }
       });
 
       //remove measure tooltips when removing annotation layer
-      vm.map.olmap.on("removeLayer", function (ev) {
+      vm.map.olmap.on('removeLayer', function (ev) {
         var layer = vm._measureLayers.find(function (l) {
-          return l[0] === ev.mapLayer.get("id");
+          return l[0] === ev.mapLayer.get('id');
         });
         if (layer) {
           if (ev.mapLayer._change_opacity) {
@@ -515,25 +515,25 @@ export default {
           }
         }
       });
-      this.measureStatus.phaseEnd("attach_event_to_olmap");
+      this.measureStatus.phaseEnd('attach_event_to_olmap');
 
       this.measureStatus.phaseBegin(
-        "gk-postinit",
+        'gk-postinit',
         20,
         "Listen 'gk-postinit' event",
         true,
         true,
       );
-      this.$on("gk-postinit", function () {});
+      this.$on('gk-postinit', function () {});
     },
     initialiseInteractionEvents() {
       const vm = this;
-      this.measureStatus.phaseEnd("gk-postinit");
+      this.measureStatus.phaseEnd('gk-postinit');
 
       this.measureStatus.phaseBegin(
-        "attach_event_to_tool",
+        'attach_event_to_tool',
         5,
-        "Attach event to tool",
+        'Attach event to tool',
       );
       var processedInteractions = [];
       $.each(vm.annotations.tools, function (index1, tool) {
@@ -545,31 +545,31 @@ export default {
           ) {
             if (interaction instanceof Modify) {
               //console.log('===================')
-              interaction.on("featuresmodified", featuresChangedListener);
+              interaction.on('featuresmodified', featuresChangedListener);
             } else if (interaction instanceof Translate) {
-              interaction.on("translateend", featuresChangedListener);
+              interaction.on('translateend', featuresChangedListener);
             } else if (
               interaction instanceof Draw &&
               interaction.events &&
-              interaction.events["addfeaturegeometry"]
+              interaction.events['addfeaturegeometry']
             ) {
-              interaction.on("addfeaturegeometry", addFeatureGeometryListener);
+              interaction.on('addfeaturegeometry', addFeatureGeometryListener);
             }
             if (
               interaction.events &&
-              interaction.events["deletefeaturegeometry"]
+              interaction.events['deletefeaturegeometry']
             ) {
               interaction.on(
-                "deletefeaturegeometry",
+                'deletefeaturegeometry',
                 deleteFeatureGeometryListener,
               );
             }
             if (
               interaction.events &&
-              interaction.events["deleteallgeometries"]
+              interaction.events['deleteallgeometries']
             ) {
               interaction.on(
-                "deleteallgeometries",
+                'deleteallgeometries',
                 deleteFeatureAllGeometriesListener,
               );
             }
@@ -578,12 +578,12 @@ export default {
         });
       });
 
-      this.measureStatus.phaseEnd("attach_event_to_tool");
+      this.measureStatus.phaseEnd('attach_event_to_tool');
 
       this.measureStatus.phaseBegin(
-        "init_measurable_layers",
+        'init_measurable_layers',
         5,
-        "Initialize measurable layers",
+        'Initialize measurable layers',
       );
       //initialize measure layers
       if (vm.measureFeature) {
@@ -594,14 +594,14 @@ export default {
         });
       }
 
-      this.measureStatus.phaseEnd("init_measurable_layers");
+      this.measureStatus.phaseEnd('init_measurable_layers');
     },
     initialiseMeasureToolEvents() {},
     //layer can be layer id, layer object
     register: function (layer, features, filter) {
       this._measureLayers = this._measureLayers || [];
       this._measureLayers.push([
-        layer["id"] || layer,
+        layer['id'] || layer,
         features || null,
         filter || null,
         {},
@@ -612,7 +612,7 @@ export default {
       this.toggleMeasure(tool.toolid, enable);
     },
     isToolActivated: function () {
-      return this.measureType !== "";
+      return this.measureType !== '';
     },
     showAssistantButton: function () {
       return this.showClear;
@@ -626,28 +626,28 @@ export default {
       layer = Array.isArray(layer)
         ? layer
         : this._measureLayers.find(function (l) {
-            return l[0] === (layer["id"] || layer);
+            return l[0] === (layer['id'] || layer);
           });
       if (!layer) return;
       if (enable) {
         //enable
         //register the add /remove listener for features
-        layer[3]["features_remove"] =
-          layer[3]["features_remove"] ||
-          layer[1].on("remove", function (ev) {
+        layer[3]['features_remove'] =
+          layer[3]['features_remove'] ||
+          layer[1].on('remove', function (ev) {
             var feature = ev.element;
             if (feature.tooltip) {
               vm.removeTooltip(feature);
             }
           });
 
-        layer[3]["features_add"] =
-          layer[3]["features_add"] ||
-          layer[1].on("add", function (ev) {
+        layer[3]['features_add'] =
+          layer[3]['features_add'] ||
+          layer[1].on('add', function (ev) {
             if (vm.map.getMapLayer(layer[0])) {
               var feature = ev.element;
               if (!layer[2] || layer[2](feature)) {
-                var tool = vm.annotations.getTool(feature.get("toolName"));
+                var tool = vm.annotations.getTool(feature.get('toolName'));
                 if (!tool) {
                   return;
                 }
@@ -665,7 +665,7 @@ export default {
                       tool.measureLength,
                       tool.measureArea,
                       false,
-                      "show",
+                      'show',
                     );
                   }
                 }
@@ -677,11 +677,11 @@ export default {
         if (mapLayer && !mapLayer._change_opacity) {
           mapLayer._change_opacity =
             mapLayer._change_opacity ||
-            mapLayer.on("change:opacity", vm._changeOpacityHandler);
+            mapLayer.on('change:opacity', vm._changeOpacityHandler);
         }
 
         $.each(layer[1].getArray(), function (index, feature) {
-          var tool = vm.annotations.getTool(feature.get("toolName"));
+          var tool = vm.annotations.getTool(feature.get('toolName'));
           if (!tool) {
             return;
           }
@@ -690,14 +690,14 @@ export default {
           }
           if (feature.tooltip) {
             vm.showTooltip(feature, true);
-            if (!feature.get("measurement")) {
+            if (!feature.get('measurement')) {
               vm.measuring(
                 feature,
                 tool.getMeasureGeometry,
                 tool.measureLength,
                 tool.measureArea,
                 false,
-                "show",
+                'show',
               );
             }
           } else {
@@ -713,19 +713,19 @@ export default {
               tool.measureLength,
               tool.measureArea,
               false,
-              "show",
+              'show',
             );
           }
         });
       } else {
-        if (layer[3]["features_remove"]) {
+        if (layer[3]['features_remove']) {
           // layer.unByKey(layer[3]["features_remove"])
-          delete layer[3]["features_remove"];
+          delete layer[3]['features_remove'];
         }
 
-        if (layer[3]["features_add"]) {
+        if (layer[3]['features_add']) {
           // layer[1].unByKey(layer[3]["features_add"])
-          delete layer[3]["features_add"];
+          delete layer[3]['features_add'];
         }
 
         //disable
@@ -739,7 +739,7 @@ export default {
         function (feat) {
           if (!feat) return;
           this.removeTooltip(feat, true);
-          feat.unset("measurement", true);
+          feat.unset('measurement', true);
         };
       if (feature instanceof Collection) {
         feature.forEach(function (feat) {
@@ -759,7 +759,7 @@ export default {
         vm._remeasureFeature ||
         function (feat) {
           if (!feat) return;
-          var tool = vm.annotations.getTool(feat.get("toolName"));
+          var tool = vm.annotations.getTool(feat.get('toolName'));
           if (!tool) {
             return;
           }
@@ -772,7 +772,7 @@ export default {
           }
 
           this.removeTooltip(feat, true);
-          feat.unset("measurement", true);
+          feat.unset('measurement', true);
 
           vm.createTooltip(
             feat,
@@ -786,7 +786,7 @@ export default {
             tool.measureLength,
             tool.measureArea,
             false,
-            "show",
+            'show',
           );
         };
       if (feature instanceof Collection) {
@@ -850,7 +850,7 @@ export default {
         );
 
         vm.geometryChangeHandler = vm.drawingFeature.getGeometry().on(
-          "change",
+          'change',
           (function (feature, measureLength, measureArea, measureBearing) {
             return function () {
               vm.measuring(
@@ -859,7 +859,7 @@ export default {
                 measureLength,
                 measureArea,
                 measureBearing,
-                "drawing",
+                'drawing',
                 true,
               );
             };
@@ -901,35 +901,35 @@ export default {
             ) {
               measurement = measurement || {};
               var length = null;
-              if (!measurement["length"] || mode === "drawing") {
+              if (!measurement['length'] || mode === 'drawing') {
                 if (geom instanceof LineString) {
                   length = vm.getLength(geom.getCoordinates());
                 } else if (geom instanceof Polygon) {
                   length = vm.getLength(geom.getLinearRing(0).getCoordinates());
                 }
-                measurement["length"] = length;
+                measurement['length'] = length;
               } else {
-                length = measurement["length"];
+                length = measurement['length'];
               }
               if (measureLength) {
-                tooltipElement.find(".length").html(vm.formatLength(length));
+                tooltipElement.find('.length').html(vm.formatLength(length));
               }
             }
             if (measureArea && geom instanceof Polygon) {
               measurement = measurement || {};
               var area;
-              if (!measurement["area"] || mode === "drawing") {
+              if (!measurement['area'] || mode === 'drawing') {
                 area = vm.getArea(geom);
-                measurement["area"] = area;
+                measurement['area'] = area;
               } else {
-                area = measurement["area"];
+                area = measurement['area'];
               }
-              tooltipElement.find(".area").html(vm.formatArea(area));
+              tooltipElement.find('.area').html(vm.formatArea(area));
             }
             if (measureBearing && geom instanceof LineString) {
               measurement = measurement || {};
               var bearing;
-              if (!measurement["bearing"] || mode === "drawing") {
+              if (!measurement['bearing'] || mode === 'drawing') {
                 var coordinates = geom.getCoordinates();
                 bearing =
                   Math.round(
@@ -939,22 +939,22 @@ export default {
                     ) * 100,
                   ) /
                     100 +
-                  "&deg;";
+                  '&deg;';
 
                 bearing =
                   "<span style='color:red;font-weight:bold'>" +
                   bearing +
-                  "\n" +
-                  vm.formatLength(measurement["length"], "nm") +
-                  "</span>\n" +
-                  vm.formatLength(measurement["length"], "km");
-                measurement["bearing"] = bearing;
+                  '\n' +
+                  vm.formatLength(measurement['length'], 'nm') +
+                  '</span>\n' +
+                  vm.formatLength(measurement['length'], 'km');
+                measurement['bearing'] = bearing;
               } else {
-                bearing = measurement["bearing"];
+                bearing = measurement['bearing'];
               }
-              tooltipElement.find(".bearing").html(bearing);
+              tooltipElement.find('.bearing').html(bearing);
             }
-            if (mode === "drawing" || mode === "show" || mode === "measure") {
+            if (mode === 'drawing' || mode === 'show' || mode === 'measure') {
               var tooltipCoord = null;
               if (geom instanceof Polygon) {
                 tooltipCoord = geom.getInteriorPoint().getCoordinates();
@@ -967,13 +967,13 @@ export default {
               }
               tooltip.setPosition(tooltipCoord);
             }
-            if (mode === "show") {
+            if (mode === 'show') {
               tooltipElement.get(0).className =
-                "tooltip-measure tooltip-measured";
+                'tooltip-measure tooltip-measured';
               tooltip.setOffset([0, -7]);
-            } else if (mode === "measure") {
+            } else if (mode === 'measure') {
               tooltipElement.get(0).className =
-                "tooltip-measure tooltip-measured";
+                'tooltip-measure tooltip-measured';
               if (tooltip.getMap()) {
                 vm.map.olmap.removeOverlay(tooltip);
               }
@@ -1096,12 +1096,12 @@ export default {
         (measureLength || measureArea || measureBearing);
       if (
         indexes &&
-        feature.get("measurement") !== undefined &&
-        feature.get("measurement") !== null
+        feature.get('measurement') !== undefined &&
+        feature.get('measurement') !== null
       ) {
         var geom = this.annotations.getSelectedGeometry(feature, indexes);
         var measurement = this.getMeasurementObject(
-          feature.get("measurement"),
+          feature.get('measurement'),
           indexes,
           true,
           indexes.length - 2,
@@ -1132,8 +1132,8 @@ export default {
         );
       } else if (
         measureFeature ||
-        (feature.get("measurement") !== undefined &&
-          feature.get("measurement") !== null)
+        (feature.get('measurement') !== undefined &&
+          feature.get('measurement') !== null)
       ) {
         measurement = this._measure(
           feature,
@@ -1142,14 +1142,14 @@ export default {
             : feature.getGeometry(),
           feature.tooltipElement,
           feature.tooltip,
-          feature.get("measurement"),
+          feature.get('measurement'),
           measureLength,
           measureArea,
           measureBearing,
           mode,
         );
-        if (measurement && measurement !== feature.get("measurement")) {
-          feature.set("measurement", measurement, true);
+        if (measurement && measurement !== feature.get('measurement')) {
+          feature.set('measurement', measurement, true);
         }
       }
     },
@@ -1167,7 +1167,7 @@ export default {
             });
           } else {
             tooltipElement.get(0).className =
-              "tooltip-measure tooltip-measured";
+              'tooltip-measure tooltip-measured';
             tooltip.setOffset([0, -7]);
           }
         };
@@ -1306,7 +1306,7 @@ export default {
             (geom instanceof LineString && (measureLength || measureBearing)) ||
             (geom instanceof Polygon && (measureLength || measureArea))
           ) {
-            var measureTooltipElement = $("<div></div>");
+            var measureTooltipElement = $('<div></div>');
             if (measureLength) {
               measureTooltipElement.append("<div class='length'></div>");
             }
@@ -1318,9 +1318,9 @@ export default {
                 "<div class='bearing' style='white-space:pre;'></div>",
               );
             }
-            measureTooltipElement.addClass("tooltip-measure tooltip-measuring");
+            measureTooltipElement.addClass('tooltip-measure tooltip-measuring');
 
-            $("#map-measure-tooltips").append(measureTooltipElement);
+            $('#map-measure-tooltips').append(measureTooltipElement);
 
             return measureTooltipElement;
           } else if (
@@ -1392,7 +1392,7 @@ export default {
               element: tooltipElement.get(0),
               offset: [0, -15],
               stopEvent: false,
-              positioning: "bottom-center",
+              positioning: 'bottom-center',
             });
             vm.map.olmap.addOverlay(measureTooltip);
             return measureTooltip;
@@ -1423,7 +1423,7 @@ export default {
             tooltipElement &&
             (!Array.isArray(tooltipElement) || tooltipElement.length > 0)
           ) {
-            feature["tooltipElement"] = tooltipElement;
+            feature['tooltipElement'] = tooltipElement;
           }
         }
       } else if (Array.isArray(indexes)) {
@@ -1451,8 +1451,8 @@ export default {
 
       if (feature.tooltip === undefined || feature.tooltip === null) {
         //console.log("Create measure tooltip overlay")
-        if (measureFeature && feature["tooltipElement"]) {
-          feature["tooltip"] = this._createTooltip(feature["tooltipElement"]);
+        if (measureFeature && feature['tooltipElement']) {
+          feature['tooltip'] = this._createTooltip(feature['tooltipElement']);
         }
       } else if (Array.isArray(indexes)) {
         var tooltip = this.getMeasurementObject(
@@ -1506,7 +1506,7 @@ export default {
         if (indexes) {
           this.removeMeasurementObject(
             feature,
-            "tooltip",
+            'tooltip',
             indexes,
             this._removeTooltip,
           );
@@ -1519,7 +1519,7 @@ export default {
         if (indexes) {
           this.removeMeasurementObject(
             feature,
-            "tooltipElement",
+            'tooltipElement',
             indexes,
             this._removeTooltipElement,
           );
@@ -1575,10 +1575,10 @@ export default {
       return area;
     },
     convertArea: function (area, unit) {
-      unit = unit || "km2";
-      if (unit === "ha") {
+      unit = unit || 'km2';
+      if (unit === 'ha') {
         return area / 10000;
-      } else if (unit === "km2") {
+      } else if (unit === 'km2') {
         return area / 1000000;
       } else {
         return area;
@@ -1588,8 +1588,8 @@ export default {
       var length = 0;
       var sourceProj = this.map.olmap.getView().getProjection();
       for (var i = 0, ii = coordinates.length - 1; i < ii; ++i) {
-        var c1 = transform(coordinates[i], sourceProj, "EPSG:4326");
-        var c2 = transform(coordinates[i + 1], sourceProj, "EPSG:4326");
+        var c1 = transform(coordinates[i], sourceProj, 'EPSG:4326');
+        var c2 = transform(coordinates[i + 1], sourceProj, 'EPSG:4326');
         //   length += this.wgs84Sphere.haversineDistance(c1, c2)
         length += getDistance(c1, c2, 6378137);
       }
@@ -1617,12 +1617,12 @@ export default {
       return length;
     },
     convertLength: function (length, unit) {
-      unit = unit || "m";
-      if (unit === "nm") {
+      unit = unit || 'm';
+      if (unit === 'nm') {
         return (length * 250) / (463 * 1000);
-      } else if (unit === "mile") {
+      } else if (unit === 'mile') {
         return (length * 15625) / (25146 * 1000);
-      } else if (unit === "km") {
+      } else if (unit === 'km') {
         return length / 1000;
       } else {
         return length;
@@ -1644,70 +1644,70 @@ export default {
     getDirection: function (bearing, mode) {
       if (!this._direction) {
         this._direction = {
-          4: [360 / 4, Math.floor((360 / 8) * 100) / 100, ["N", "E", "S", "W"]],
+          4: [360 / 4, Math.floor((360 / 8) * 100) / 100, ['N', 'E', 'S', 'W']],
           8: [
             360 / 8,
             Math.floor((360 / 16) * 100) / 100,
-            ["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
+            ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
           ],
           16: [
             360 / 16,
             Math.floor((360 / 32) * 100) / 100,
             [
-              "N",
-              "NNE",
-              "NE",
-              "ENE",
-              "E",
-              "ESE",
-              "SE",
-              "SSE",
-              "S",
-              "SSW",
-              "SW",
-              "WSW",
-              "W",
-              "WNW",
-              "NW",
-              "NNW",
+              'N',
+              'NNE',
+              'NE',
+              'ENE',
+              'E',
+              'ESE',
+              'SE',
+              'SSE',
+              'S',
+              'SSW',
+              'SW',
+              'WSW',
+              'W',
+              'WNW',
+              'NW',
+              'NNW',
             ],
           ],
           32: [
             360 / 32,
             Math.floor((360 / 64) * 100) / 100,
             [
-              "N",
-              "NbE",
-              "NNE",
-              "NEbN",
-              "NE",
-              "NEbE",
-              "ENE",
-              "EbN",
-              "E",
-              "EbS",
-              "ESE",
-              "SEbE",
-              "SE",
-              "SEbS",
-              "SSE",
-              "SbE",
-              "S",
-              "SbW",
-              "SSW",
-              "SWbS",
-              "SW",
-              "SWbW",
-              "WSW",
-              "WbS",
-              "W",
-              "WbN",
-              "WNW",
-              "NWbW",
-              "NW",
-              "NWbN",
-              "NNW",
-              "NbW",
+              'N',
+              'NbE',
+              'NNE',
+              'NEbN',
+              'NE',
+              'NEbE',
+              'ENE',
+              'EbN',
+              'E',
+              'EbS',
+              'ESE',
+              'SEbE',
+              'SE',
+              'SEbS',
+              'SSE',
+              'SbE',
+              'S',
+              'SbW',
+              'SSW',
+              'SWbS',
+              'SW',
+              'SWbW',
+              'WSW',
+              'WbS',
+              'W',
+              'WbN',
+              'WNW',
+              'NWbW',
+              'NW',
+              'NWbN',
+              'NNW',
+              'NbW',
             ],
           ],
         };
@@ -1717,7 +1717,7 @@ export default {
       var key = mode.toString();
       if (!this._direction[key]) {
         mode = 16;
-        key = "16";
+        key = '16';
       }
 
       var directionIndex =
@@ -1732,17 +1732,17 @@ export default {
     formatLength: function (length, unit) {
       var output;
       unit = unit || this.lengthUnit;
-      if (unit === "nm") {
-        output = "nm";
-      } else if (unit === "mile") {
-        output = " mile";
+      if (unit === 'nm') {
+        output = 'nm';
+      } else if (unit === 'mile') {
+        output = ' mile';
       } else {
         if (length > 100) {
-          unit = "km";
-          output = "km";
+          unit = 'km';
+          output = 'km';
         } else {
-          unit = "m";
-          output = "m";
+          unit = 'm';
+          output = 'm';
         }
       }
       length = this.convertLength(length, unit);
@@ -1757,16 +1757,16 @@ export default {
     formatArea: function (area) {
       var output;
       var unit;
-      if (this.areaUnit === "ha") {
-        unit = "ha";
-        output = "ha";
+      if (this.areaUnit === 'ha') {
+        unit = 'ha';
+        output = 'ha';
       } else {
         if (area > 10000) {
-          unit = "km2";
-          output = "km<sup>2</sup>";
+          unit = 'km2';
+          output = 'km<sup>2</sup>';
         } else {
-          unit = "m2";
-          output = "m<sup>2</sup>";
+          unit = 'm2';
+          output = 'm<sup>2</sup>';
         }
       }
       area = this.convertArea(area, unit);
@@ -1798,33 +1798,33 @@ export default {
     this._degrees2radians = Math.PI / 180;
     this._radians2degrees = 180 / Math.PI;
     this.measureStatus = vm.loading.register(
-      "measure",
-      "Measurement Component",
+      'measure',
+      'Measurement Component',
     );
 
-    this.measureStatus.phaseBegin("initialize", 30, "Initialize");
+    this.measureStatus.phaseBegin('initialize', 30, 'Initialize');
 
     //initialize the overlay and interactions
     this.features = new Collection();
-    this.features.on("remove", function (event) {
-      if (event.element["tooltipElement"]) {
+    this.features.on('remove', function (event) {
+      if (event.element['tooltipElement']) {
         //console.log("Remove measured tooltip")
         vm.removeTooltip(event.element);
       }
     });
     this.style = new Style({
       fill: new Fill({
-        color: "rgba(0,0,0, 0.25)",
+        color: 'rgba(0,0,0, 0.25)',
       }),
       stroke: new Stroke({
-        color: "rgba(0, 0, 0, 0.5)",
+        color: 'rgba(0, 0, 0, 0.5)',
         lineDash: [10, 10],
         width: 2,
       }),
       image: new Circle({
         radius: 5,
         fill: new Fill({
-          color: "rgb(0, 153, 255)",
+          color: 'rgb(0, 153, 255)',
         }),
       }),
     });
@@ -1836,10 +1836,10 @@ export default {
       style: this.style,
     });
 
-    this.measureStatus.phaseEnd("initialize");
+    this.measureStatus.phaseEnd('initialize');
 
     this.measureStatus.phaseBegin(
-      "gk-init",
+      'gk-init',
       30,
       "Listen 'gk-init' event",
       true,

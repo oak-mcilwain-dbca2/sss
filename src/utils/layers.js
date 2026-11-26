@@ -3,15 +3,15 @@ export function getLayerId(id, env) {
 }
 
 export function isKbLayer(id) {
-  return typeof id === "string" && id.startsWith("kaartdijin-boodja");
+  return typeof id === 'string' && id.startsWith('kaartdijin-boodja');
 }
 
 export function getLayerUrl(layerId, env) {
-  if (isKbLayer(layerId) || layerId.startsWith("dpaw:bushfire")) {
+  if (isKbLayer(layerId) || layerId.startsWith('dpaw:bushfire')) {
     return env.kbService;
   }
 
-  if (layerId.startsWith("hotspots:")) {
+  if (layerId.startsWith('hotspots:')) {
     return `${env.hotspotsUrl}/wfs`;
   }
 

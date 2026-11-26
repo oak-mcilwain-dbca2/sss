@@ -19,9 +19,9 @@
 </template>
 
 <script>
-import { fixedScales } from "@/config/appData";
+import { fixedScales } from '@/config/appData';
 
-import { useMapStore } from "@/stores/map";
+import { useMapStore } from '@/stores/map';
 
 export default {
   data: function () {
@@ -42,7 +42,7 @@ export default {
     },
     scaleString() {
       if (!this.map) {
-        return "";
+        return '';
       }
       return this.map.getScaleString(this.map.scale);
     },
@@ -62,7 +62,7 @@ export default {
     initialiseScales() {
       const vm = this;
 
-      this.map.olmap.on("postrender", function () {
+      this.map.olmap.on('postrender', function () {
         vm.reset();
       });
     },

@@ -101,20 +101,20 @@
 }
 </style>
 <script>
-import { saveAs } from "file-saver";
+import { saveAs } from 'file-saver';
 
-import { jsPDF } from "jspdf";
+import { jsPDF } from 'jspdf';
 
-import Foundation from "foundation-sites";
+import Foundation from 'foundation-sites';
 
 export default {
-  store: ["dpmm"],
+  store: ['dpmm'],
   data: function () {
     return {
       legendLayers: [],
       filteredLegendLayers: [],
       hiddenLayers: {},
-      position: "right-top",
+      position: 'right-top',
     };
   },
   computed: {
@@ -134,15 +134,15 @@ export default {
       //   return this._legendsPanel;
 
       return (
-        this._legendsPanel || new Foundation.Reveal($("#active-layer-legends"))
+        this._legendsPanel || new Foundation.Reveal($('#active-layer-legends'))
       );
     },
     loadFinished: {
       cache: false,
       get: function () {
         var finished = true;
-        $("#active-layer-legend-list")
-          .find("img")
+        $('#active-layer-legend-list')
+          .find('img')
           .each(function (index, img) {
             if (
               img.naturalWidth === 0 ||
@@ -241,7 +241,7 @@ export default {
       if (!vm.unwatchActiveLayers) {
         this.syncLegendLayers();
         vm.unwatchActiveLayers = this.$root.active.$watch(
-          "olLayers",
+          'olLayers',
           function () {
             vm.syncLegendLayers();
           },
@@ -260,12 +260,12 @@ export default {
       }
     },
     getImageDataURL: function (img, format) {
-      format = format || "image/jpeg";
-      var canvas = document.createElement("canvas");
+      format = format || 'image/jpeg';
+      var canvas = document.createElement('canvas');
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
       $(document.body).append($(canvas));
-      var ctx = canvas.getContext("2d");
+      var ctx = canvas.getContext('2d');
       ctx.drawImage(
         img,
         0,
@@ -283,7 +283,7 @@ export default {
       var vm = this;
       this.getLegendBlob(false, false, function (blobData) {
         var filename =
-          vm.$root.export.finalTitle.replace(" ", "_") + ".legend.pdf";
+          vm.$root.export.finalTitle.replace(' ', '_') + '.legend.pdf';
         saveAs(blobData, filename);
       });
     },
@@ -309,12 +309,12 @@ export default {
       }
       var printFunc = function () {
         try {
-          if ($("#active-layer-legend-list .layer-legend-row").length === 0) {
+          if ($('#active-layer-legend-list .layer-legend-row').length === 0) {
             //no legend;
             callback(null);
             return;
           }
-          var paperSize = vm.$root.export.paperSizes["A4"];
+          var paperSize = vm.$root.export.paperSizes['A4'];
           var style = {
             top: 20,
             bottom: 20,
@@ -324,8 +324,8 @@ export default {
             height: paperSize[0],
             fontHeight: 10,
             padding: 5,
-            font: "helvetica",
-            fontType: "bold",
+            font: 'helvetica',
+            fontType: 'bold',
             fontSize: 10,
             textColor: [0, 0, 0],
             lineWidth: 1,
@@ -377,9 +377,9 @@ export default {
             style.lineColor[2],
           );
           var top = style.top;
-          $("#active-layer-legend-list .layer-legend-row").each(
+          $('#active-layer-legend-list .layer-legend-row').each(
             function (index, element) {
-              var imgElement = $(element).find("img").get(0);
+              var imgElement = $(element).find('img').get(0);
               var imageSize = getImageSize(imgElement, style.fontHeight);
               if (
                 top != style.top &&
@@ -400,11 +400,11 @@ export default {
                 top += style.lineWidth;
                 top += style.padding;
               }
-              doc.text(style.left, top, $(element).find(".layer-title").text());
+              doc.text(style.left, top, $(element).find('.layer-title').text());
               top += style.fontHeight;
               doc.addImage(
-                vm.getImageDataURL(imgElement, "image/jpeg"),
-                "JPEG",
+                vm.getImageDataURL(imgElement, 'image/jpeg'),
+                'JPEG',
                 style.left,
                 top,
                 imageSize[0],
@@ -413,7 +413,7 @@ export default {
               top += imageSize[1];
             },
           );
-          callback(doc.output("blob"));
+          callback(doc.output('blob'));
         } finally {
           if (hiddenLayers) {
             //restore the legend panel
@@ -443,41 +443,41 @@ export default {
     setPosition: function (left, right, top, bottom) {
       if (left == null) {
         this._position[0] =
-          right - parseInt($("#active-layer-legends").css("width"));
+          right - parseInt($('#active-layer-legends').css('width'));
       } else {
         this._position[0] = left;
       }
       if (right == null) {
         this._position[1] =
-          left + parseInt($("#active-layer-legends").css("width"));
+          left + parseInt($('#active-layer-legends').css('width'));
       } else {
         this._position[1] = right;
       }
       if (top == null) {
         this._position[2] =
-          bottom - parseInt($("#active-layer-legends").css("height"));
+          bottom - parseInt($('#active-layer-legends').css('height'));
       } else {
         this._position[2] = top;
       }
       if (bottom == null) {
         this._position[3] =
-          top + parseInt($("#active-layer-legends").css("height"));
+          top + parseInt($('#active-layer-legends').css('height'));
       } else {
         this._position[3] = bottom;
       }
-      $("#active-layer-legends").get(0).style.left = this._position[0] + "px";
-      $("#active-layer-legends").get(0).style.right = this._position[1] + "px";
-      $("#active-layer-legends").get(0).style.top = this._position[2] + "px";
-      $("#active-layer-legends").get(0).style.bottom = this._position[3] + "px";
+      $('#active-layer-legends').get(0).style.left = this._position[0] + 'px';
+      $('#active-layer-legends').get(0).style.right = this._position[1] + 'px';
+      $('#active-layer-legends').get(0).style.top = this._position[2] + 'px';
+      $('#active-layer-legends').get(0).style.bottom = this._position[3] + 'px';
     },
   },
   ready: function () {
     var vm = this;
     vm._position = null;
-    $("#active-layer-legends").on("open.zf.reveal", function () {
+    $('#active-layer-legends').on('open.zf.reveal', function () {
       if (vm._position == null) {
         vm._position = [null, null, null, null];
-        vm.setPosition(null, parseInt($(document.body).css("width")), 0, null);
+        vm.setPosition(null, parseInt($(document.body).css('width')), 0, null);
       } else {
         vm.setPosition(
           vm._position[0],

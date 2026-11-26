@@ -1,6 +1,6 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
-export const useAnnotationsStore = defineStore("annotations", {
+export const useAnnotationsStore = defineStore('annotations', {
   state: () => ({
     component: null,
     ready: false,

@@ -23,7 +23,7 @@
                   :title="t.label"
                   style="font-size: 0.9rem"
                   :key="index"
-                  >{{ annotations.icon(t) }} {{ t.showName ? t.label : "" }}</a
+                  >{{ annotations.icon(t) }} {{ t.showName ? t.label : '' }}</a
                 >
               </div>
             </div>
@@ -264,7 +264,7 @@
               @click="toggleSelect(f)"
             >
               <button class="collapsible" @click="toggleImageList($event, f)">
-                {{ f.get("flight_datetime") }} {{ f.get("hotspot_no") }}
+                {{ f.get('flight_datetime') }} {{ f.get('hotspot_no') }}
               </button>
 
               <div class="showImages">
@@ -287,38 +287,38 @@
 </template>
 
 <script>
-import { debounce } from "lodash-es";
+import { debounce } from 'lodash-es';
 
-import Collection from "ol/Collection";
+import Collection from 'ol/Collection';
 
-import Style from "ol/style/Style";
-import Fill from "ol/style/Fill";
-import Stroke from "ol/style/Stroke";
-import Circle from "ol/style/Circle";
+import Style from 'ol/style/Style';
+import Fill from 'ol/style/Fill';
+import Stroke from 'ol/style/Stroke';
+import Circle from 'ol/style/Circle';
 
-import { extend } from "ol/extent";
+import { extend } from 'ol/extent';
 
-import { containsCoordinate } from "ol/extent";
+import { containsCoordinate } from 'ol/extent';
 
-import { getDateRange } from "@/utils";
+import { getDateRange } from '@/utils';
 
-import DateTimeInput from "@/components/forms/DateTimeInput.vue";
+import DateTimeInput from '@/components/forms/DateTimeInput.vue';
 
-import { useActiveStore } from "@/stores/active";
-import { useAnnotationsStore } from "@/stores/annotations";
-import { useLoadingStore } from "@/stores/loading";
-import { useStateStore } from "@/stores/state";
-import { useMapStore } from "@/stores/map";
-import { useSettingsStore } from "@/stores/settings";
+import { useActiveStore } from '@/stores/active';
+import { useAnnotationsStore } from '@/stores/annotations';
+import { useLoadingStore } from '@/stores/loading';
+import { useStateStore } from '@/stores/state';
+import { useMapStore } from '@/stores/map';
+import { useSettingsStore } from '@/stores/settings';
 
 export default {
   store: {
     hotspotLabels: true, //boolean defining whether to show labels (can be later changed to use settings.
-    hintsHeight: "layout.hintsHeight",
-    screenHeight: "layout.screenHeight",
-    leftPanelHeadHeight: "layout.leftPanelHeadHeight",
-    activeMenu: "activeMenu",
-    whoami: "whoami",
+    hintsHeight: 'layout.hintsHeight',
+    screenHeight: 'layout.screenHeight',
+    leftPanelHeadHeight: 'layout.leftPanelHeadHeight',
+    activeMenu: 'activeMenu',
+    whoami: 'whoami',
   },
   components: {
     DateTimeInput,
@@ -332,10 +332,10 @@ export default {
       showEmailComposer: false,
       flights: [],
       //clippedOnly: false,
-      search: "",
-      groupFilter: "",
+      search: '',
+      groupFilter: '',
       tools: [],
-      thermalDateRange: "21024",
+      thermalDateRange: '21024',
       features: new Collection(),
       extentFeaturesSize: 0,
       footprints: new Collection(),
@@ -343,8 +343,8 @@ export default {
       emailList: [],
       featureLabelDisabled: false,
       clippedFeatures: [],
-      thermalFromDate: "",
-      thermalToDate: "",
+      thermalFromDate: '',
+      thermalToDate: '',
       //dateRange: '',
       revision: 1,
       selectRevision: 1,
@@ -400,7 +400,7 @@ export default {
       return useLoadingStore();
     },
     selectedFeatures: function () {
-      return this.annotations.getSelectedFeatures("thermal");
+      return this.annotations.getSelectedFeatures('thermal');
     },
 
     selectedFeaturesSize: function () {
@@ -411,7 +411,7 @@ export default {
         return !(this.selectRevision && this.selectedFeatures && this.selectedFeatures.getLength() && this.thermalFromDate !== "")
       },*/
     hotspotLayer: function () {
-      return this.$root.catalogue.getLayer("hotspots:hotspot_centroids");
+      return this.$root.catalogue.getLayer('hotspots:hotspot_centroids');
     },
     hotspotMapLayer: function () {
       return this.$root.map
@@ -429,11 +429,11 @@ export default {
         const labelStyleFunc = function () {
           return new Style({
             text: new Text({
-              text: "o",
-              font: "24px Calibri,sans-serif",
-              fill: new Fill({ color: "#fff" }),
+              text: 'o',
+              font: '24px Calibri,sans-serif',
+              fill: new Fill({ color: '#fff' }),
               stroke: new Stroke({
-                color: "#fff",
+                color: '#fff',
                 width: 2,
               }),
             }),
@@ -455,7 +455,7 @@ export default {
 
     flightFootprintLayer: function () {
       return this.$root.catalogue.getLayer(
-        "hotspots:hotspot_flight_footprints",
+        'hotspots:hotspot_flight_footprints',
       );
     },
 
@@ -508,24 +508,24 @@ export default {
     },
     thermalMinDate() {
       if (!this.thermalFromDate) {
-        return moment().subtract(10, "years").format("YYYY-MM-DDTHH:mm");
+        return moment().subtract(10, 'years').format('YYYY-MM-DDTHH:mm');
       }
 
-      return moment(this.thermalFromDate).format("YYYY-MM-DDTHH:mm");
+      return moment(this.thermalFromDate).format('YYYY-MM-DDTHH:mm');
     },
     thermalMaxDate() {
       if (!this.thermalToDate) {
-        return moment().format("YYYY-MM-DDT23:59");
+        return moment().format('YYYY-MM-DDT23:59');
       }
 
-      return moment(this.thermalToDate).format("YYYY-MM-DDTHH:mm");
+      return moment(this.thermalToDate).format('YYYY-MM-DDTHH:mm');
     },
     invalidDateFilter: function () {
       var invalid = true;
       if (!this.showDateRange) {
         if (
           this.thermalSingleDate != undefined &&
-          this.thermalSingleDate != ""
+          this.thermalSingleDate != ''
         ) {
           invalid = false;
         }
@@ -533,21 +533,21 @@ export default {
       if (this.showDateRange) {
         if (
           this.thermalDateRange != undefined &&
-          this.thermalDateRange != "-1"
+          this.thermalDateRange != '-1'
         ) {
           invalid = false;
         }
-        if (this.thermalDateRange == "-1") {
+        if (this.thermalDateRange == '-1') {
           var startDatetime = this.thermalFromDate
-            .replace(/-/g, "")
-            .replace(" ", "_")
-            .replace(":", "");
+            .replace(/-/g, '')
+            .replace(' ', '_')
+            .replace(':', '');
           var endDatetime = this.thermalToDate
-            .replace(/-/g, "")
-            .replace(" ", "_")
-            .replace(":", "");
-          if (endDatetime == "") {
-            endDatetime = moment().format("YYYYMMDD_HHmm");
+            .replace(/-/g, '')
+            .replace(' ', '_')
+            .replace(':', '');
+          if (endDatetime == '') {
+            endDatetime = moment().format('YYYYMMDD_HHmm');
           }
           var startYear = parseInt(startDatetime.substring(0, 4));
           var startMonth = parseInt(startDatetime.substring(4, 6)) - 1;
@@ -592,25 +592,25 @@ export default {
   },
   methods: {
     adjustHeight: function () {
-      if (this.activeMenu === "thermal") {
-        $("#hotspot-list").height(
+      if (this.activeMenu === 'thermal') {
+        $('#hotspot-list').height(
           (this.screenHeight -
             this.leftPanelHeadHeight -
-            $("#thermal-list-controller-container").height() -
+            $('#thermal-list-controller-container').height() -
             this.hintsHeight) *
             0.83,
         );
       }
     },
     changeThermalDateRange: function () {
-      if (this.thermalDateRange === "-1") {
+      if (this.thermalDateRange === '-1') {
         //customized
         if (!this.thermalFromDate) {
           //fromDate is null, set to default value "Last 24 hours"
-          let range = getDateRange(21024, "YYYY-MM-DD HH:mm");
-          this.thermalFromDate = range[0] || "";
-          if ((range[1] || "") !== this.thermalToDate) {
-            this.thermalToDate = range[1] || "";
+          let range = getDateRange(21024, 'YYYY-MM-DD HH:mm');
+          this.thermalFromDate = range[0] || '';
+          if ((range[1] || '') !== this.thermalToDate) {
+            this.thermalToDate = range[1] || '';
           } else {
             this.changeThermalToDate();
           }
@@ -619,9 +619,9 @@ export default {
           this.changeThermalToDate();
         }
       } else {
-        let range = getDateRange(this.thermalDateRange, "YYYY-MM-DD HH:mm");
-        this.thermalFromDate = range[0] || "";
-        this.thermalToDate = range[1] || "";
+        let range = getDateRange(this.thermalDateRange, 'YYYY-MM-DD HH:mm');
+        this.thermalFromDate = range[0] || '';
+        this.thermalToDate = range[1] || '';
       }
     },
 
@@ -650,7 +650,7 @@ export default {
         }
       }
       if (index >= 0) {
-        var listElement = document.getElementById("hotspot-list");
+        var listElement = document.getElementById('hotspot-list');
         if (index < listElement.children.length) {
           listElement.scrollTop +=
             listElement.children[index].getBoundingClientRect().top -
@@ -678,20 +678,20 @@ export default {
       // Check if footprints layer already loaded
       var hotspotsLoaded = false;
       map.olmap.getLayers().forEach(function (layer) {
-        if (layer.get("name") === "Thermal Imaging Flight Footprints") {
+        if (layer.get('name') === 'Thermal Imaging Flight Footprints') {
           // TODO: Resolve unused variable
           // toggleFlightFootprint = true
         }
-        if (layer.get("name") === "Thermal Imaging Hotspots") {
+        if (layer.get('name') === 'Thermal Imaging Hotspots') {
           hotspotsLoaded = true;
         }
       });
       if (hotspotsLoaded && this.showFlightFootprint) {
         this.flightFootprintLayer.style = this.footprintStyle;
-        var footprintOLLayer = map["createWFSLayer"](this.flightFootprintLayer);
+        var footprintOLLayer = map['createWFSLayer'](this.flightFootprintLayer);
         var ThermalImagingFlightFootprintsExists = false;
         map.olmap.getLayers().forEach(function (layer) {
-          if (layer.get("name") === "Thermal Imaging Flight Footprints") {
+          if (layer.get('name') === 'Thermal Imaging Flight Footprints') {
             ThermalImagingFlightFootprintsExists = true;
           }
         });
@@ -702,7 +702,7 @@ export default {
         }
       } else if (hotspotsLoaded && !this.showFlightFootprint) {
         map.olmap.getLayers().forEach(function (layer) {
-          if (layer.get("name") === "Thermal Imaging Flight Footprints") {
+          if (layer.get('name') === 'Thermal Imaging Flight Footprints') {
             map.olmap.removeLayer(layer);
           }
         });
@@ -721,11 +721,11 @@ export default {
       var mosaicPosition = null;
 
       map.olmap.getLayers().forEach(function (layer) {
-        if (layer.get("name") === "Flight mosaics") {
+        if (layer.get('name') === 'Flight mosaics') {
           // TODO: Resolve unused variable
           // mosaicLoaded = true
         }
-        if (layer.get("name") === "Thermal Imaging Hotspots") {
+        if (layer.get('name') === 'Thermal Imaging Hotspots') {
           mosaicPosition = map.olmap
             .getLayers()
             .getArray()
@@ -748,14 +748,14 @@ export default {
         // mosaicLayersOLLayer.refresh()
         var dateInfo = this.getDateInfoForMosaics(vm);
         if (mosaicPosition && dateInfo.length > 0) {
-          map["createWMSLayer"](mosaicPosition, dateInfo);
+          map['createWMSLayer'](mosaicPosition, dateInfo);
         }
         // map.olmap.addLayer(mosaicPositionOLLayer)
         // mosaicPositionOLLayer.refresh()
       } else if (hotspotsLoaded && !this.showRawImageMosaic) {
         map.olmap.getLayers().forEach(function (layer) {
           if (layer) {
-            if (layer.get("name") === "Flight mosaics") {
+            if (layer.get('name') === 'Flight mosaics') {
               map.olmap.removeLayer(layer);
             }
           }
@@ -788,15 +788,15 @@ export default {
       if (!vm._updateCQLFilter) {
         vm._updateCQLFilter = debounce(function () {
           try {
-            var cql_filter = "";
+            var cql_filter = '';
             if (cql_filter === vm.hotspotLayer.cql_filter) {
               //filter not changed
               return;
             }
             vm.hotspotLayer.cql_filter = cql_filter;
             //clear device filter or change other filter
-            vm.hotspotMapLayer.set("updated", moment().toLocaleString());
-            vm.hotspotMapLayer.getSource().loadSource("query");
+            vm.hotspotMapLayer.set('updated', moment().toLocaleString());
+            vm.hotspotMapLayer.getSource().loadSource('query');
           } catch (ex) {
             alert(ex);
           }
@@ -815,21 +815,21 @@ export default {
       var dateInfo = [];
       if (vm.showDateRange) {
         var start = vm.thermalFromDate
-          .replace(/-/g, "")
-          .replace(" ", "_")
-          .replace(":", "");
+          .replace(/-/g, '')
+          .replace(' ', '_')
+          .replace(':', '');
         var end = vm.thermalToDate
-          .replace(/-/g, "")
-          .replace(" ", "_")
-          .replace(":", "");
+          .replace(/-/g, '')
+          .replace(' ', '_')
+          .replace(':', '');
         dateInfo.push(start);
-        if (end === "") {
-          dateInfo.push("now");
+        if (end === '') {
+          dateInfo.push('now');
         } else {
           dateInfo.push(end);
         }
       } else if (vm.thermalSingleDate != undefined) {
-        var singleDate = vm.thermalSingleDate.replace(/-/g, "");
+        var singleDate = vm.thermalSingleDate.replace(/-/g, '');
         dateInfo.push(singleDate);
       }
       return dateInfo;
@@ -837,11 +837,11 @@ export default {
 
     removeHotspotList: function () {
       var hotspotButtons = document
-        .getElementById("hotspot-list")
-        .querySelectorAll(".collapsible");
+        .getElementById('hotspot-list')
+        .querySelectorAll('.collapsible');
       hotspotButtons.forEach(function (button) {
         // button.parentNode.remove()
-        button.parentNode.style.display = "none";
+        button.parentNode.style.display = 'none';
       });
     },
 
@@ -850,12 +850,12 @@ export default {
       var hotspotButtons =
         (this.$root.map,
         document
-          .getElementById("hotspot-list")
-          .querySelectorAll(".collapsible"));
+          .getElementById('hotspot-list')
+          .querySelectorAll('.collapsible'));
       var i = 0;
       return (
         hotspotButtons.forEach(function (button) {
-          "block" === button.nextElementSibling.style.display &&
+          'block' === button.nextElementSibling.style.display &&
             (setTimeout(function () {
               button.click();
             }, 10),
@@ -875,20 +875,20 @@ export default {
 
       vm._featurelist.clear();
       vm.setExtentFeatureSize();
-      var cqlFilter = "";
+      var cqlFilter = '';
       var fromDate;
       var toDate;
       if (vm.hasDateFilter()) {
         if (vm.thermalSingleDate != undefined) {
-          var singleDate = vm.thermalSingleDate.replace(/-/g, "");
+          var singleDate = vm.thermalSingleDate.replace(/-/g, '');
           cqlFilter =
             "strStartsWith(flight_datetime,'" + singleDate + "')=true";
-        } else if (vm.thermalToDate == "") {
-          fromDate = vm.thermalFromDate.replace(/-/g, "");
+        } else if (vm.thermalToDate == '') {
+          fromDate = vm.thermalFromDate.replace(/-/g, '');
           cqlFilter = "flight_datetime>'" + fromDate + "'";
         } else {
-          toDate = vm.thermalToDate.replace(/-/g, "");
-          fromDate = vm.thermalFromDate.replace(/-/g, "");
+          toDate = vm.thermalToDate.replace(/-/g, '');
+          fromDate = vm.thermalFromDate.replace(/-/g, '');
           cqlFilter =
             "flight_datetime between '" + fromDate + "' and '" + toDate + "'";
         }
@@ -902,17 +902,17 @@ export default {
           .getArray()
           .slice()
           .forEach(function (layer) {
-            var layer_name = layer.get("name");
+            var layer_name = layer.get('name');
 
             //"Thermal Imaging Flight Footprints"===layer.get("name")&&map.olmap.removeLayer(layer),"Flight mosaics"===layer.get("name")&&map.olmap.removeLayer(layer)
             // if (layer.get("name") == "Thermal Imaging Hotspots"){
             // 	map.olmap.removeLayer(layer)
             // }
             if (
-              layer_name.startsWith("Hotspot image") ||
-              layer_name.startsWith("Thermal Imaging Hotspots") ||
-              layer_name.startsWith("Thermal Imaging Flight Footprints") ||
-              layer_name.startsWith("Flight mosaics")
+              layer_name.startsWith('Hotspot image') ||
+              layer_name.startsWith('Thermal Imaging Hotspots') ||
+              layer_name.startsWith('Thermal Imaging Flight Footprints') ||
+              layer_name.startsWith('Flight mosaics')
             ) {
               map.olmap.removeLayer(layer);
             }
@@ -930,7 +930,7 @@ export default {
           .getArray()
           .slice()
           .forEach(function (layer) {
-            if (layer.get("name") == "Thermal Imaging Flight Footprints") {
+            if (layer.get('name') == 'Thermal Imaging Flight Footprints') {
               map.olmap.removeLayer(layer);
             }
           });
@@ -975,18 +975,18 @@ export default {
     },
 
     featureFilter: function (f) {
-      var search = this.search ? this.search.toLowerCase().trim() : "";
+      var search = this.search ? this.search.toLowerCase().trim() : '';
       var found =
         !search ||
         this.fields.some(function (key) {
-          return ("" + f.get(key)).toLowerCase().indexOf(search) > -1;
+          return ('' + f.get(key)).toLowerCase().indexOf(search) > -1;
         });
       return found;
     },
 
     featureOrder: function (a, b) {
-      var as = [a.get("flight_datetime"), a.get("hotspot_no")];
-      var bs = [b.get("flight_datetime"), b.get("hotspot_no")];
+      var as = [a.get('flight_datetime'), a.get('hotspot_no')];
+      var bs = [b.get('flight_datetime'), b.get('hotspot_no')];
       if (as[0] < bs[0]) {
         return 1;
       } else if (as[0] > bs[0]) {
@@ -1012,39 +1012,39 @@ export default {
           }
           if (vm.hasDateFilter()) {
             if (vm.thermalSingleDate != undefined) {
-              var singleDate = vm.thermalSingleDate.replace(/-/g, "");
+              var singleDate = vm.thermalSingleDate.replace(/-/g, '');
               list = list.filter(function (feature) {
-                return feature.get("flight_datetime").startsWith(singleDate);
+                return feature.get('flight_datetime').startsWith(singleDate);
               });
             } else if (vm.showDateRange) {
               var start = vm.thermalFromDate
-                .replace(/-/g, "")
-                .replace(" ", "_")
-                .replace(":", "");
+                .replace(/-/g, '')
+                .replace(' ', '_')
+                .replace(':', '');
               var end = vm.thermalToDate
-                .replace(/-/g, "")
-                .replace(" ", "_")
-                .replace(":", "");
-              if (end === "") {
+                .replace(/-/g, '')
+                .replace(' ', '_')
+                .replace(':', '');
+              if (end === '') {
                 list = list.filter(function (feature) {
-                  return feature.get("flight_datetime") > start;
+                  return feature.get('flight_datetime') > start;
                 });
               } else {
                 list = list.filter(function (feature) {
                   return (
-                    feature.get("flight_datetime") > start &&
-                    feature.get("flight_datetime") < end
+                    feature.get('flight_datetime') > start &&
+                    feature.get('flight_datetime') < end
                   );
                 });
               }
             }
             if (list.length == 0) {
-              alert("No hotspots recorded in that period");
+              alert('No hotspots recorded in that period');
               return;
             }
 
             list.forEach(function (feature) {
-              var flight = feature.get("flight_datetime");
+              var flight = feature.get('flight_datetime');
               if (!vm.flights.includes(flight)) {
                 vm.flights.push(flight);
               }
@@ -1109,28 +1109,28 @@ export default {
           }
           if (vm.hasDateFilter()) {
             if (vm.thermalSingleDate != undefined) {
-              var singleDate = vm.thermalSingleDate.replace(/-/g, "");
+              var singleDate = vm.thermalSingleDate.replace(/-/g, '');
               list = list.filter(function (feature) {
-                return feature.get("flight_datetime").startsWith(singleDate);
+                return feature.get('flight_datetime').startsWith(singleDate);
               });
             } else if (vm.showDateRange) {
               var start = vm.thermalFromDate
-                .replace(/-/g, "")
-                .replace(" ", "_")
-                .replace(":", "");
+                .replace(/-/g, '')
+                .replace(' ', '_')
+                .replace(':', '');
               var end = vm.thermalToDate
-                .replace(/-/g, "")
-                .replace(" ", "_")
-                .replace(":", "");
-              if (end === "") {
+                .replace(/-/g, '')
+                .replace(' ', '_')
+                .replace(':', '');
+              if (end === '') {
                 list = list.filter(function (feature) {
-                  return feature.get("flight_datetime") > start;
+                  return feature.get('flight_datetime') > start;
                 });
               } else {
                 list = list.filter(function (feature) {
                   return (
-                    feature.get("flight_datetime") > start &&
-                    feature.get("flight_datetime") < end
+                    feature.get('flight_datetime') > start &&
+                    feature.get('flight_datetime') < end
                   );
                 });
               }
@@ -1160,8 +1160,8 @@ export default {
 
     toggleImageList: function (event, feature) {
       //event.target is the button wh was clicked; its nextElementSibling is the associated content (list of images for that hotspot)
-      var imagesString = feature.get("images");
-      var imagesArray = imagesString.split(",");
+      var imagesString = feature.get('images');
+      var imagesArray = imagesString.split(',');
       this.showHotspotImages = true;
       const selected_feature = this.featurelist.find(function (f) {
         return f.id_ === feature.id_;
@@ -1169,37 +1169,37 @@ export default {
       selected_feature.shortImages = imagesArray;
       var hotspotID = event.target.innerHTML;
       var imageListContent = event.target.nextElementSibling;
-      if (imageListContent.style.display === "block") {
+      if (imageListContent.style.display === 'block') {
         var children = imageListContent.children; //HTML Collection object
         for (let item of children) {
           item.innerHTML = item.innerHTML
-            .replace("<b>", "")
-            .replace(" ON</b>", "");
+            .replace('<b>', '')
+            .replace(' ON</b>', '');
         }
-        imageListContent.style.display = "none";
+        imageListContent.style.display = 'none';
         var map = this.$root.map;
         // Close any single images for this hotspot
         map.olmap.getLayers().forEach(function (layer) {
           if (layer) {
-            if (layer.get("name") === "Hotspot image " + hotspotID) {
+            if (layer.get('name') === 'Hotspot image ' + hotspotID) {
               map.olmap.removeLayer(layer);
             }
           }
         });
         this.isHotspotImageON = false;
       } else {
-        imageListContent.style.display = "block";
+        imageListContent.style.display = 'block';
       }
     },
 
     listImageFiles: function (f) {
       //Not used at present
-      var imagesString = f.get("images");
-      var imagesArrayPrelim = imagesString.split(",");
+      var imagesString = f.get('images');
+      var imagesArrayPrelim = imagesString.split(',');
       var imagesArray = [];
       imagesArrayPrelim.forEach(function (item) {
-        var pos1 = item.indexOf("/PNGs/") + 6;
-        var pos2 = item.indexOf(".png");
+        var pos1 = item.indexOf('/PNGs/') + 6;
+        var pos2 = item.indexOf('.png');
         var imageName = item.slice(pos1, pos2);
         imagesArray.push(imageName);
       });
@@ -1207,7 +1207,7 @@ export default {
     },
 
     showImage: function (flight_datetime, hotspot_no, file) {
-      file = file.replace(" ", ""); // Get rid of whitespace
+      file = file.replace(' ', ''); // Get rid of whitespace
       var map = this.$root.map;
       var hotspots_position = 0;
       this.isHotspotImageON = true;
@@ -1218,8 +1218,8 @@ export default {
       map.olmap.getLayers().forEach(function (layer) {
         if (layer) {
           if (
-            layer.get("name") ===
-            "Hotspot image " + flight_datetime + " " + hotspot_no
+            layer.get('name') ===
+            'Hotspot image ' + flight_datetime + ' ' + hotspot_no
           ) {
             map.olmap.removeLayer(layer);
           }
@@ -1229,11 +1229,11 @@ export default {
       // TODO: This variable was not referenced
       // var position = map.olmap.getLayers().getArray().length - 1
       map.olmap.getLayers().forEach(function (layer) {
-        if (layer.get("name") === "Flight mosaics") {
+        if (layer.get('name') === 'Flight mosaics') {
           // TODO: Resolve unused variable
           // mosaicLoaded = true
         }
-        if (layer.get("name") === "Thermal Imaging Hotspots") {
+        if (layer.get('name') === 'Thermal Imaging Hotspots') {
           hotspots_position = map.olmap
             .getLayers()
             .getArray()
@@ -1256,16 +1256,16 @@ export default {
     changeButtons: function (event) {
       var siblingButtons = this.getSiblingButtons(event.target);
       if (
-        !event.target.innerHTML.endsWith(" ON") &&
-        !event.target.innerHTML.endsWith(" ON</b>")
+        !event.target.innerHTML.endsWith(' ON') &&
+        !event.target.innerHTML.endsWith(' ON</b>')
       ) {
         event.target.innerHTML =
-          event.target.innerHTML.replace("image ", "<b>image ") + " ON</b>";
+          event.target.innerHTML.replace('image ', '<b>image ') + ' ON</b>';
       }
       siblingButtons.forEach(function (item) {
         item.innerHTML = item.innerHTML
-          .replace("<b>", "")
-          .replace(" ON</b>", "");
+          .replace('<b>', '')
+          .replace(' ON</b>', '');
       });
     },
 
@@ -1287,10 +1287,10 @@ export default {
         var map = this.$root.map;
         // Remove layers if exist
         map.active.olLayers.forEach(function (layer) {
-          if (layer.get("name") === "Thermal Imaging Hotspots") {
+          if (layer.get('name') === 'Thermal Imaging Hotspots') {
             map.olmap.removeLayer(layer);
           }
-          if (layer.get("name") === "Thermal Imaging Flight Footprints") {
+          if (layer.get('name') === 'Thermal Imaging Flight Footprints') {
             map.olmap.removeLayer(layer);
           }
         });
@@ -1305,7 +1305,7 @@ export default {
         var map = this.$root.map;
         // Remove layers if exist
         map.olmap.getLayers().forEach(function (layer) {
-          if (layer.get("name") === "Flight mosaics") {
+          if (layer.get('name') === 'Flight mosaics') {
             map.olmap.removeLayer(layer);
           }
         });
@@ -1318,14 +1318,14 @@ export default {
       this.showEmailComposer = !this.showEmailComposer;
       var vm = this;
       if (vm.emailList.length == 0) {
-        if (this.env.gokartService == "") {
+        if (this.env.gokartService == '') {
           this.env.gokartServicewindow.location.href.slice(0, -4);
         }
-        $.get(this.env.gokartService + "/hotspot_email_list").then(
+        $.get(this.env.gokartService + '/hotspot_email_list').then(
           function (response) {
             var jsonObject = JSON.parse(response);
-            vm.emailList = jsonObject["objects"];
-            const select = document.getElementById("emailRecipient");
+            vm.emailList = jsonObject['objects'];
+            const select = document.getElementById('emailRecipient');
             for (let email in vm.emailList) {
               select.add(new Option(vm.emailList[email]));
             }
@@ -1337,20 +1337,20 @@ export default {
     showEmailComposerPanel: function () {
       if (this.flights.length == 0 && this.showEmailComposer == 0)
         return void alert(
-          "The email function is designed to work only if one or more hotspot flights are loaded in the map.",
+          'The email function is designed to work only if one or more hotspot flights are loaded in the map.',
         );
       this.showEmailComposer = !this.showEmailComposer;
       var vm = this;
       if (vm.emailList.length == 0) {
-        if (this.env.gokartService == "") {
+        if (this.env.gokartService == '') {
           this.env.gokartServicewindow.location.href.slice(0, -4);
         }
-        $.get(this.env.gokartService + "/hotspot_email_list").then(
+        $.get(this.env.gokartService + '/hotspot_email_list').then(
           function (response) {
             vm.emailList = JSON.parse(response);
-            const select = document.getElementById("emailRecipient");
+            const select = document.getElementById('emailRecipient');
             for (let item in vm.emailList) {
-              select.add(new Option(vm.emailList[item]["email"]));
+              select.add(new Option(vm.emailList[item]['email']));
             }
           },
         );
@@ -1358,13 +1358,13 @@ export default {
     },
 
     sendEmail_OLD: function () {
-      var recipient = document.getElementById("emailRecipient").value;
-      var messageText = document.getElementById("emailText").value;
+      var recipient = document.getElementById('emailRecipient').value;
+      var messageText = document.getElementById('emailText').value;
       var vm = this;
-      var cqlFilter = "";
+      var cqlFilter = '';
       if (vm.hasDateFilter()) {
         if (vm.thermalSingleDate != undefined) {
-          var singleDate = vm.thermalSingleDate.replace(/-/g, "");
+          var singleDate = vm.thermalSingleDate.replace(/-/g, '');
           cqlFilter =
             "strStartsWith(flight_datetime, '" + singleDate + "') = true";
         }
@@ -1373,18 +1373,18 @@ export default {
       // TODO: Fix unused variable
       // var dateInfo = this.getDateInfoForMosaics(vm)
       if (messageText.length == 0) {
-        alert("You need to type in a message.");
+        alert('You need to type in a message.');
         return;
       }
       $.get(
         this.env.gokartService +
-          "/send_hotspot_email/" +
+          '/send_hotspot_email/' +
           recipient +
-          "/" +
+          '/' +
           messageText +
-          "/" +
+          '/' +
           vm.flights +
-          "/" +
+          '/' +
           cqlFilter,
       ).then(function (response) {
         alert(response);
@@ -1392,35 +1392,35 @@ export default {
     },
 
     sendEmail: function () {
-      var recipient = document.getElementById("emailRecipient").value,
-        messageText = document.getElementById("emailText").value,
+      var recipient = document.getElementById('emailRecipient').value,
+        messageText = document.getElementById('emailText').value,
         vm = this,
-        cqlFilter = "";
+        cqlFilter = '';
       if (vm.hasDateFilter() && void 0 != vm.thermalSingleDate) {
         cqlFilter =
           "strStartsWith(flight_datetime, '" +
-          vm.thermalSingleDate.replace(/-/g, "") +
+          vm.thermalSingleDate.replace(/-/g, '') +
           "') = true";
       }
       this.getDateInfoForMosaics(vm);
       if (0 == messageText.length)
-        return void alert("You need to type in a message.");
+        return void alert('You need to type in a message.');
       try {
         $.get(
           this.env.gokartService +
-            "/send_hotspot_email/" +
+            '/send_hotspot_email/' +
             recipient +
-            "/" +
+            '/' +
             messageText +
-            "/" +
+            '/' +
             vm.flights +
-            "/" +
+            '/' +
             cqlFilter,
         ).then(function (response) {
           alert(response);
         });
       } catch (err) {
-        alert(err.name + ": " + err.message);
+        alert(err.name + ': ' + err.message);
       }
     },
 
@@ -1502,7 +1502,7 @@ export default {
       this.clippedFeatures.splice(0, this.clippedFeatures.length);
       for (var index = 0; index < this.selectedFeatures.getLength(); index++) {
         this.clippedFeatures.push(
-          this.selectedFeatures.item(index).get("deviceid"),
+          this.selectedFeatures.item(index).get('deviceid'),
         );
       }
       if (this.clippedOnly) {
@@ -1523,28 +1523,28 @@ export default {
 
       this._thermalInitialised = true;
 
-      this.thermalStatus.phaseEnd("gk-init");
+      this.thermalStatus.phaseEnd('gk-init');
 
-      this.thermalStatus.phaseBegin("attach_events", 10, "Attach events");
+      this.thermalStatus.phaseBegin('attach_events', 10, 'Attach events');
 
-      vm.map.olmap.getView().on("propertychange", function () {
+      vm.map.olmap.getView().on('propertychange', function () {
         vm.updateViewport();
       });
 
-      vm.selectedFeatures.on("add", function () {
+      vm.selectedFeatures.on('add', function () {
         vm.selectRevision += 1;
       });
 
-      vm.selectedFeatures.on("remove", function () {
+      vm.selectedFeatures.on('remove', function () {
         vm.selectRevision += 1;
       });
 
-      vm.map.olmap.on("removeLayer", function (ev) {
-        if (ev.mapLayer.get("id") === "hotspots:hotspot_centroids") {
+      vm.map.olmap.on('removeLayer', function (ev) {
+        if (ev.mapLayer.get('id') === 'hotspots:hotspot_centroids') {
           vm.features.clear();
           vm._featurelist.clear();
         } else if (
-          ev.mapLayer.get("id") === "hotspots:hotspot_flight_footprints"
+          ev.mapLayer.get('id') === 'hotspots:hotspot_flight_footprints'
         ) {
           vm.footprints.clear();
           vm._footprintlist.clear();
@@ -1560,55 +1560,55 @@ export default {
 
       vm._resolutionChanged();
 
-      vm.map.olmap.getView().on("change:resolution", function () {
+      vm.map.olmap.getView().on('change:resolution', function () {
         vm._resolutionChanged();
       });
 
-      this.thermalStatus.phaseEnd("attach_events");
+      this.thermalStatus.phaseEnd('attach_events');
 
-      this.thermalStatus.phaseBegin("init_tools", 10, "Initialize tools");
+      this.thermalStatus.phaseBegin('init_tools', 10, 'Initialize tools');
 
       $.each([vm.annotations.ui.defaultPan], function (index, t) {
         t.scope = t.scope || [];
-        t.scope.push("thermal");
+        t.scope.push('thermal');
       });
 
       vm.tools = vm.annotations.tools.filter(function (t) {
-        return t.scope && t.scope.indexOf("thermal") >= 0;
+        return t.scope && t.scope.indexOf('thermal') >= 0;
       });
 
-      this.thermalStatus.phaseEnd("init_tools");
+      this.thermalStatus.phaseEnd('init_tools');
     },
   },
   mounted() {
     var vm = this;
     var thermalStatus = this.loading.register(
-      "thermal",
-      "Thermal Imaging Component",
+      'thermal',
+      'Thermal Imaging Component',
     );
     vm._featurelist = new Collection();
     vm._footprintlist = new Collection();
 
-    thermalStatus.phaseBegin("initialize", 20, "Initialize");
+    thermalStatus.phaseBegin('initialize', 20, 'Initialize');
 
     this.changeThermalDateRange();
 
-    thermalStatus.phaseBegin("load_hotspots", 30, "Load hotspots", false, true);
+    thermalStatus.phaseBegin('load_hotspots', 30, 'Load hotspots', false, true);
     useStateStore().fixedLayers.push({
       //   type: 'WFSLayer',
-      type: "ImageLayer",
-      name: "Thermal Imaging Hotspots",
-      id: "hotspots:hotspot_centroids",
+      type: 'ImageLayer',
+      name: 'Thermal Imaging Hotspots',
+      id: 'hotspots:hotspot_centroids',
       features: vm._featurelist,
       getFeatureInfo: function (f) {
         return {
-          flight_datetime: f.get("flight_datetime"),
-          hotspot_no: f.get("hotspot_no"),
-          images: f.get("images"),
+          flight_datetime: f.get('flight_datetime'),
+          hotspot_no: f.get('hotspot_no'),
+          images: f.get('images'),
         };
       },
       onerror: function (status, message) {
-        thermalStatus.phaseFailed("load_hotspots", status + " : " + message);
+        thermalStatus.phaseFailed('load_hotspots', status + ' : ' + message);
       },
       onload: function (loadType, vectorSource, features) {
         vm.features.clear();
@@ -1632,23 +1632,23 @@ export default {
         $.each(features, function (index, feature) {
           //var hotspot_no = feature.get('hotspot_no').toString()
           //feature.setStyle(s(hotspot_no))
-          var imagesString = feature.get("images");
-          var imagesArray = imagesString.split(",");
+          var imagesString = feature.get('images');
+          var imagesArray = imagesString.split(',');
           feature.shortImages = imagesArray;
         });
       },
     });
 
     useStateStore().fixedLayers.push({
-      type: "WFSLayer",
-      name: "Thermal Imaging Flight Footprints",
-      id: "hotspots:hotspot_flight_footprints",
+      type: 'WFSLayer',
+      name: 'Thermal Imaging Flight Footprints',
+      id: 'hotspots:hotspot_flight_footprints',
       features: vm._footprintlist,
       getFeatureInfo: function (f) {
-        return { flight_datetime: f.get("flight_datetime") };
+        return { flight_datetime: f.get('flight_datetime') };
       },
       onerror: function (status, message) {
-        thermalStatus.phaseFailed("load_hotspots", status + " : " + message);
+        thermalStatus.phaseFailed('load_hotspots', status + ' : ' + message);
       },
       onload: function (loadType, vectorSource, features) {
         vm.footprints.clear();
@@ -1668,14 +1668,14 @@ export default {
       },
     });
 
-    thermalStatus.phaseEnd("load_hotspots");
+    thermalStatus.phaseEnd('load_hotspots');
 
     var tools = [
       {
-        name: "Thermal Imaging Select",
-        label: "Select",
+        name: 'Thermal Imaging Select',
+        label: 'Select',
         // icon: 'fa-mouse-pointer',
-        scope: ["thermal"],
+        scope: ['thermal'],
         selectedFeatures: vm.selectedFeatures,
         keepSelection: true,
         interactions: [
@@ -1723,9 +1723,9 @@ export default {
       vm.annotations.tools.push(tool);
     });
 
-    thermalStatus.phaseEnd("initialize");
+    thermalStatus.phaseEnd('initialize');
 
-    thermalStatus.phaseBegin("gk-init", 30, "Listen 'gk-init' event");
+    thermalStatus.phaseBegin('gk-init', 30, "Listen 'gk-init' event");
   },
 };
 </script>

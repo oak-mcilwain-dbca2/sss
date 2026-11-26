@@ -1,14 +1,14 @@
 // stores/settings.js
 
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
-export const useSettingsStore = defineStore("settings", {
+export const useSettingsStore = defineStore('settings', {
   state: () => ({
     settings: {
       tourVersion: null,
       undoLimit: 0,
-      lengthUnit: "km",
-      areaUnit: "ha",
+      lengthUnit: 'km',
+      areaUnit: 'ha',
       measureFeature: false,
 
       print: {
@@ -30,8 +30,8 @@ export const useSettingsStore = defineStore("settings", {
       },
 
       weatheroutlook: {
-        "weather-outlook-customized": null,
-        "weather-outlook-amicus": null,
+        'weather-outlook-customized': null,
+        'weather-outlook-amicus': null,
       },
     },
   }),
