@@ -31,6 +31,10 @@ import Collection from 'ol/Collection';
 
 import EventType from 'ol/events/EventType';
 
+import GeoJSON from 'ol/format/GeoJSON';
+
+const geojson = new GeoJSON();
+
 import { useStateStore } from '@/stores/state';
 import { useLoadingStore } from '@/stores/loading';
 
@@ -303,10 +307,7 @@ export default {
         features = [features];
       }
 
-      this.addLog([
-        'C',
-        JSON.parse(this.$root.geojson.writeFeatures(features)),
-      ]);
+      this.addLog(['C', JSON.parse(geojson.writeFeatures(features))]);
     },
     removeFeatures: function (features) {
       if (features instanceof Collection) {
@@ -314,10 +315,7 @@ export default {
       } else if (!Array.isArray(features)) {
         features = [features];
       }
-      this.addLog([
-        'R',
-        JSON.parse(this.$root.geojson.writeFeatures(features)),
-      ]);
+      this.addLog(['R', JSON.parse(geojson.writeFeatures(features))]);
     },
     modifyFeatures: function (features) {
       var vm = this;
@@ -332,8 +330,8 @@ export default {
       if (features.length) {
         this.addLog([
           'U',
-          JSON.parse(this.$root.geojson.writeFeatures(this._modifyingFeatures)),
-          JSON.parse(this.$root.geojson.writeFeatures(features)),
+          JSON.parse(geojson.writeFeatures(this._modifyingFeatures)),
+          JSON.parse(geojson.writeFeatures(features)),
         ]);
       }
       this._modifyingFeatures = [];
@@ -399,7 +397,7 @@ export default {
         if (vm.drawingLogs[undoIndex][0] === 'C') {
           //create feature log;
           //undo action will delete the feature
-          var changedFeatures = vm.$root.geojson.readFeatures(
+          var changedFeatures = geojson.readFeatures(
             vm.drawingLogs[undoIndex][1],
           );
           $.each(changedFeatures, function (i, feature) {
@@ -421,9 +419,7 @@ export default {
         } else if (vm.drawingLogs[undoIndex][0] === 'R') {
           //Remove feature log;
           //undo action will add the feature
-          changedFeatures = vm.$root.geojson.readFeatures(
-            vm.drawingLogs[undoIndex][1],
-          );
+          changedFeatures = geojson.readFeatures(vm.drawingLogs[undoIndex][1]);
           $.each(changedFeatures, function (i, feature) {
             vm.annotations.initFeature(feature);
             vm.annotations.features.push(feature);
@@ -431,9 +427,7 @@ export default {
         } else if (vm.drawingLogs[undoIndex][0] === 'U') {
           //Change geature geometry log;
           //undo action will replace the feature's geometry
-          changedFeatures = vm.$root.geojson.readFeatures(
-            vm.drawingLogs[undoIndex][1],
-          );
+          changedFeatures = geojson.readFeatures(vm.drawingLogs[undoIndex][1]);
           $.each(changedFeatures, function (i, feature) {
             var index = vm.annotations.features
               .getArray()
@@ -522,7 +516,7 @@ export default {
         if (vm.drawingLogs[vm.redoPointer][0] === 'C') {
           //create feature log;
           //redo action will create the feature again
-          var changedFeatures = vm.$root.geojson.readFeatures(
+          var changedFeatures = geojson.readFeatures(
             vm.drawingLogs[vm.redoPointer][1],
           );
           $.each(changedFeatures, function (i, feature) {
@@ -532,7 +526,7 @@ export default {
         } else if (vm.drawingLogs[vm.redoPointer][0] === 'R') {
           //Remove feature log;
           //redo action will remove the feature again
-          changedFeatures = vm.$root.geojson.readFeatures(
+          changedFeatures = geojson.readFeatures(
             vm.drawingLogs[vm.redoPointer][1],
           );
           $.each(changedFeatures, function (i, feature) {
@@ -548,7 +542,7 @@ export default {
         } else if (vm.drawingLogs[vm.redoPointer][0] === 'U') {
           //Change feature log;
           //redo action will replace the feature's geometry
-          changedFeatures = vm.$root.geojson.readFeatures(
+          changedFeatures = geojson.readFeatures(
             vm.drawingLogs[vm.redoPointer][2],
           );
           $.each(changedFeatures, function (i, feature) {

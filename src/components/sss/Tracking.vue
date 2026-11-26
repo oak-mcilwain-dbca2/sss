@@ -484,6 +484,9 @@ import { useStateStore } from '@/stores/state';
 import { useMapStore } from '@/stores/map';
 
 import DateTimeInput from '@/components/forms/DateTimeInput.vue';
+import { useInfoStore } from '@/stores/info';
+import { useCatalogueStore } from '@/stores/catalogue';
+import { useExportStore } from '@/stores/export';
 
 export default {
   store: {
@@ -578,7 +581,7 @@ export default {
       return this.annotationsReady ? useAnnotationsStore().component : null;
     },
     info: function () {
-      return this.$root.info;
+      return useInfoStore().component;
     },
     systemSetting: function () {
       return useSystemSettingStore();
@@ -596,10 +599,10 @@ export default {
       return this.setting?.resourceLabels;
     },
     catalogue: function () {
-      return this.$root.catalogue;
+      return useCatalogueStore().component;
     },
     export: function () {
-      return this.$root.export;
+      return useExportStore().component;
     },
     loading: function () {
       return useLoadingStore();
@@ -655,22 +658,16 @@ export default {
       },
     },
     trackingLayer: function () {
-      return this.$root.catalogue.getLayer(this.env.resourceTrackingLiveLayer);
+      return this.catalogue.getLayer(this.env.resourceTrackingLiveLayer);
     },
     trackingMapLayer: function () {
-      return this.$root.map
-        ? this.$root.map.getMapLayer(this.trackingLayer)
-        : undefined;
+      return this.map ? this.map.getMapLayer(this.trackingLayer) : undefined;
     },
     historyLayer: function () {
-      return this.$root.catalogue.getLayer(
-        this.env.resourceTrackingHistoryLayer,
-      );
+      return this.catalogue.getLayer(this.env.resourceTrackingHistoryLayer);
     },
     historyMapLayer: function () {
-      return this.$root.map
-        ? this.$root.map.getMapLayer(this.historyLayer)
-        : undefined;
+      return this.map ? this.map.getMapLayer(this.historyLayer) : undefined;
     },
     featurelist: function () {
       try {
@@ -1075,7 +1072,7 @@ export default {
       } else {
         list = this._featurelist.getArray();
       }
-      this.$root.export.exportVector(list, 'trackingdata');
+      this.export.exportVector(list, 'trackingdata');
     },
     downloadSelectedCSV: function () {
       var deviceFilter = '';
@@ -1097,7 +1094,7 @@ export default {
       var historyLayer = this.historyLayer;
       if (!this.toggleHistory) {
         historyLayer.cql_filter = 'clearhistorylayer';
-        this.$root.catalogue.onLayerChange(historyLayer, false);
+        this.catalogue.onLayerChange(historyLayer, false);
       }
     },
     updateCQLFilter: function (wait) {
@@ -1168,12 +1165,12 @@ export default {
           "')";
         historyLayer.cql_filter =
           deviceFilter + 'and ' + this.historyDateFilter();
-        if (this.$root.catalogue.onLayerChange(historyLayer, true)) {
+        if (this.catalogue.onLayerChange(historyLayer, true)) {
           //Add history layer into the map. need to add to the hoverable
           this.info.hoverable.push(this.historyMapLayer);
         } else {
           //history layer is already turned on, manually load the history source
-          var source = this.$root.map.getMapLayer(historyLayer).getSource();
+          var source = this.map.getMapLayer(historyLayer).getSource();
           source.loadSource('query');
         }
       } catch (ex) {

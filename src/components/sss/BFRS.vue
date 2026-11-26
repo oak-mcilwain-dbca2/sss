@@ -691,6 +691,10 @@ import { singleClick, shiftKeyOnly, noModifierKeys } from 'ol/events/condition';
 
 import { containsCoordinate } from 'ol/extent';
 
+import GeoJSON from 'ol/format/GeoJSON';
+
+const geojson = new GeoJSON();
+
 import { intersect, point, booleanPointInPolygon, buffer } from '@turf/turf';
 import {
   FeatureTask,
@@ -725,6 +729,9 @@ import { useStateStore } from '@/stores/state';
 import { useMapStore } from '@/stores/map';
 import { useUserStore } from '@/stores/user';
 import { useSettingsStore } from '@/stores/settings';
+import { useMeasureStore } from '@/stores/measure';
+import { useInfoStore } from '@/stores/info';
+import { useCatalogueStore } from '@/stores/catalogue';
 
 export default {
   store: {
@@ -867,16 +874,16 @@ export default {
       return useActiveStore()?.component;
     },
     measure: function () {
-      return this.$root.measure;
+      return useMeasureStore().component;
     },
     info: function () {
-      return this.$root.info;
+      return useInfoStore().component;
     },
     catalogue: function () {
-      return this.$root.catalogue;
+      return useCatalogueStore().component;
     },
     export: function () {
-      return this.$root.export;
+      return useExportStore().component;
     },
     loading: function () {
       return useLoadingStore();
@@ -900,12 +907,10 @@ export default {
       return this.selectRevision && this.selectedFeatures?.getLength();
     },
     bushfireLayer: function () {
-      return this.$root.catalogue.getLayer(env.bushfireListLayer);
+      return this.catalogue.getLayer(env.bushfireListLayer);
     },
     bushfireMapLayer: function () {
-      return this.$root.map
-        ? this.$root.map.getMapLayer(this.bushfireLayer)
-        : undefined;
+      return this.map ? this.map.getMapLayer(this.bushfireLayer) : undefined;
     },
     finalFireboundaryMapLayer: function () {
       return this.bushfireMapLayer
@@ -991,7 +996,7 @@ export default {
           geometries.length > 0 &&
           feat.get('fire_number') &&
           vm.bushfireLabels &&
-          !vm.$root.active.isHidden(vm.map.getMapLayer(env.bushfireListLayer))
+          !vm.active.isHidden(vm.map.getMapLayer(env.bushfireListLayer))
         ) {
           labelStyle = labelStyleFunc.call(feat, res);
           labelStyle.setGeometry(geometries[0]);
@@ -2947,7 +2952,7 @@ export default {
                 data: {
                   bfrs: feat.get('fire_number'),
                   tasks: JSON.stringify(vm.featureTasks(vm.target_feature)),
-                  features: vm.$root.geojson.writeFeatures([feat]),
+                  features: geojson.writeFeatures([feat]),
                   options: JSON.stringify({
                     area: {
                       action: 'getArea',
@@ -4124,7 +4129,7 @@ export default {
     showBushfireLabels: function () {
       if (
         this.bushfireMapLayer &&
-        !this.$root.active.isHidden(this.bushfireMapLayer)
+        !this.active.isHidden(this.bushfireMapLayer)
       ) {
         this.bushfireMapLayer.changed();
       }
@@ -4415,7 +4420,7 @@ export default {
         });
         if (newBushfiresPoint.length > 0) {
           options['newBushfiresOriginPoint'] =
-            this.$root.geojson.writeFeatures(newBushfiresPoint);
+            geojson.writeFeatures(newBushfiresPoint);
           options['layers'].push({
             layer: 'new_bushfire_point',
             ignore_if_empty: true,
@@ -4428,7 +4433,7 @@ export default {
         }
         if (newBushfiresBoundary.length > 0) {
           options['newBushfiresFireboundary'] =
-            this.$root.geojson.writeFeatures(newBushfiresBoundary);
+            geojson.writeFeatures(newBushfiresBoundary);
           options['layers'].push({
             layer: 'new_bushfire_fireboundary',
             ignore_if_empty: true,
@@ -4440,7 +4445,7 @@ export default {
           });
         }
       }
-      this.$root.export.downloadVector(fmt, options, function (status, msg) {
+      this.export.downloadVector(fmt, options, function (status, msg) {
         if (status) {
           vm.dialog.close();
         } else {
@@ -4633,8 +4638,7 @@ export default {
                   });
 
                   if (!targetFeature.imported_feature) {
-                    var feature_response =
-                      this.$root.geojson.readFeatures(imp_feature)[0];
+                    var feature_response = geojson.readFeatures(imp_feature)[0];
                     targetFeature.imported_feature = feature_response;
                   }
 
@@ -6074,7 +6078,7 @@ export default {
 
                 if (fireNumber.startsWith('New bushfire') && !existingFeature) {
                   // Create new feature
-                  var imported_feature = this.$root.geojson.readFeatures(
+                  var imported_feature = geojson.readFeatures(
                     bfrsItem.feature,
                   )[0];
 
@@ -6143,9 +6147,7 @@ export default {
                   }
                 } else if (existingFeature) {
                   // Existing feature
-                  imported_feature = this.$root.geojson.readFeatures(
-                    bfrsItem.feature,
-                  )[0];
+                  imported_feature = geojson.readFeatures(bfrsItem.feature)[0];
                   if (!imported_feature) {
                     console.log(
                       'No feature found in the imported data for fire number: ' +
@@ -6246,7 +6248,7 @@ export default {
       this.annotations.setTool();
 
       //add feature to place an point based on coordinate
-      this.$root.search.setSearchPointFunc(function (searchMethod, coords) {
+      this.search.setSearchPointFunc(function (searchMethod, coords) {
         if (['DMS', 'MGA'].indexOf(searchMethod) < 0) {
           return false;
         }
@@ -6385,7 +6387,7 @@ export default {
 
     vm._bfrsStatus = this.loading.register('bfrs', 'Bushfire Report Component');
     vm._bfrsStatus.phaseBegin('initialize', 10, 'Initialize');
-    var map = this.$root.map;
+    var map = this.map;
 
     vm._reportStatus = {
       99999: 'unknown',

@@ -273,6 +273,8 @@ import { squaredDistanceToSegment } from 'ol/coordinate';
 
 import GeoJSON from 'ol/format/GeoJSON';
 
+const geojson = new GeoJSON();
+
 import {
   singleClick,
   mouseActionButton,
@@ -739,7 +741,7 @@ export default {
         if (ignoredFeatures.length) {
           console.warn(
             'The following features are ignored.\r\n' +
-              vm.geojson.writeFeatures(features),
+              geojson.writeFeatures(features),
           );
         }
         if (features && features.length > 0) {
@@ -2957,9 +2959,7 @@ export default {
         10,
         'Load saved features',
       );
-      var savedFeatures = this.geojson.readFeatures(
-        this.$root.store.annotations,
-      );
+      var savedFeatures = geojson.readFeatures(this.$root.store.annotations);
       this.annotationStatus.phaseEnd('load_features');
 
       this.annotationStatus.phaseBegin(

@@ -387,6 +387,8 @@ import { unByKey } from 'ol/Observable';
 
 import GeoJSON from 'ol/format/GeoJSON';
 
+const geojson = new GeoJSON();
+
 import ScaleLine from 'ol/control/ScaleLine';
 
 import gkLegend from './Legend.vue';
@@ -399,6 +401,8 @@ import { useLoadingStore } from '@/stores/loading';
 
 import { eventBus } from '@/services/gokart';
 import { useMapStore } from '@/stores/map';
+import { useAnnotationsStore } from '@/stores/annotations.js';
+import { useStateStore } from '@/stores/state.js';
 
 export default {
   store: {
@@ -459,20 +463,20 @@ export default {
     settings() {
       return useSettingsStore().settings;
     },
-    env: function () {
-      return this.$root.env;
-    },
     annotations: function () {
-      return this.$root.annotations;
+      return useAnnotationsStore().component;
     },
     layerlegends: function () {
       return this.$refs.layerlegends;
     },
     map: function () {
-      return this.$root.map;
+      return useMapStore().component;
     },
     olmap: function () {
-      return this.$root.map.olmap;
+      return this.map?.olmap;
+    },
+    touring() {
+      return useStateStore().touring;
     },
     shortUrl: {
       cache: false,
@@ -484,7 +488,7 @@ export default {
         return $.param({
           lon: lonlat[0],
           lat: lonlat[1],
-          scale: Math.round(this.$root.map.getScale() * 1000),
+          scale: Math.round(this.map.getScale() * 1000),
         });
       },
     },
@@ -527,7 +531,7 @@ export default {
     },
     // info for the legend block on the print raster
     legendInfo: function () {
-      if (!this.$root.map || !this.$root.map.olmap) {
+      if (!this.map || !this.map.olmap) {
         return {};
       }
       var result = {
@@ -535,11 +539,11 @@ export default {
         author: 'Produced by the Department of Parks and Wildlife', //this.whoami.email,
         date: 'Map last amended ' + moment().toLocaleString(),
       };
-      if (this.$root.map) {
+      if (this.map) {
         result.km = (
-          Math.round(this.$root.map.getScale() * 40) / 1000
+          Math.round(this.map.getScale() * 40) / 1000
         ).toLocaleString();
-        result.scale = this.paperSize + ' ' + this.$root.scales.scaleString;
+        result.scale = this.paperSize + ' ' + this.scales.scaleString;
       }
       return result;
     },
@@ -548,10 +552,10 @@ export default {
       const filename =
         (name || '') +
         '.' +
-        this.$root.profile.name +
+        this.profile.name +
         '_export_' +
         moment().format('YYYYMMDD_HHmmss');
-      var result = this.$root.geojson.writeFeatures(features);
+      var result = geojson.writeFeatures(features);
       format = format || this.vectorFormat;
       if (format === 'geojson') {
         var blob = new window.Blob([result], {
@@ -1014,7 +1018,7 @@ export default {
 
         //no print job is processing, get the map size and scale for recovering.
         this.printStatus.oldLayout.size = this.olmap.getSize();
-        this.printStatus.oldLayout.scale = this.$root.map.getScale();
+        this.printStatus.oldLayout.scale = this.map.getScale();
         this.printStatus.oldLayout.extent = this.olmap
           .getView()
           .calculateExtent(this.olmap.getSize());
@@ -1059,14 +1063,14 @@ export default {
           .getView()
           .fit(this.printStatus.oldLayout.extent, this.olmap.getSize());
         this.printStatus.layout.scale = this.settings.print.snapToFixedScale
-          ? this.$root.map.getFixedScale()
-          : this.$root.map.getScale();
+          ? this.map.getFixedScale()
+          : this.map.getScale();
         if (this.settings.print.snapToFixedScale) {
-          this.$root.map.setScale(this.printStatus.layout.scale);
+          this.map.setScale(this.printStatus.layout.scale);
         }
       } else {
         this.printStatus.layout.scale = this.settings.print.snapToFixedScale
-          ? this.$root.map.getFixedScale(this.printStatus.oldLayout.scale)
+          ? this.map.getFixedScale(this.printStatus.oldLayout.scale)
           : this.printStatus.oldLayout.scale;
         this.printStatus.layout.size = [
           this.dpmm * this.printStatus.layout.width,
@@ -1074,7 +1078,7 @@ export default {
         ];
         this.olmap.setSize(this.printStatus.layout.size);
         if (this.settings.print.snapToFixedScale) {
-          this.$root.map.setScale(this.printStatus.layout.scale);
+          this.map.setScale(this.printStatus.layout.scale);
         }
       }
       // Add scale line to the printed map
@@ -1112,7 +1116,7 @@ export default {
       /*
         var  msg = (this.settings.print.retainBoundingbox)?"Retain boundingbox":"Retain scale"
         msg += (this.settings.print.snapToFixedScale)?" and snap to fixed scale":""
-        msg += " : old extent = " + this.printStatus.oldLayout.extent + "\t new extent = " + this.printStatus.layout.extent + "\told scale = " + this.printStatus.oldLayout.scale + "\texpected scale = " + this.printStatus.layout.scale + "\t new scale=" + this.$root.map.getScale()  + "\t old size =" + this.printStatus.oldLayout.size + "\texpected size = " + this.printStatus.layout.size + "\t new size = " + this.olmap.getSize()
+        msg += " : old extent = " + this.printStatus.oldLayout.extent + "\t new extent = " + this.printStatus.layout.extent + "\told scale = " + this.printStatus.oldLayout.scale + "\texpected scale = " + this.printStatus.layout.scale + "\t new scale=" + this.map.getScale()  + "\t old size =" + this.printStatus.oldLayout.size + "\texpected size = " + this.printStatus.layout.size + "\t new size = " + this.olmap.getSize()
         console.log(msg)
         */
 
@@ -1134,7 +1138,7 @@ export default {
         }
         //restore the map size and map scale
         this.olmap.setSize(this.printStatus.oldLayout.size);
-        this.$root.map.setScale(this.printStatus.oldLayout.scale);
+        this.map.setScale(this.printStatus.oldLayout.scale);
         //restore the interactions
         $.each(this.printStatus.interactions, function (index, interact) {
           vm.olmap.addInteraction(interact);
@@ -1507,7 +1511,7 @@ export default {
       var vm = this;
       var store = this.$root.store;
       // don't save if user is in tour
-      if (vm.$root.touring) {
+      if (vm.touring) {
         return;
       }
 
@@ -1522,7 +1526,7 @@ export default {
         store.view.center = nextCenter;
       }
 
-      var nextScale = vm.$root.map.getScale();
+      var nextScale = vm.map.getScale();
       if (Number.isFinite(nextScale) && nextScale > 0) {
         store.view.scale = Math.round(nextScale * 1000);
       }
@@ -1532,9 +1536,7 @@ export default {
       }
       store.activeLayers = activeLayers || [];
       store.annotations = JSON.parse(
-        vm.$root.geojson.writeFeatures(
-          vm.$root.annotations.features.getArray(),
-        ),
+        geojson.writeFeatures(vm.annotations.features.getArray()),
       );
 
       // save in the offline store

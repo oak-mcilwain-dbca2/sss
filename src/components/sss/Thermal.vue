@@ -310,6 +310,10 @@ import { useLoadingStore } from '@/stores/loading';
 import { useStateStore } from '@/stores/state';
 import { useMapStore } from '@/stores/map';
 import { useSettingsStore } from '@/stores/settings';
+import { useInfoStore } from '@/stores/info';
+import { useSystemSettingStore } from '@/stores/systemSetting';
+import { useCatalogueStore } from '@/stores/catalogue';
+import { useExportStore } from '@/stores/export';
 
 export default {
   store: {
@@ -363,9 +367,6 @@ export default {
     map() {
       return useMapStore()?.component;
     },
-    env: function () {
-      return this.$root.env;
-    },
     activeReady() {
       return useActiveStore().ready;
     },
@@ -379,10 +380,10 @@ export default {
       return this.annotationsReady ? useAnnotationsStore().component : null;
     },
     info: function () {
-      return this.$root.info;
+      return useInfoStore().component;
     },
     systemsetting: function () {
-      return this.$root.systemsetting;
+      return useSystemSettingStore();
     },
     setting() {
       return useSettingsStore();
@@ -391,10 +392,10 @@ export default {
       return this.setting?.viewportOnly;
     },
     catalogue: function () {
-      return this.$root.catalogue;
+      return useCatalogueStore().component;
     },
     export: function () {
-      return this.$root.export;
+      return useExportStore().comp;
     },
     loading: function () {
       return useLoadingStore();
@@ -411,12 +412,10 @@ export default {
         return !(this.selectRevision && this.selectedFeatures && this.selectedFeatures.getLength() && this.thermalFromDate !== "")
       },*/
     hotspotLayer: function () {
-      return this.$root.catalogue.getLayer('hotspots:hotspot_centroids');
+      return this.catalogue.getLayer('hotspots:hotspot_centroids');
     },
     hotspotMapLayer: function () {
-      return this.$root.map
-        ? this.$root.map.getMapLayer(this.hotspotLayer)
-        : undefined;
+      return this.map ? this.map.getMapLayer(this.hotspotLayer) : undefined;
     },
     //based on the much more complex bfrsStyleFunc, may be overcomplex
     hotspotStyleFunc: function () {
@@ -454,14 +453,12 @@ export default {
     },
 
     flightFootprintLayer: function () {
-      return this.$root.catalogue.getLayer(
-        'hotspots:hotspot_flight_footprints',
-      );
+      return this.catalogue.getLayer('hotspots:hotspot_flight_footprints');
     },
 
     flightFootprintMapLayer: function () {
-      return this.$root.map
-        ? this.$root.map.getMapLayer(this.flightFootprintLayer)
+      return this.map
+        ? this.map.getMapLayer(this.flightFootprintLayer)
         : undefined;
     },
 
@@ -674,7 +671,7 @@ export default {
     toggleFlightFootprint: function () {
       this.showFlightFootprint = !this.showFlightFootprint;
       this.export.saveState();
-      var map = this.$root.map;
+      var map = this.map;
       // Check if footprints layer already loaded
       var hotspotsLoaded = false;
       map.olmap.getLayers().forEach(function (layer) {
@@ -713,7 +710,7 @@ export default {
       this.export.saveState();
 
       var vm = this;
-      var map = this.$root.map;
+      var map = this.map;
       // Check if mosaic layer already loaded
       // TODO fix unused variable
       // var mosaicLoaded;
@@ -848,7 +845,7 @@ export default {
     removeImages: function () {
       this.isHotspotImageON = false;
       var hotspotButtons =
-        (this.$root.map,
+        (this.map,
         document
           .getElementById('hotspot-list')
           .querySelectorAll('.collapsible'));
@@ -893,7 +890,7 @@ export default {
             "flight_datetime between '" + fromDate + "' and '" + toDate + "'";
         }
       }
-      var map = vm.$root.map;
+      var map = vm.map;
       var imagesRemoved = vm.removeImages();
       var timeout = 10 * imagesRemoved;
       setTimeout(function () {
@@ -1060,9 +1057,7 @@ export default {
             list.forEach(function (feature) {
               extend(extent, feature.getGeometry().getExtent());
             });
-            vm.$root.map.olmap
-              .getView()
-              .fit(extent, vm.$root.map.olmap.getSize());
+            vm.map.olmap.getView().fit(extent, vm.map.olmap.getSize());
           }
 
           vm.setExtentFeatureSize();
@@ -1144,9 +1139,7 @@ export default {
           list.forEach(function (feature) {
             extend(extent, feature.getGeometry().getExtent());
           });
-          vm.$root.map.olmap
-            .getView()
-            .fit(extent, vm.$root.map.olmap.getSize());
+          vm.map.olmap.getView().fit(extent, vm.map.olmap.getSize());
         }, 500);
       }
       if (wait === 0) {
@@ -1177,7 +1170,7 @@ export default {
             .replace(' ON</b>', '');
         }
         imageListContent.style.display = 'none';
-        var map = this.$root.map;
+        var map = this.map;
         // Close any single images for this hotspot
         map.olmap.getLayers().forEach(function (layer) {
           if (layer) {
@@ -1208,7 +1201,7 @@ export default {
 
     showImage: function (flight_datetime, hotspot_no, file) {
       file = file.replace(' ', ''); // Get rid of whitespace
-      var map = this.$root.map;
+      var map = this.map;
       var hotspots_position = 0;
       this.isHotspotImageON = true;
       if (this.showRawImageMosaic) {
@@ -1284,7 +1277,7 @@ export default {
     removeHotspotLayers: function () {
       //not used at present (the removal is done in map.vue L1811)
       try {
-        var map = this.$root.map;
+        var map = this.map;
         // Remove layers if exist
         map.active.olLayers.forEach(function (layer) {
           if (layer.get('name') === 'Thermal Imaging Hotspots') {
@@ -1302,7 +1295,7 @@ export default {
     removeHotspotMosaic: function () {
       //not used at present (the removal is done in map.vue L1811)
       try {
-        var map = this.$root.map;
+        var map = this.map;
         // Remove layers if exist
         map.olmap.getLayers().forEach(function (layer) {
           if (layer.get('name') === 'Flight mosaics') {

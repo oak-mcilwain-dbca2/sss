@@ -289,6 +289,10 @@ import aboutSvg from '@/assets/images/about.svg';
 
 import appInfo from '@/config/appInfo';
 
+import { useLayout } from '@/composables/useLayout';
+
+const { setHintsHeight } = useLayout();
+
 import { useTour } from '@/composables/useTour';
 
 import { useLoadingStore } from '@/stores/loading';
@@ -432,9 +436,8 @@ export default {
       this.showOverviewMap(newValue);
     },
     showHints: function () {
-      var vm = this;
       this.$nextTick(function () {
-        vm.$root.setHintsHeight();
+        setHintsHeight();
       });
     },
   },

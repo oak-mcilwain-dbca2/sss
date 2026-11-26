@@ -66,6 +66,10 @@ import Event from 'ol/events/Event';
 
 import { get } from 'ol/proj';
 
+import GeoJSON from 'ol/format/GeoJSON';
+
+const geojson = new GeoJSON();
+
 import proj4 from 'proj4';
 import { bbox, buffer, point } from '@turf/turf';
 
@@ -1743,7 +1747,7 @@ export default {
           $.ajax({
             url: url + '?' + $.param(params),
             success: function (response) {
-              var features = vm.$root.geojson.readFeatures(response);
+              var features = geojson.readFeatures(response);
               onSuccess(features);
             },
             error: function () {
@@ -1773,7 +1777,7 @@ export default {
           $.ajax({
             url: url + '?' + $.param(options.params),
             success: function (response) {
-              var features = vm.$root.geojson.readFeatures(response);
+              var features = geojson.readFeatures(response);
               var defaultOnload = function (loadType, source, features) {
                 source.clear(true);
                 source.addFeatures(features);
@@ -3502,7 +3506,7 @@ export default {
         url: '/api/spatial',
         dataType: 'json',
         data: {
-          features: vm.$root.geojson.writeFeatures([feat]),
+          features: geojson.writeFeatures([feat]),
           options: JSON.stringify({
             grid: {
               action: 'getClosestFeature',

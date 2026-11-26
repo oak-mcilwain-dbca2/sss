@@ -514,6 +514,11 @@ import weatherOutlookAmicusSvg from '@/assets/images/weather-outlook-amicus.svg'
 import { useAnnotationsStore } from '@/stores/annotations';
 import { useSettingsStore } from '@/stores/settings';
 import { useLoadingStore } from '@/stores/loading';
+import { useSystemSettingStore } from '@/stores/systemSetting';
+import { useMapStore } from '@/stores/map';
+import { useMeasureStore } from '@/stores/measure';
+import { useActiveStore } from '@/stores/active';
+import { useCatalogueStore } from '@/stores/catalogue';
 
 export default {
   store: {
@@ -577,25 +582,22 @@ export default {
       return useLoadingStore();
     },
     setting: function () {
-      return this.$root.setting;
+      return useSettingsStore();
     },
     map: function () {
-      return this.$root.map;
-    },
-    env: function () {
-      return this.$root.env;
+      return useMapStore().component;
     },
     systemsetting: function () {
-      return this.$root.systemsetting;
+      return useSystemSettingStore();
     },
     measure: function () {
-      return this.$root.measure;
+      return useMeasureStore().component;
     },
     active: function () {
-      return this.$root.active;
+      return useActiveStore().component;
     },
     catalogue: function () {
-      return this.$root.catalogue;
+      return useCatalogueStore().component;
     },
     annotations: function () {
       return useAnnotationsStore();
