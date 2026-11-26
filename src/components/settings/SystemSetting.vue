@@ -196,7 +196,7 @@
                   id="take-tour"
                   class="button"
                   title="Take a tour of the new SSS interface"
-                  @click="$root.takeTour()"
+                  @click="takeTour()"
                   ><i class="fa fa-book"></i> Take Tour</a
                 >
               </div>
@@ -287,21 +287,26 @@ import localforage from 'localforage';
 
 import aboutSvg from '@/assets/images/about.svg';
 
-import { useUserStore } from '@/stores/user';
-
 import appInfo from '@/config/appInfo';
+
+import { useTour } from '@/composables/useTour';
+const { takeTour } = useTour();
 
 import { useLoadingStore } from '@/stores/loading';
 import { useSettingsStore } from '@/stores/settings';
 import { useStateStore } from '@/stores/state';
-
-import { eventBus, GK_EVENTS } from '@/services/gokart';
+import { useMapStore } from '@/stores/map';
+import { useUserStore } from '@/stores/user';
+import { useInfoStore } from '@/stores/info';
+import { useMeasureStore } from '@/stores/measure';
+import { useExportStore } from '@/stores/export';
+import { useAnnotationsStore } from '@/stores/annotations';
 
 export default {
   data: function () {
     return {
-      userStore: null,
       aboutSvg,
+      settingStatus: null,
       configuredUndoLimit: 0,
     };
   },
@@ -313,31 +318,37 @@ export default {
       return useLoadingStore();
     },
     whoami() {
-      return this.userStore.whoami;
+      return useUserStore().whoami;
     },
     profile: function () {
-      return this.$root.profile;
+      return this.whoami ? this.whoami['bushfire']['profile'] : null;
     },
     measure: function () {
-      return this.$root.measure;
+      return useMeasureStore().component;
     },
     info: function () {
-      return this.$root.info;
+      return useInfoStore().component;
     },
     annotations: function () {
-      return this.$root.annotations;
+      return useAnnotationsStore().component;
     },
     export: function () {
-      return this.$root.export;
+      return useExportStore().component;
     },
     drawinglogs: function () {
-      return this.$root.annotations.drawinglogs;
+      return this.annotations?.drawinglogs;
+    },
+    mapReady() {
+      return useMapStore().ready;
     },
     map: function () {
-      return this.$root.map;
+      return useMapStore().component;
     },
     settings() {
       return useSettingsStore();
+    },
+    state() {
+      return useStateStore();
     },
     undoLimit() {
       return this.settings?.undoLimit;
@@ -351,9 +362,6 @@ export default {
     rightHandTools() {
       return this.settings?.rightHandTools;
     },
-    tourVersion() {
-      return this.settings?.tourVersion;
-    },
     measureFeature() {
       return this.settings?.measureFeature;
     },
@@ -364,7 +372,7 @@ export default {
       return this.settings?.graticule;
     },
     showHints() {
-      return useStateStore().showHints;
+      return this.state?.showHints;
     },
     undoLimitDesc: function () {
       return (
@@ -403,16 +411,21 @@ export default {
       return this.configuredUndoLimit >= 0;
     },
     hoverInfoSwitchable: function () {
-      return (
-        this.$root.annotations.tool &&
-        this.$root.annotations.tool.name === 'Pan'
-      );
+      return this.annotations.tool && this.annotations.tool.name === 'Pan';
     },
     hoverInfo: function () {
       return this.map ? this.info.enabled : false;
     },
   },
   watch: {
+    mapReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready && !this._trackingInitialized) {
+          this.initialiseMapElements();
+        }
+      },
+    },
     rightHandTools: function (newValue) {
       this.showRightHandTools(newValue);
     },
@@ -427,6 +440,23 @@ export default {
     },
   },
   methods: {
+    takeTour,
+    initialiseMapElements() {
+      this.settingStatus.phaseEnd('gk-postinit');
+      this.settingStatus.phaseBegin(
+        'initialize',
+        20,
+        'Initialize',
+        true,
+        false,
+      );
+      this.showOverviewMap(this.overviewMap);
+      this.showRightHandTools(this.rightHandTools);
+
+      this.settingStatus.phaseEnd('gk-postinit');
+
+      this.settingStatus.phaseEnd('initialize');
+    },
     logout: function () {
       document.location = '/logout';
     },
@@ -520,35 +550,25 @@ export default {
           'This will clear all customized settings and reset to system default settings. Are you sure?',
         )
       ) {
-        this.$root.store.settings = $.extend(
-          {},
-          JSON.parse(JSON.stringify(this.$root.defaultSettings)),
-          { tourVersion: this.tourVersion },
-        );
+        this.settings.resetSettings();
         this.export.saveState();
       }
     },
   },
-  created() {
-    this.userStore = useUserStore();
-  },
   mounted() {
-    var vm = this;
-    var settingStatus = this.loading.register('setting', 'Setting Component');
+    this.settingStatus = this.loading.register(
+      'setting',
+      'SystemSetting Component',
+    );
     this.configuredUndoLimit = this.undoLimit;
 
-    settingStatus.phaseBegin(
+    this.settingStatus.phaseBegin(
       'gk-postinit',
       80,
       "Listen 'gk-postinit' event",
       true,
       true,
     );
-
-    eventBus.on(GK_EVENTS.POSTINIT, () => {
-      vm.showOverviewMap(vm.overviewMap);
-      vm.showRightHandTools(vm.rightHandTools);
-    });
   },
 };
 </script>

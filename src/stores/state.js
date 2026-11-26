@@ -4,6 +4,9 @@ import { defineStore } from 'pinia';
 
 export const useStateStore = defineStore('state', {
   state: () => ({
+    tourVersion: null,
+    touring: false,
+
     fixedLayers: [],
     drawingLogs: [],
     redoPointer: 0,
@@ -20,4 +23,14 @@ export const useStateStore = defineStore('state', {
     activeMenu: null,
     activeSubmenu: null,
   }),
+  actions: {
+    startTour(version) {
+      this.tourVersion = version;
+      this.touring = true;
+    },
+
+    stopTour() {
+      this.touring = false;
+    },
+  },
 });
