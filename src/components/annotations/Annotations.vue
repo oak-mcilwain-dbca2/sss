@@ -71,7 +71,7 @@
                     <label
                       class="button"
                       for="uploadAnnotations"
-                      title="{{utils.importSpatialFileTypeDesc}}"
+                      :title="importSpatialFileTypeDesc"
                       ><i class="fa fa-upload"></i> Import Editing
                     </label>
                     <input
@@ -79,7 +79,7 @@
                       id="uploadAnnotations"
                       class="show-for-sr"
                       name="annotationsfile"
-                      accept="{{utils.importSpatialFileTypes}}"
+                      :accept="importSpatialFileTypes"
                       ref="annotationsfile"
                       @change="importAnnotations()"
                     />
@@ -230,43 +230,43 @@
 <script>
 // TODO: This component requires a full variable scope check (const/let/var) and refactoring to ES6 syntax.
 // It is currently using a mix of ES5 and ES6 syntax, which can lead to confusion and potential bugs.
-import { debounce } from "lodash-es";
+import { debounce } from 'lodash-es';
 
-import EventType from "ol/events/EventType";
+import EventType from 'ol/events/EventType';
 
-import Collection from "ol/Collection";
-import Feature from "ol/Feature";
+import Collection from 'ol/Collection';
+import Feature from 'ol/Feature';
 
-import Point from "ol/geom/Point";
-import MultiPoint from "ol/geom/MultiPoint";
-import Polygon from "ol/geom/Polygon";
-import LineString from "ol/geom/LineString";
-import MultiLineString from "ol/geom/MultiLineString";
-import MultiPolygon from "ol/geom/MultiPolygon";
-import GeometryCollection from "ol/geom/GeometryCollection";
+import Point from 'ol/geom/Point';
+import MultiPoint from 'ol/geom/MultiPoint';
+import Polygon from 'ol/geom/Polygon';
+import LineString from 'ol/geom/LineString';
+import MultiLineString from 'ol/geom/MultiLineString';
+import MultiPolygon from 'ol/geom/MultiPolygon';
+import GeometryCollection from 'ol/geom/GeometryCollection';
 
-import { intersects } from "ol/extent";
+import { intersects } from 'ol/extent';
 
-import Snap from "ol/interaction/Snap";
-import Draw from "ol/interaction/Draw";
-import Translate from "ol/interaction/Translate";
-import DragBox from "ol/interaction/DragBox";
-import Select from "ol/interaction/Select";
-import Interaction from "ol/interaction/Interaction";
-import Modify from "ol/interaction/Modify";
+import Snap from 'ol/interaction/Snap';
+import Draw from 'ol/interaction/Draw';
+import Translate from 'ol/interaction/Translate';
+import DragBox from 'ol/interaction/DragBox';
+import Select from 'ol/interaction/Select';
+import Interaction from 'ol/interaction/Interaction';
+import Modify from 'ol/interaction/Modify';
 
-import Style from "ol/style/Style";
-import Icon from "ol/style/Icon";
-import Fill from "ol/style/Fill";
-import Stroke from "ol/style/Stroke";
-import Text from "ol/style/Text";
+import Style from 'ol/style/Style';
+import Icon from 'ol/style/Icon';
+import Fill from 'ol/style/Fill';
+import Stroke from 'ol/style/Stroke';
+import Text from 'ol/style/Text';
 
-import VectorLayer from "ol/layer/Vector";
-import VectorSource from "ol/source/Vector";
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
 
-import { squaredDistanceToSegment } from "ol/coordinate";
+import { squaredDistanceToSegment } from 'ol/coordinate';
 
-import GeoJSON from "ol/format/GeoJSON";
+import GeoJSON from 'ol/format/GeoJSON';
 
 import {
   singleClick,
@@ -274,7 +274,7 @@ import {
   mouseOnly,
   noModifierKeys,
   platformModifierKeyOnly,
-} from "ol/events/condition";
+} from 'ol/events/condition';
 
 import {
   intersect,
@@ -283,9 +283,9 @@ import {
   point,
   polygon,
   lineString,
-} from "@turf/turf";
+} from '@turf/turf';
 
-import gkDrawinglogs from "./DrawingLogs.vue";
+import gkDrawinglogs from './DrawingLogs.vue';
 
 var noteOffset = 0;
 var notePadding = 10;
@@ -293,31 +293,31 @@ var notePadding = 10;
 var noteStyles = {
   general: function (note) {
     var textTmpl = {
-      fontSize: "16px",
+      fontSize: '16px',
       fontFamily: '"Helvetica Neue",Helvetica,Roboto,Arial,sans-serif',
       text: note.text,
       x: noteOffset + notePadding,
       y: notePadding,
-      align: "left",
+      align: 'left',
       fromCenter: false,
     };
     return [
       [
-        "drawText",
+        'drawText',
         $.extend(
           {
             layer: true,
-            name: "decorationLayer",
+            name: 'decorationLayer',
             strokeWidth: 3,
-            strokeStyle: "rgba(255, 255, 255, 0.9)",
+            strokeStyle: 'rgba(255, 255, 255, 0.9)',
           },
           textTmpl,
         ),
       ],
       [
-        "drawText",
+        'drawText',
         $.extend(
-          { layer: true, name: "textLayer", fillStyle: note.colour },
+          { layer: true, name: 'textLayer', fillStyle: note.colour },
           textTmpl,
         ),
       ],
@@ -325,29 +325,29 @@ var noteStyles = {
   },
 };
 
-import thick1Svg from "@/assets/images/thick-1.svg";
-import thick2Svg from "@/assets/images/thick-2.svg";
-import thick4Svg from "@/assets/images/thick-4.svg";
+import thick1Svg from '@/assets/images/thick-1.svg';
+import thick2Svg from '@/assets/images/thick-2.svg';
+import thick4Svg from '@/assets/images/thick-4.svg';
 
-import boxresizeSvg from "@/assets/images/boxresize.svg";
+import boxresizeSvg from '@/assets/images/boxresize.svg';
 
-import iDSpriteSvg from "@/assets/images/iD-sprite.svg";
+import iDSpriteSvg from '@/assets/images/iD-sprite.svg';
 
-import { useLoadingStore } from "@/stores/loading";
-import { useAnnotationsStore } from "@/stores/annotations";
-import { useMapStore } from "@/stores/map";
+import { useLoadingStore } from '@/stores/loading';
+import { useAnnotationsStore } from '@/stores/annotations';
+import { useMapStore } from '@/stores/map';
 
 export default {
   store: {
-    dpmm: "dpmm",
-    drawingSequence: "drawingSequence",
-    whoami: "whoami",
-    activeMenu: "activeMenu",
-    activeSubmenu: "activeSubmenu",
-    hints: "hints",
-    screenHeight: "layout.screenHeight",
-    hintsHeight: "layout.hintsHeight",
-    leftPanelHeadHeight: "layout.leftPanelHeadHeight",
+    dpmm: 'dpmm',
+    drawingSequence: 'drawingSequence',
+    whoami: 'whoami',
+    activeMenu: 'activeMenu',
+    activeSubmenu: 'activeSubmenu',
+    hints: 'hints',
+    screenHeight: 'layout.screenHeight',
+    hintsHeight: 'layout.hintsHeight',
+    leftPanelHeadHeight: 'layout.leftPanelHeadHeight',
   },
   components: { gkDrawinglogs },
   setup() {
@@ -370,45 +370,45 @@ export default {
       // array of layers that are selectable
       selectable: [],
       featureOverlay: {},
-      annotationsfile: "",
+      annotationsfile: '',
       note: {
-        style: "general",
-        text: "Sector: \nChannel: \nCommander: ",
-        colour: "#000000",
+        style: 'general',
+        text: 'Sector: \nChannel: \nCommander: ',
+        colour: '#000000',
       },
       notes: {},
       size: 2,
-      colour: "#000000",
+      colour: '#000000',
       colours: [
-        ["red", "#cc0000"],
-        ["orange", "#f57900"],
-        ["yellow", "#edd400"],
-        ["green", "#73d216"],
-        ["blue", "#3465a4"],
-        ["violet", "#75507b"],
-        ["brown", "#8f5902"],
-        ["grey", "#555753"],
-        ["black", "#000000"],
+        ['red', '#cc0000'],
+        ['orange', '#f57900'],
+        ['yellow', '#edd400'],
+        ['green', '#73d216'],
+        ['blue', '#3465a4'],
+        ['violet', '#75507b'],
+        ['brown', '#8f5902'],
+        ['grey', '#555753'],
+        ['black', '#000000'],
       ],
       advanced: false,
       tints: {},
       pointShapes: [
         // point image url, point title, [border colur,filling colour]
-        ["/symbols/points/circle.svg", "Circle", [null, "#000000"]],
-        ["/symbols/points/square.svg", "Square", [null, "#000000"]],
-        ["/symbols/points/triangle.svg", "Triangle", [null, "#000000"]],
-        ["/symbols/points/star.svg", "Star", [null, "#000000"]],
-        ["/symbols/points/plus.svg", "Plus", [null, "#000000"]],
-        ["/symbols/points/minus.svg", "Minus", [null, "#000000"]],
+        ['/symbols/points/circle.svg', 'Circle', [null, '#000000']],
+        ['/symbols/points/square.svg', 'Square', [null, '#000000']],
+        ['/symbols/points/triangle.svg', 'Triangle', [null, '#000000']],
+        ['/symbols/points/star.svg', 'Star', [null, '#000000']],
+        ['/symbols/points/plus.svg', 'Plus', [null, '#000000']],
+        ['/symbols/points/minus.svg', 'Minus', [null, '#000000']],
         [
-          "/symbols/points/Fire_Advice.svg",
-          "FireAdvice",
-          ["#000000", "#000000"],
+          '/symbols/points/Fire_Advice.svg',
+          'FireAdvice',
+          ['#000000', '#000000'],
         ],
       ],
       shape: null,
       toolRevision: 1,
-      icon_type: "red",
+      icon_type: 'red',
     };
   },
   computed: {
@@ -424,9 +424,7 @@ export default {
     active: function () {
       return this.$root.active;
     },
-    utils: function () {
-      return this.$root.utils;
-    },
+
     search: function () {
       return this.$root.search;
     },
@@ -443,7 +441,7 @@ export default {
       return this.$root.activeModule;
     },
     selectedAnnotations: function () {
-      return this.getSelectedFeatures("annotations");
+      return this.getSelectedFeatures('annotations');
     },
     featureEditing: function () {
       if (
@@ -464,7 +462,7 @@ export default {
         this.tool === this.ui.defaultText ||
         (this.tool === this.ui.editStyle &&
           this.featureEditing &&
-          this.getTool(this.featureEditing.get("toolName")) ===
+          this.getTool(this.featureEditing.get('toolName')) ===
             this.ui.defaultText)
       );
     },
@@ -477,7 +475,7 @@ export default {
         this.tool === this.ui.defaultPoint ||
         (this.tool == this.ui.editStyle &&
           this.featureEditing &&
-          this.getTool(this.featureEditing.get("toolName")) ===
+          this.getTool(this.featureEditing.get('toolName')) ===
             this.ui.defaultPoint)
       );
     },
@@ -492,7 +490,7 @@ export default {
         (this.tool == this.ui.editStyle &&
           this.featureEditing &&
           [this.ui.defaultLine, this.ui.defaultPolygon].indexOf(
-            this.getTool(this.featureEditing.get("toolName")),
+            this.getTool(this.featureEditing.get('toolName')),
           ) >= 0)
       );
     },
@@ -513,7 +511,7 @@ export default {
             this.ui.defaultPolygon,
             this.ui.defaultPoint,
             this.ui.defaultText,
-          ].indexOf(this.getTool(this.featureEditing.get("toolName"))) >= 0)
+          ].indexOf(this.getTool(this.featureEditing.get('toolName'))) >= 0)
       );
     },
     currentTool: {
@@ -550,18 +548,18 @@ export default {
     },
     featureEditing: function (val) {
       if (val && val instanceof Feature && val.get) {
-        if (val.get("note")) {
+        if (val.get('note')) {
           //it is a text note
-          this.note = val.get("note");
+          this.note = val.get('note');
           this.drawNote(this.note);
           this.colour = this.note.colour || this.colour;
-        } else if (val.get("shape")) {
+        } else if (val.get('shape')) {
           //it is a custom point
-          this.shape = val.get("shape");
-          this.colour = val.get("colour") || this.colour;
+          this.shape = val.get('shape');
+          this.colour = val.get('colour') || this.colour;
         } else {
-          this.size = val.get("size") || this.size;
-          this.colour = val.get("colour") || this.colour;
+          this.size = val.get('size') || this.size;
+          this.colour = val.get('colour') || this.colour;
         }
       }
       this.adjustHeight();
@@ -572,18 +570,18 @@ export default {
   },
   methods: {
     adjustHeight: function () {
-      if (this.activeModule === "annotations") {
-        $("#annotations-flexible-part").height(
+      if (this.activeModule === 'annotations') {
+        $('#annotations-flexible-part').height(
           this.screenHeight -
             this.leftPanelHeadHeight -
             41 -
-            $("#annotations-fixed-part").height() -
+            $('#annotations-fixed-part').height() -
             this.hintsHeight,
         );
       }
     },
     getSelectedFeatures: function (menu, submenu) {
-      var key = submenu ? menu + "." + submenu : menu;
+      var key = submenu ? menu + '.' + submenu : menu;
       let selectedFeatures = this._cachedSelectedFeatures?.[key];
 
       if (selectedFeatures) {
@@ -598,12 +596,12 @@ export default {
       this._cachedSelectedFeatures[key] = selectedFeatures;
 
       // add/remove selected property
-      selectedFeatures.on("add", function (ev) {
+      selectedFeatures.on('add', function (ev) {
         if (vm.selectedFeatures === selectedFeatures) {
           vm.tintSelectedFeature(ev.element);
         }
       });
-      selectedFeatures.on("remove", function (ev) {
+      selectedFeatures.on('remove', function (ev) {
         if (vm.selectedFeatures === selectedFeatures) {
           vm.tintUnselectedFeature(ev.element);
         }
@@ -640,7 +638,7 @@ export default {
       this.export.importVector(file, function (features, fileFormat) {
         var ignoredFeatures = [];
         let f = null;
-        if (fileFormat === "gpx") {
+        if (fileFormat === 'gpx') {
           //gpx file
           for (let i = features.length - 1; i >= 0; i--) {
             const feature = features[i];
@@ -653,7 +651,7 @@ export default {
               let coordinates = feature.getGeometry().getCoordinates();
               coordinates.push(coordinates[0]);
               feature.setGeometry(new Polygon([coordinates]));
-              feature.set("toolName", "Fire Boundary");
+              feature.set('toolName', 'Fire Boundary');
             } else if (feature.getGeometry() instanceof MultiLineString) {
               //convert each linstring in MultiLineString as a fire boundary
               vm.map.clearFeatureProperties(feature);
@@ -665,7 +663,7 @@ export default {
                 coordinates = linestring.getCoordinates();
                 coordinates.push(coordinates[0]);
                 f.setGeometry(new Polygon([coordinates]));
-                f.set("toolName", "Fire Boundary");
+                f.set('toolName', 'Fire Boundary');
                 features.splice(i, 0, f);
               });
             } else {
@@ -677,23 +675,23 @@ export default {
           //geo json file
           for (let i = features.length - 1; i >= 0; i--) {
             var feature = features[i];
-            if (!vm.getTool(feature.get("toolName"))) {
+            if (!vm.getTool(feature.get('toolName'))) {
               // external feature.
               if (feature.getGeometry() instanceof Point) {
                 vm.map.clearFeatureProperties(feature);
-                feature.set("toolName", "Custom Point", true);
-                feature.set("shape", vm.annotations.pointShapes[0][1], true);
-                feature.set("colour", "#000000", true);
+                feature.set('toolName', 'Custom Point', true);
+                feature.set('shape', vm.annotations.pointShapes[0][1], true);
+                feature.set('colour', '#000000', true);
               } else if (feature.getGeometry() instanceof LineString) {
                 vm.map.clearFeatureProperties(feature);
-                feature.set("toolName", "Custom Line", true);
-                feature.set("size", 2, true);
-                feature.set("colour", "#000000", true);
+                feature.set('toolName', 'Custom Line', true);
+                feature.set('size', 2, true);
+                feature.set('colour', '#000000', true);
               } else if (feature.getGeometry() instanceof Polygon) {
                 vm.map.clearFeatureProperties(feature);
-                feature.set("toolName", "Custom Area", true);
-                feature.set("size", 2, true);
-                feature.set("colour", "#000000", true);
+                feature.set('toolName', 'Custom Area', true);
+                feature.set('size', 2, true);
+                feature.set('colour', '#000000', true);
               } else if (
                 feature.getGeometry() instanceof MultiPoint ||
                 feature.getGeometry() instanceof MultiLineString ||
@@ -731,14 +729,14 @@ export default {
         }
         if (ignoredFeatures.length) {
           console.warn(
-            "The following features are ignored.\r\n" +
+            'The following features are ignored.\r\n' +
               vm.$root.geojson.writeFeatures(features),
           );
         }
         if (features && features.length > 0) {
           $.each(features, function (index, feature) {
             vm.drawingSequence += 1;
-            feature.set("id", vm.drawingSequence);
+            feature.set('id', vm.drawingSequence);
             vm.initFeature(feature);
           });
           vm.features.extend(features);
@@ -748,7 +746,7 @@ export default {
     downloadAnnotations: function (fmt) {
       this.$root.export.exportVector(
         this.features.getArray(),
-        "annotations",
+        'annotations',
         fmt,
       );
     },
@@ -804,7 +802,7 @@ export default {
         pixelTolerance: (options && options.pixelTolerance) || 16,
       });
 
-      inter.on("addtomap", function () {
+      inter.on('addtomap', function () {
         this.setActive(true);
       });
 
@@ -816,23 +814,23 @@ export default {
         var draw = new Draw(
           $.extend(
             {
-              type: "LineString",
+              type: 'LineString',
               features: (tool && tool.features) || vm.features,
             },
             (options && options.drawOptions) || {},
           ),
         );
-        draw.on("drawend", function (ev) {
+        draw.on('drawend', function (ev) {
           // set parameters
           vm.drawingSequence += 1;
-          ev.feature.set("id", vm.drawingSequence);
-          ev.feature.set("toolName", tool.name);
+          ev.feature.set('id', vm.drawingSequence);
+          ev.feature.set('toolName', tool.name);
           ev.feature.setStyle(tool.style);
-          ev.feature.set("author", vm.whoami.email);
-          ev.feature.set("createTime", Date.now());
+          ev.feature.set('author', vm.whoami.email);
+          ev.feature.set('createTime', Date.now());
         });
 
-        draw.on("addtomap", function () {
+        draw.on('addtomap', function () {
           this.setActive(true);
         });
 
@@ -846,7 +844,7 @@ export default {
         var draw = new Draw(
           $.extend(
             {
-              type: "Polygon",
+              type: 'Polygon',
               features: (tool && tool.features) || vm.features,
             },
             (options && options.drawOptions) || {},
@@ -860,25 +858,25 @@ export default {
         }
 
         draw.drawing = false;
-        draw.on("addtomap", function () {
+        draw.on('addtomap', function () {
           this.setActive(true);
           this.drawing = false;
         });
 
-        draw.on("drawstart", function (ev) {
+        draw.on('drawstart', function (ev) {
           this.drawing = true;
           if (options && options.listeners && options.listeners.drawstart)
             options.listeners.drawstart(ev);
         });
 
-        draw.on("drawend", function (ev) {
+        draw.on('drawend', function (ev) {
           // set parameters
           vm.drawingSequence += 1;
-          ev.feature.set("id", vm.drawingSequence);
-          ev.feature.set("toolName", tool.name);
+          ev.feature.set('id', vm.drawingSequence);
+          ev.feature.set('toolName', tool.name);
           ev.feature.setStyle(tool.style);
-          ev.feature.set("author", vm.whoami.email);
-          ev.feature.set("createTime", Date.now());
+          ev.feature.set('author', vm.whoami.email);
+          ev.feature.set('createTime', Date.now());
           this.drawing = false;
           if (options && options.listeners && options.listeners.drawend)
             options.listeners.drawend(ev);
@@ -904,7 +902,7 @@ export default {
           $.extend(
             {
               //source: source,
-              type: "Point",
+              type: 'Point',
               features:
                 (options && options.features) ||
                 (tool && tool.features) ||
@@ -915,22 +913,22 @@ export default {
           ),
         );
         // map.addInteraction(draw);
-        draw.on("addtomap", function () {
+        draw.on('addtomap', function () {
           this.setActive(true);
         });
 
-        draw.on("drawend", function (ev) {
+        draw.on('drawend', function (ev) {
           // set parameters
           vm.drawingSequence += 1;
-          ev.feature.set("id", vm.drawingSequence);
-          ev.feature.set("toolName", tool.name);
+          ev.feature.set('id', vm.drawingSequence);
+          ev.feature.set('toolName', tool.name);
           ev.feature.setStyle(tool.style);
-          ev.feature.set("author", vm.whoami.email);
+          ev.feature.set('author', vm.whoami.email);
           //ev.feature.set('shape',vm.shape)
-          ev.feature.set("createTime", Date.now());
+          ev.feature.set('createTime', Date.now());
           if (tool.perpendicular) {
             var coords = ev.feature.getGeometry().getCoordinates();
-            ev.feature.set("rotation", vm.getPerpendicular(coords));
+            ev.feature.set('rotation', vm.getPerpendicular(coords));
           }
         });
         draw.events = (options && options.events) || {};
@@ -950,8 +948,8 @@ export default {
           var _func = translateInter.handleEvent;
           return function (ev) {
             if (
-              (!vm._toolStatus["selectTool"] ||
-                vm._toolStatus["selectTool"] === this) &&
+              (!vm._toolStatus['selectTool'] ||
+                vm._toolStatus['selectTool'] === this) &&
               noModifierKeys(ev)
             ) {
               return _func.call(this, ev);
@@ -961,21 +959,21 @@ export default {
           };
         })();
 
-        translateInter.on("addtomap", function () {
+        translateInter.on('addtomap', function () {
           this.setActive(true);
         });
 
-        translateInter.on("translating", function () {
-          vm._toolStatus["selectTool"] = this;
+        translateInter.on('translating', function () {
+          vm._toolStatus['selectTool'] = this;
         });
-        translateInter.on("translateend", function (ev) {
-          vm._toolStatus["selectTool"] = null;
+        translateInter.on('translateend', function (ev) {
+          vm._toolStatus['selectTool'] = null;
           ev.features.forEach(function (f) {
-            if (f.get("toolName")) {
-              tool = vm.getTool(f.get("toolName"));
+            if (f.get('toolName')) {
+              tool = vm.getTool(f.get('toolName'));
               if (tool && tool.typeIcon) {
-                delete f["typeIconStyle"];
-                delete f["typeIconMetadata"];
+                delete f['typeIconStyle'];
+                delete f['typeIconMetadata'];
                 f.changed();
               }
             }
@@ -994,10 +992,10 @@ export default {
             vm._rotateAll();
           } else {
             $.each(ev.features.getArray(), function (index, f) {
-              tool = vm.getTool(f.get("toolName"));
+              tool = vm.getTool(f.get('toolName'));
               if (tool.perpendicular) {
                 f.set(
-                  "rotation",
+                  'rotation',
                   vm.getPerpendicular(f.getGeometry().getCoordinates()),
                 );
               }
@@ -1017,10 +1015,10 @@ export default {
         });
         vm._style4Selection = new Style({
           fill: new Fill({
-            color: "rgba(0,0,0, 0.25)",
+            color: 'rgba(0,0,0, 0.25)',
           }),
           stroke: new Stroke({
-            color: "rgba(0, 0, 0, 0.5)",
+            color: 'rgba(0, 0, 0, 0.5)',
             lineDash: [5, 5],
             width: 2,
           }),
@@ -1075,7 +1073,7 @@ export default {
               turfPolygon,
             );
           } else {
-            throw "Geometry not supported.";
+            throw 'Geometry not supported.';
           }
           return isSelected;
         };
@@ -1084,17 +1082,17 @@ export default {
         var selectedFeatures_ = (tool && tool.selectedFeatures) || null;
         var drawInter = new Draw({
           source: vm._source4Selection,
-          type: "Polygon",
+          type: 'Polygon',
           style: vm._style4Selection,
           stopClick: true,
           minPoints: 3,
           freehandCondition: function (mapBrowserEvent) {
             //ctrl and shift key
             var originalEvent = mapBrowserEvent.originalEvent;
-            const isMac = navigator.platform.toUpperCase().includes("MAC");
+            const isMac = navigator.platform.toUpperCase().includes('MAC');
             return (
-              (!vm._toolStatus["selectTool"] ||
-                vm._toolStatus["selectTool"] === this) &&
+              (!vm._toolStatus['selectTool'] ||
+                vm._toolStatus['selectTool'] === this) &&
               !originalEvent.altKey &&
               (isMac ? originalEvent.metaKey : originalEvent.ctrlKey) &&
               originalEvent.shiftKey
@@ -1106,7 +1104,7 @@ export default {
         drawInter.startDrawing_ = (function () {
           var _func = drawInter.startDrawing_;
           return function (event) {
-            vm._toolStatus["selectTool"] = this;
+            vm._toolStatus['selectTool'] = this;
             _func.call(this, event);
           };
         })();
@@ -1115,18 +1113,18 @@ export default {
           var _func = drawInter.abortDrawing_;
           return function () {
             var result = _func.call(this);
-            vm._toolStatus["selectTool"] = null;
+            vm._toolStatus['selectTool'] = null;
             return result;
           };
         })();
 
-        drawInter.on("drawend", function () {
+        drawInter.on('drawend', function () {
           vm._overlay4Selection.setMap(vm.map.olmap);
           // if (vm._listener4Selection) {
           //     vm._features4Selection.unByKey(vm._listener4Selection)
           // }
           vm._listener4Selection = vm._features4Selection.on(
-            "add",
+            'add',
             function (ev) {
               var selectedFeatures = selectedFeatures_ || vm.selectedFeatures;
               try {
@@ -1150,7 +1148,7 @@ export default {
                           if (!multi && selectedFeatures.getLength() > 0) {
                             return true;
                           }
-                          if (!feature.get("note")) {
+                          if (!feature.get('note')) {
                             if (
                               !vm._isGeometryInPolygon(
                                 feature.getGeometry(),
@@ -1168,7 +1166,7 @@ export default {
                       if (!multi && selectedFeatures.getLength() > 0) {
                         return false;
                       }
-                      if (feature.get("note")) {
+                      if (feature.get('note')) {
                         if (
                           ev.element
                             .getGeometry()
@@ -1220,7 +1218,7 @@ export default {
           );
           this.setActive(true);
         });
-        drawInter.on("removefrommap", function () {
+        drawInter.on('removefrommap', function () {
           vm._overlay4Selection.setMap(null);
           if (vm._listener4Selection) {
             vm._features4Selection.unByKey(vm._listener4Selection);
@@ -1241,14 +1239,14 @@ export default {
         var dragSelectInter = new DragBox({
           condition: function (ev) {
             return (
-              (!vm._toolStatus["selectTool"] ||
-                vm._toolStatus["selectTool"] === this) &&
+              (!vm._toolStatus['selectTool'] ||
+                vm._toolStatus['selectTool'] === this) &&
               noModifierKeys(ev)
             );
           },
           boxEndCondition: function (mapBrowserEvent) {
-            if (vm._toolStatus["selectTool"] === this) {
-              vm._toolStatus["selectTool"] = null;
+            if (vm._toolStatus['selectTool'] === this) {
+              vm._toolStatus['selectTool'] = null;
             }
             // Use default box end condition from DragBox class
             return (
@@ -1259,11 +1257,11 @@ export default {
           },
         });
         // modify selectedFeatures after dragging a box
-        dragSelectInter.on("addtomap", function () {
+        dragSelectInter.on('addtomap', function () {
           this.setActive(true);
         });
 
-        dragSelectInter.on("boxend", function (event) {
+        dragSelectInter.on('boxend', function (event) {
           let selectedFeatures = selectedFeatures_ || vm.selectedFeatures;
           selectedFeatures.clear();
           var extent = event.target.getGeometry().getExtent();
@@ -1280,7 +1278,7 @@ export default {
                   if (!multi && selectedFeatures.getLength() > 0) {
                     return true;
                   }
-                  if (!feature.get("note")) {
+                  if (!feature.get('note')) {
                     selectedFeatures.push(feature);
                     return !multi;
                   }
@@ -1290,7 +1288,7 @@ export default {
                 if (!multi && selectedFeatures.getLength() > 0) {
                   return false;
                 }
-                if (feature.get("note")) {
+                if (feature.get('note')) {
                   if (intersects(extent, vm.getNoteExtent(feature))) {
                     selectedFeatures.push(feature);
                     return multi;
@@ -1314,8 +1312,8 @@ export default {
           }
         });
         // clear selectedFeatures before dragging a box
-        dragSelectInter.on("boxdrag", function () {
-          vm._toolStatus["selectTool"] = this;
+        dragSelectInter.on('boxdrag', function () {
+          vm._toolStatus['selectTool'] = this;
         });
         dragSelectInter.setMulti = function (multi) {
           this.multi_ = multi;
@@ -1338,7 +1336,7 @@ export default {
       }
     },
     getSelectedGeometry: function (f, indexes, end) {
-      indexes = indexes || f["selectedIndex"];
+      indexes = indexes || f['selectedIndex'];
       if (indexes) {
         end = end === null || end === undefined ? indexes.length - 1 : end;
         if (end >= indexes.length) {
@@ -1384,7 +1382,7 @@ export default {
       }
     },
     deleteSelectedGeometry: function (f, interaction) {
-      var indexes = f["selectedIndex"];
+      var indexes = f['selectedIndex'];
       if (!indexes) {
         return;
       }
@@ -1396,9 +1394,9 @@ export default {
           if (deleteIndex < geom.getGeometriesArray().length) {
             geom.getGeometriesArray().splice(deleteIndex, 1);
             geom.setGeometriesArray(geom.getGeometriesArray());
-            delete f["selectedIndex"];
+            delete f['selectedIndex'];
             interaction.dispatchEvent(
-              this.map.createEvent(interaction, "deletefeaturegeometry", {
+              this.map.createEvent(interaction, 'deletefeaturegeometry', {
                 feature: f,
                 indexes: indexes,
               }),
@@ -1414,9 +1412,9 @@ export default {
           if (deleteIndex < coordinates.length) {
             coordinates.splice(deleteIndex, 1);
             geom.setCoordinates(coordinates);
-            delete f["selectedIndex"];
+            delete f['selectedIndex'];
             interaction.dispatchEvent(
-              this.map.createEvent(interaction, "deletefeaturegeometry", {
+              this.map.createEvent(interaction, 'deletefeaturegeometry', {
                 feature: f,
                 indexes: indexes,
               }),
@@ -1492,7 +1490,7 @@ export default {
             function (ev) {
               var originalEvent = ev.originalEvent;
               return (
-                !vm._toolStatus["selectTool"] &&
+                !vm._toolStatus['selectTool'] &&
                 singleClick(ev) &&
                 !originalEvent.altKey &&
                 !(originalEvent.metaKey || originalEvent.ctrlKey)
@@ -1500,11 +1498,11 @@ export default {
             },
         });
 
-        selectInter.on("addtomap", function () {
+        selectInter.on('addtomap', function () {
           this.setActive(true);
         });
 
-        selectInter.on("select", function (ev) {
+        selectInter.on('select', function (ev) {
           selectedFeatures.clear();
           vm.selectedFeatures.clear();
 
@@ -1516,7 +1514,7 @@ export default {
               if (
                 options &&
                 options.listeners &&
-                typeof options.listeners.selected === "function"
+                typeof options.listeners.selected === 'function'
               ) {
                 options.listeners.selected(vm.selectedFeatures);
               }
@@ -1573,12 +1571,12 @@ export default {
       vm._deleteSelected =
         vm._deleteSelected ||
         function (features, selectedFeatures) {
-          if (vm.tool.selectMode === "feature") {
+          if (vm.tool.selectMode === 'feature') {
             selectedFeatures.forEach(function (feature) {
               features.remove(feature);
             });
             selectedFeatures.clear();
-          } else if (vm.tool.selectMode === "geometry") {
+          } else if (vm.tool.selectMode === 'geometry') {
             selectedFeatures.forEach(function (feature) {
               vm.deleteSelectedGeometry(feature, this);
             });
@@ -1641,7 +1639,7 @@ export default {
           },
         });
 
-        keyboardInter.on("addtomap", function () {
+        keyboardInter.on('addtomap', function () {
           this.setActive(true);
         });
 
@@ -1658,17 +1656,17 @@ export default {
           features: (tool && tool.features) || vm.features,
         });
 
-        modifyInter.on("addtomap", function () {
+        modifyInter.on('addtomap', function () {
           this.setActive(true);
         });
 
-        modifyInter.on("modifystart", function (ev) {
+        modifyInter.on('modifystart', function (ev) {
           ev.features.forEach(function (feature) {
             //console.log("Modifystart : " + feature.get('label') + "\t" + feature.getGeometry().getRevision())
             feature.geometryRevision = feature.getGeometry().getRevision();
           });
         });
-        modifyInter.on("modifyend", function (ev) {
+        modifyInter.on('modifyend', function (ev) {
           var modifiedFeatures = new Collection(
             ev.features.getArray().filter(function (feature) {
               //console.log("Modifyend : " + feature.get('label') + "\t" + feature.geometryRevision + "\t" + feature.getGeometry().getRevision())
@@ -1691,29 +1689,29 @@ export default {
             vm._rotateAll();
           } else {
             $.each(modifiedFeatures.getArray(), function (index, f) {
-              tool = vm.getTool(f.get("toolName"));
+              tool = vm.getTool(f.get('toolName'));
               if (tool.perpendicular) {
                 f.set(
-                  "rotation",
+                  'rotation',
                   vm.getPerpendicular(f.getGeometry().getCoordinates()),
                 );
               }
             });
           }
           var event = {
-            type: "featuresmodified",
+            type: 'featuresmodified',
             features: modifiedFeatures,
             originalEvent: ev,
           };
           modifyInter.dispatchEvent(event);
         });
-        modifyInter.on("featuresmodified", function (ev) {
+        modifyInter.on('featuresmodified', function (ev) {
           ev.features.forEach(function (f) {
-            if (f.get("toolName")) {
-              tool = vm.getTool(f.get("toolName"));
+            if (f.get('toolName')) {
+              tool = vm.getTool(f.get('toolName'));
               if (tool && tool.typeIcon) {
-                delete f["typeIconStyle"];
-                delete f["typeIconMetadata"];
+                delete f['typeIconStyle'];
+                delete f['typeIconMetadata'];
                 f.changed();
               }
             }
@@ -1724,14 +1722,14 @@ export default {
     },
     icon: function (t) {
       let iconUrl;
-      if (typeof t.icon === "function") {
+      if (typeof t.icon === 'function') {
         iconUrl = t.icon();
       } else {
         iconUrl = t.icon;
       }
-      if (iconUrl.startsWith("fa-")) {
+      if (iconUrl.startsWith('fa-')) {
         return '<i class="fa ' + iconUrl + '" aria-hidden="true"></i>';
-      } else if (iconUrl.search("#") === -1) {
+      } else if (iconUrl.search('#') === -1) {
         // plain svg/image
         return '<img class="icon" src="' + iconUrl + '" />';
       } else {
@@ -1756,13 +1754,13 @@ export default {
       //note's property will be set by updateNote
       if (
         this.featureEditing instanceof Feature &&
-        !this.featureEditing.get("note")
+        !this.featureEditing.get('note')
       ) {
         this.featureEditing.set(prop, value);
       }
     },
     setDefaultTool: function (menu, tool) {
-      if (typeof tool === "string") {
+      if (typeof tool === 'string') {
         tool = this.getTool(tool);
       }
       this._currentTool[menu] = tool;
@@ -1786,7 +1784,7 @@ export default {
         t = this.currentTool;
         keepSelection = true;
       }
-      if (typeof t == "string") {
+      if (typeof t == 'string') {
         t = this.getTool(t);
       }
       if (this.tool === t) {
@@ -1803,31 +1801,31 @@ export default {
       if (this.tool && this.tool.interactions) {
         this.tool.interactions.forEach(function (inter) {
           map.olmap.removeInteraction(inter);
-          inter.dispatchEvent(vm.map.createEvent(inter, "removefrommap"));
+          inter.dispatchEvent(vm.map.createEvent(inter, 'removefrommap'));
         });
       }
 
       // add interactions for this tool
       t.interactions.forEach(function (inter) {
         map.olmap.addInteraction(inter);
-        inter.dispatchEvent(vm.map.createEvent(inter, "addtomap"));
+        inter.dispatchEvent(vm.map.createEvent(inter, 'addtomap'));
       });
 
       //change the cursor
-      if (t.cursor && typeof t.cursor === "string") {
+      if (t.cursor && typeof t.cursor === 'string') {
         $(map.olmap.getTargetElement())
-          .find(".ol-viewport")
-          .css("cursor", t.cursor);
+          .find('.ol-viewport')
+          .css('cursor', t.cursor);
       } else if (t.cursor && Array.isArray(t.cursor)) {
         $.each(t.cursor, function (index, value) {
           $(map.olmap.getTargetElement())
-            .find(".ol-viewport")
-            .css("cursor", value);
+            .find('.ol-viewport')
+            .css('cursor', value);
         });
       } else {
         $(map.olmap.getTargetElement())
-          .find(".ol-viewport")
-          .css("cursor", "default");
+          .find('.ol-viewport')
+          .css('cursor', 'default');
       }
 
       if (
@@ -1869,11 +1867,11 @@ export default {
       let note;
       if (this.tool === this.ui.editStyle) {
         //edit mode
-        if (!this.featureEditing || !this.featureEditing.get("note")) {
+        if (!this.featureEditing || !this.featureEditing.get('note')) {
           //this feature is not a note. return
           return;
         }
-        note = this.featureEditing.get("note");
+        note = this.featureEditing.get('note');
       } else {
         //draw mode
         note = this.note;
@@ -1887,8 +1885,8 @@ export default {
         this.tool === this.ui.editStyle
       ) {
         this.featureEditing.set(
-          "noteRevision",
-          (this.featureEditing.get("noteRevision") || 0) + 1,
+          'noteRevision',
+          (this.featureEditing.get('noteRevision') || 0) + 1,
         );
       }
     },
@@ -1898,48 +1896,48 @@ export default {
       }
       var vm = this;
       var noteCanvas = this.$refs.textpreview;
-      $(noteCanvas).removeLayer("decorationLayer");
-      $(noteCanvas).removeLayer("textLayer");
+      $(noteCanvas).removeLayer('decorationLayer');
+      $(noteCanvas).removeLayer('textLayer');
       $(noteCanvas).clearCanvas();
       if (note.style && note.style in noteStyles) {
         //draw
         $(noteCanvas).attr(
-          "height",
+          'height',
           $(this.$refs.notecontent).height() + noteOffset,
         );
         $(noteCanvas).attr(
-          "width",
+          'width',
           $(this.$refs.notecontent).width() + noteOffset,
         );
         noteStyles[note.style](note).forEach(function (cmd) {
           $(noteCanvas)[cmd[0]](cmd[1]);
         });
         //measure and set canvas dimension
-        var annotationSize = $(noteCanvas).measureText("decorationLayer");
+        var annotationSize = $(noteCanvas).measureText('decorationLayer');
         note.size = [
           annotationSize.width + noteOffset + notePadding,
           annotationSize.height + notePadding,
         ];
-        $(noteCanvas).attr("width", note.size[0]);
-        $(noteCanvas).attr("height", note.size[1]);
+        $(noteCanvas).attr('width', note.size[0]);
+        $(noteCanvas).attr('height', note.size[1]);
         $(noteCanvas).drawLayers();
 
         if (save) {
           var key = JSON.stringify(note);
           // temp placeholder
-          this.notes[key] = "";
+          this.notes[key] = '';
           noteCanvas.toBlob(function (blob) {
             // switch for actual image
             vm.notes[key] = window.URL.createObjectURL(blob);
             // FIXME: redraw stuff when saving blobs (broken in chrome)
             vm.features.getArray().forEach(function (f) {
-              if (JSON.stringify(f.get("note")) === key) {
+              if (JSON.stringify(f.get('note')) === key) {
                 f.changed();
               }
             });
             // Set canvas back to the vm's note
             vm.drawNote(vm.note, false);
-          }, "image/png");
+          }, 'image/png');
         }
       }
     },
@@ -1958,10 +1956,10 @@ export default {
 
       // enable annotations layer, if disabled
       var catalogue = this.$root.catalogue;
-      if (!this.map.getMapLayer("annotations")) {
-        catalogue.onLayerChange(catalogue.getLayer("annotations"), true);
-      } else if (this.active.isHidden(this.map.getMapLayer("annotations"))) {
-        this.active.toggleHidden(this.map.getMapLayer("annotations"));
+      if (!this.map.getMapLayer('annotations')) {
+        catalogue.onLayerChange(catalogue.getLayer('annotations'), true);
+      } else if (this.active.isHidden(this.map.getMapLayer('annotations'))) {
+        this.active.toggleHidden(this.map.getMapLayer('annotations'));
       }
       // runs on switch to this tab
       this.selectable.push(this.featureOverlay);
@@ -1970,8 +1968,8 @@ export default {
       this.search.setSearchPointFunc(function (searchMethod, coords) {
         if (
           vm.tool &&
-          ["DMS", "MGA"].indexOf(searchMethod) >= 0 &&
-          ["Origin Point", "Spot Fire", "Road Closure", "Custom Point"].indexOf(
+          ['DMS', 'MGA'].indexOf(searchMethod) >= 0 &&
+          ['Origin Point', 'Spot Fire', 'Road Closure', 'Custom Point'].indexOf(
             vm.tool.name,
           ) >= 0
         ) {
@@ -1979,14 +1977,14 @@ export default {
           vm.map.olmap.forEachFeatureAtPixel(
             vm.map.olmap.getPixelFromCoordinate(coords),
             function (f) {
-              var toolName = f.get("toolName");
+              var toolName = f.get('toolName');
               if (
                 toolName &&
                 [
-                  "Origin Point",
-                  "Spot Fire",
-                  "Road Closure",
-                  "Custom Point",
+                  'Origin Point',
+                  'Spot Fire',
+                  'Road Closure',
+                  'Custom Point',
                 ].indexOf(toolName) >= 0
               ) {
                 if (
@@ -2009,17 +2007,17 @@ export default {
             geometry: new Point(coords),
           });
           vm.drawingSequence += 1;
-          feat.set("id", vm.drawingSequence);
-          feat.set("toolName", vm.tool.name);
+          feat.set('id', vm.drawingSequence);
+          feat.set('toolName', vm.tool.name);
           feat.setStyle(vm.tool.style);
-          feat.set("author", vm.whoami.email);
-          feat.set("createTime", Date.now());
+          feat.set('author', vm.whoami.email);
+          feat.set('createTime', Date.now());
           if (vm.tool.perpendicular) {
-            feat.set("rotation", vm.getPerpendicular(coords));
+            feat.set('rotation', vm.getPerpendicular(coords));
           }
           if (vm.tool === vm.ui.defaultPoint) {
-            feat.set("shape", vm.shape, true);
-            feat.set("colour", vm.colour, true);
+            feat.set('shape', vm.shape, true);
+            feat.set('colour', vm.colour, true);
           }
           vm.features.push(feat);
           return true;
@@ -2031,7 +2029,7 @@ export default {
       this.selectable.splice(0, this.selectable.length);
     },
     getNoteExtent: function (feature) {
-      var note = feature.get("note");
+      var note = feature.get('note');
       if (!note) return null;
       var map = this.map.olmap;
       var bottomLeftCoordinate = feature.getGeometry().getFirstCoordinate();
@@ -2048,31 +2046,31 @@ export default {
       ];
     },
     tintSelectedFeature: function (feature) {
-      var tool = feature.get("toolName")
-        ? this.getTool(feature.get("toolName"))
+      var tool = feature.get('toolName')
+        ? this.getTool(feature.get('toolName'))
         : false;
       if (tool && tool.selectedTint) {
-        if (typeof tool.selectedTint === "function") {
-          feature["tint"] = tool.selectedTint(feature);
+        if (typeof tool.selectedTint === 'function') {
+          feature['tint'] = tool.selectedTint(feature);
         } else {
-          feature["tint"] = tool.selectedTint;
+          feature['tint'] = tool.selectedTint;
         }
       } else {
-        feature["tint"] = "selected";
+        feature['tint'] = 'selected';
       }
       if (tool && tool.typeIcon) {
-        feature["typeIconTint"] = tool.typeIconSelectedTint || "selected";
+        feature['typeIconTint'] = tool.typeIconSelectedTint || 'selected';
       }
 
       feature.changed();
     },
     tintUnselectedFeature: function (feature) {
-      delete feature["tint"];
-      var tool = feature.get("toolName")
-        ? this.getTool(feature.get("toolName"))
+      delete feature['tint'];
+      var tool = feature.get('toolName')
+        ? this.getTool(feature.get('toolName'))
         : false;
       if (tool && tool.typeIcon) {
-        delete feature["typeIconTint"];
+        delete feature['typeIconTint'];
       }
       feature.changed();
     },
@@ -2080,26 +2078,26 @@ export default {
       var result =
         f[property] ||
         f.get(property) ||
-        (tool || this.getTool(f.get("toolName")) || {})[property] ||
-        (defaultValue === undefined ? "default" : defaultValue);
-      return typeof result === "function" ? result(f) : result;
+        (tool || this.getTool(f.get('toolName')) || {})[property] ||
+        (defaultValue === undefined ? 'default' : defaultValue);
+      return typeof result === 'function' ? result(f) : result;
     },
 
     getStylePropertyOLD: function (f, property, defaultValue, tool) {
       let toolName;
 
-      if (Object.hasOwn(f, "tool")) {
+      if (Object.hasOwn(f, 'tool')) {
         toolName = f.tool?.name;
       } else {
-        toolName = f.get("toolName");
+        toolName = f.get('toolName');
       }
 
       const result =
         f[property] ||
         (tool || this.getTool(toolName) || {})[property] ||
-        (defaultValue === undefined ? "default" : defaultValue);
+        (defaultValue === undefined ? 'default' : defaultValue);
 
-      return typeof result === "function" ? result(f) : result;
+      return typeof result === 'function' ? result(f) : result;
     },
     getIconStyleFunction: function (tints) {
       var vm = this;
@@ -2111,27 +2109,27 @@ export default {
           f = res;
         }
 
-        var selectMode = "none";
+        var selectMode = 'none';
         var keySuffix;
-        if (f["tint"] === undefined || f["tint"] === "") {
+        if (f['tint'] === undefined || f['tint'] === '') {
           //not selected
-          selectMode = "none";
-          keySuffix = "none";
-        } else if (vm.tool.selectMode !== "geometry") {
+          selectMode = 'none';
+          keySuffix = 'none';
+        } else if (vm.tool.selectMode !== 'geometry') {
           //not in geometry selection mode
-          selectMode = "all";
-          keySuffix = "all";
+          selectMode = 'all';
+          keySuffix = 'all';
         } else {
           var selectedGeometry = vm.getSelectedGeometry(f);
           if (!selectedGeometry) {
-            selectMode = "none";
-            keySuffix = f.get("tint") + ":none";
+            selectMode = 'none';
+            keySuffix = f.get('tint') + ':none';
           } else if (selectedGeometry instanceof Point) {
-            selectMode = "partial";
-            keySuffix = f.get("tint") + ":partial";
+            selectMode = 'partial';
+            keySuffix = f.get('tint') + ':partial';
           } else {
-            selectMode = "none";
-            keySuffix = f.get("tint") + ":none";
+            selectMode = 'none';
+            keySuffix = f.get('tint') + ':none';
           }
         }
         var style = vm.map.cacheStyle(
@@ -2141,14 +2139,14 @@ export default {
 
             try {
               if (
-                (selectMode === "none" && f["tint"]) ||
-                selectMode === "partial"
+                (selectMode === 'none' && f['tint']) ||
+                selectMode === 'partial'
               ) {
-                tint = f["tint"];
-                delete f["tint"];
+                tint = f['tint'];
+                delete f['tint'];
               }
 
-              let src = vm.map.getBlob(f, ["icon", "tint"], tints || {});
+              let src = vm.map.getBlob(f, ['icon', 'tint'], tints || {});
 
               if (!src) {
                 // console.log("Unable to find blob file 1");
@@ -2157,8 +2155,8 @@ export default {
               }
 
               let rot = 0.0;
-              if (Object.prototype.hasOwnProperty.call(f, "rotation")) {
-                rot = f.get("rotation");
+              if (Object.prototype.hasOwnProperty.call(f, 'rotation')) {
+                rot = f.get('rotation');
               }
               // console.log("SRC vm.map.cacheStyle 1" +src);
               // console.log(src);
@@ -2173,17 +2171,17 @@ export default {
               });
             } finally {
               if (tint) {
-                f["tint"] = tint;
+                f['tint'] = tint;
               }
             }
-            if (selectMode === "partial") {
-              let src = vm.map.getBlob(f, ["icon", "tint"], tints || {});
+            if (selectMode === 'partial') {
+              let src = vm.map.getBlob(f, ['icon', 'tint'], tints || {});
               // src = "/static/sss/img/redpin.png";
               if (!src) {
                 // console.log("Unable to find blob file 2");
                 return false;
               }
-              let rot = f.get("rotation") || 0.0;
+              let rot = f.get('rotation') || 0.0;
               // console.log("SRC vm.map.cacheStyle 2"+src);
               // console.log(src);
               style = [
@@ -2206,7 +2204,7 @@ export default {
             return style;
           },
           f,
-          ["icon", "tint", "rotation"],
+          ['icon', 'tint', 'rotation'],
           keySuffix,
         );
 
@@ -2215,27 +2213,27 @@ export default {
     },
     getLabelStyleFunc: function (tints, labelProperty) {
       var vm = this;
-      labelProperty = labelProperty || "label";
+      labelProperty = labelProperty || 'label';
       return function () {
         var f = this;
         var tool;
-        if (f.get("toolName")) {
-          tool = vm.getTool(f.get("toolName")) || vm.tool;
+        if (f.get('toolName')) {
+          tool = vm.getTool(f.get('toolName')) || vm.tool;
         } else {
           tool = vm.tool;
         }
         var strokeTint =
-          vm.getStyleProperty(f, "tint", "", tool) + ".textStroke";
-        var fillTint = vm.getStyleProperty(f, "tint", "", tool) + ".textFill";
+          vm.getStyleProperty(f, 'tint', '', tool) + '.textStroke';
+        var fillTint = vm.getStyleProperty(f, 'tint', '', tool) + '.textFill';
         var labelStyle = tool.labelStyle || {};
         return new Style({
           text: new Text({
             offsetX: labelStyle.offsetX || 12,
             text: f.get(labelProperty),
-            textAlign: "left",
-            font: labelStyle.font || "12px Helvetica,Roboto,Arial,sans-serif",
+            textAlign: 'left',
+            font: labelStyle.font || '12px Helvetica,Roboto,Arial,sans-serif',
             fill: new Fill({
-              color: tints[fillTint] || "#333",
+              color: tints[fillTint] || '#333',
             }),
             stroke: new Stroke({
               color: tints[strokeTint],
@@ -2252,50 +2250,50 @@ export default {
         var f = featone;
         var tool = null;
 
-        if (f.get("toolName")) {
-          tool = vm.getTool(f.get("toolName")) || vm.tool;
+        if (f.get('toolName')) {
+          tool = vm.getTool(f.get('toolName')) || vm.tool;
         } else {
           tool = vm.tool;
         }
-        var selectMode = "none";
-        if (f["tint"] === undefined || f["tint"] === "") {
+        var selectMode = 'none';
+        if (f['tint'] === undefined || f['tint'] === '') {
           //not selected
-          selectMode = "none";
-        } else if (vm.tool.selectMode !== "geometry") {
+          selectMode = 'none';
+        } else if (vm.tool.selectMode !== 'geometry') {
           //not in geometry selection mode
-          selectMode = "all";
+          selectMode = 'all';
         } else {
           var selectedGeometry = vm.getSelectedGeometry(f);
           if (!selectedGeometry) {
-            selectMode = "none";
+            selectMode = 'none';
           } else if (!(selectedGeometry instanceof Point)) {
-            selectMode = "partial";
+            selectMode = 'partial';
           } else {
-            selectMode = "none";
+            selectMode = 'none';
           }
         }
 
         var baseStyle = vm.map.cacheStyle(
           function (f) {
-            if (selectMode === "partial") {
+            if (selectMode === 'partial') {
               return [
                 new Style({
                   fill: new Fill({
                     color: vm.getStyleProperty(
                       f,
-                      "fillColour",
-                      "rgba(255, 255, 255, 0.2)",
+                      'fillColour',
+                      'rgba(255, 255, 255, 0.2)',
                       tool,
                     ),
                   }),
                   stroke: new Stroke({
                     color: vm.getStyleProperty(
                       f,
-                      "colour",
-                      "rgba(0,0,0,1.0)",
+                      'colour',
+                      'rgba(0,0,0,1.0)',
                       tool,
                     ),
-                    width: 2 * vm.getStyleProperty(f, "size", 1, tool),
+                    width: 2 * vm.getStyleProperty(f, 'size', 1, tool),
                   }),
                 }),
                 new Style({
@@ -2305,19 +2303,19 @@ export default {
                   fill: new Fill({
                     color: vm.getStyleProperty(
                       f,
-                      "selectedFillColour",
-                      "rgba(255, 255, 255, 0.2)",
+                      'selectedFillColour',
+                      'rgba(255, 255, 255, 0.2)',
                       tool,
                     ),
                   }),
                   stroke: new Stroke({
                     color: vm.getStyleProperty(
                       f,
-                      "selectedColour",
-                      "#2199e8",
+                      'selectedColour',
+                      '#2199e8',
                       tool,
                     ),
-                    width: 2 * vm.getStyleProperty(f, "size", 1, tool) + 2,
+                    width: 2 * vm.getStyleProperty(f, 'size', 1, tool) + 2,
                   }),
                 }),
                 new Style({
@@ -2326,36 +2324,36 @@ export default {
                     return vm.getSelectedGeometry(f);
                   },
                   stroke: new Stroke({
-                    color: "#ffffff",
-                    width: 2 * vm.getStyleProperty(f, "size", 1, tool),
+                    color: '#ffffff',
+                    width: 2 * vm.getStyleProperty(f, 'size', 1, tool),
                   }),
                 }),
               ];
-            } else if (selectMode === "all") {
+            } else if (selectMode === 'all') {
               return [
                 new Style({
                   fill: new Fill({
                     color: vm.getStyleProperty(
                       f,
-                      "selectedFillColour",
-                      "rgba(255, 255, 255, 0.2)",
+                      'selectedFillColour',
+                      'rgba(255, 255, 255, 0.2)',
                       tool,
                     ),
                   }),
                   stroke: new Stroke({
                     color: vm.getStyleProperty(
                       f,
-                      "selectedColour",
-                      "#2199e8",
+                      'selectedColour',
+                      '#2199e8',
                       tool,
                     ),
-                    width: 2 * vm.getStyleProperty(f, "size", 1, tool) + 2,
+                    width: 2 * vm.getStyleProperty(f, 'size', 1, tool) + 2,
                   }),
                 }),
                 new Style({
                   stroke: new Stroke({
-                    color: "#ffffff",
-                    width: 2 * vm.getStyleProperty(f, "size", 1, tool),
+                    color: '#ffffff',
+                    width: 2 * vm.getStyleProperty(f, 'size', 1, tool),
                   }),
                 }),
               ];
@@ -2364,54 +2362,54 @@ export default {
                 fill: new Fill({
                   color: vm.getStyleProperty(
                     f,
-                    "fillColour",
-                    "rgba(255, 255, 255, 0.2)",
+                    'fillColour',
+                    'rgba(255, 255, 255, 0.2)',
                     tool,
                   ),
                 }),
                 stroke: new Stroke({
                   color: vm.getStyleProperty(
                     f,
-                    "colour",
-                    "rgba(0,0,0,1.0)",
+                    'colour',
+                    'rgba(0,0,0,1.0)',
                     tool,
                   ),
-                  width: 2 * vm.getStyleProperty(f, "size", 1, tool),
+                  width: 2 * vm.getStyleProperty(f, 'size', 1, tool),
                 }),
               });
             }
           },
           f,
-          ["size", "colour"],
+          ['size', 'colour'],
           selectMode,
         );
 
         //get type icon style
         var typeIconStyle = null;
-        if (!vm.getStyleProperty(f, "typeIcon", false, tool)) {
+        if (!vm.getStyleProperty(f, 'typeIcon', false, tool)) {
           return baseStyle;
         }
         //draw typeSymbol along the line.
         //does not support geometry select mode
 
         //f['typeIconStyle'] = '["/symbols/fire/plus.svg","default",[20,20]]'
-        if (f["typeIconStyle"]) {
+        if (f['typeIconStyle']) {
           var diffs =
-            vm.map.getScale() / f["typeIconMetadata"]["points"]["scale"];
+            vm.map.getScale() / f['typeIconMetadata']['points']['scale'];
           var typeIconTint =
-            f["typeIconTint"] ||
-            f.get("typeIconTint") ||
-            tool["typeIconTint"] ||
-            "default";
+            f['typeIconTint'] ||
+            f.get('typeIconTint') ||
+            tool['typeIconTint'] ||
+            'default';
           if (diffs >= 0.5 && diffs <= 1.5) {
-            if (typeIconTint === f["typeIconMetadata"]["points"]["tint"]) {
-              typeIconStyle = f["typeIconStyle"];
+            if (typeIconTint === f['typeIconMetadata']['points']['tint']) {
+              typeIconStyle = f['typeIconStyle'];
             } else {
-              typeIconStyle = f["typeIconStyle"];
+              typeIconStyle = f['typeIconStyle'];
               var newStyle = [];
               var src = vm.map.getBlob(
                 f,
-                ["typeIcon", "typeIconTint", "typeIconDims"],
+                ['typeIcon', 'typeIconTint', 'typeIconDims'],
                 tints || {},
               );
               if (!src) {
@@ -2431,12 +2429,12 @@ export default {
                   }),
                 );
               });
-              f["typeIconStyle"] = newStyle;
-              f["typeIconMetadata"]["points"]["tint"] = typeIconTint;
+              f['typeIconStyle'] = newStyle;
+              f['typeIconMetadata']['points']['tint'] = typeIconTint;
               typeIconStyle = newStyle;
             }
           } else {
-            f["typeIconMetadata"]["points"] = false;
+            f['typeIconMetadata']['points'] = false;
           }
         }
         if (!typeIconStyle) {
@@ -2451,7 +2449,7 @@ export default {
 
           src = vm.map.getBlob(
             f,
-            ["typeIcon", "typeIconTint", "typeIconDims"],
+            ['typeIcon', 'typeIconTint', 'typeIconDims'],
             tints || {},
           );
           if (!src) {
@@ -2460,13 +2458,13 @@ export default {
 
           typeIconStyle = [];
           var segmentMetadata = null;
-          var metadata = f["typeIconMetadata"];
+          var metadata = f['typeIconMetadata'];
           if (!metadata) {
             metadata = {};
-            f["typeIconMetadata"] = metadata;
+            f['typeIconMetadata'] = metadata;
           }
           var perimeter = 0;
-          if (!metadata["segments"]) {
+          if (!metadata['segments']) {
             var segmentsMetadata = [];
             linestring.forEachSegment(function (start, end) {
               segmentMetadata = {
@@ -2476,10 +2474,10 @@ export default {
                   (Math.PI * 1) / 4,
               };
               segmentsMetadata.push(segmentMetadata);
-              perimeter += segmentMetadata["length"];
+              perimeter += segmentMetadata['length'];
             });
-            metadata["perimeter"] = perimeter;
-            metadata["closed"] =
+            metadata['perimeter'] = perimeter;
+            metadata['closed'] =
               linestring.getFirstCoordinate()[0] ===
                 linestring.getLastCoordinate()[0] &&
               linestring.getFirstCoordinate()[1] ===
@@ -2487,49 +2485,49 @@ export default {
             //get the position of each segment's end point in overall linestring
             var len = 0;
             $.each(segmentsMetadata, function (index, segmentMetadata) {
-              len += segmentMetadata["length"];
-              segmentMetadata["position"] = len / perimeter;
+              len += segmentMetadata['length'];
+              segmentMetadata['position'] = len / perimeter;
             });
-            metadata["segments"] = segmentsMetadata;
+            metadata['segments'] = segmentsMetadata;
           }
-          if (!metadata["points"]) {
+          if (!metadata['points']) {
             var pointsMetadata = {};
-            var iconSize = tool["typeIconDims"] ? tool["typeIconDims"][0] : 48;
-            pointsMetadata["scale"] = vm.map.getScale();
+            var iconSize = tool['typeIconDims'] ? tool['typeIconDims'][0] : 48;
+            pointsMetadata['scale'] = vm.map.getScale();
             var perimeterInPixes = parseInt(
-              (metadata["perimeter"] / (pointsMetadata["scale"] * 1000)) *
+              (metadata['perimeter'] / (pointsMetadata['scale'] * 1000)) *
                 1000 *
                 vm.dpmm,
             );
             if (perimeterInPixes < iconSize) {
-              pointsMetadata["symbolSize"] = 1;
-              pointsMetadata["symbolPercentage"] = 0.5;
+              pointsMetadata['symbolSize'] = 1;
+              pointsMetadata['symbolPercentage'] = 0.5;
             } else if (perimeterInPixes < iconSize * 2) {
-              pointsMetadata["symbolSize"] = 2;
-              pointsMetadata["symbolPercentage"] = metadata["closed"] ? 0.5 : 1;
+              pointsMetadata['symbolSize'] = 2;
+              pointsMetadata['symbolPercentage'] = metadata['closed'] ? 0.5 : 1;
             } else {
-              pointsMetadata["symbolSize"] = parseInt(
+              pointsMetadata['symbolSize'] = parseInt(
                 perimeterInPixes / (iconSize * 2),
               ); //each symbol occupy 2 times symbol size
-              pointsMetadata["symbolPercentage"] =
-                1 / pointsMetadata["symbolSize"];
-              if (!metadata["closed"]) {
+              pointsMetadata['symbolPercentage'] =
+                1 / pointsMetadata['symbolSize'];
+              if (!metadata['closed']) {
                 //geomoetry is not closed, drop a symbol at the end
-                pointsMetadata["symbolSize"] = pointsMetadata["symbolSize"] + 1;
+                pointsMetadata['symbolSize'] = pointsMetadata['symbolSize'] + 1;
               }
             }
-            pointsMetadata["tint"] =
-              f["typeIconTint"] ||
-              f.get("typeIconTint") ||
-              tool["typeIconTint"] ||
-              "default";
-            metadata["points"] = pointsMetadata;
+            pointsMetadata['tint'] =
+              f['typeIconTint'] ||
+              f.get('typeIconTint') ||
+              tool['typeIconTint'] ||
+              'default';
+            metadata['points'] = pointsMetadata;
           }
-          var symbolSize = metadata["points"]["symbolSize"];
-          var symbolPercentage = metadata["points"]["symbolPercentage"];
+          var symbolSize = metadata['points']['symbolSize'];
+          var symbolPercentage = metadata['points']['symbolPercentage'];
 
           if (symbolSize == 1) {
-            const segmentIndex = metadata["segments"].findIndex(
+            const segmentIndex = metadata['segments'].findIndex(
               function (segment) {
                 return segment.position >= symbolPercentage;
               },
@@ -2542,7 +2540,7 @@ export default {
                 ),
                 image: new Icon({
                   src: src,
-                  rotation: metadata["segments"][segmentIndex]["rotation"],
+                  rotation: metadata['segments'][segmentIndex]['rotation'],
                   rotateWithView: true,
                   snapToPixel: true,
                 }),
@@ -2550,20 +2548,20 @@ export default {
             );
           } else {
             let segmentIndex = 0;
-            segmentMetadata = metadata["segments"][segmentIndex];
+            segmentMetadata = metadata['segments'][segmentIndex];
             let symbolPoints = [];
             let fraction;
             for (let i = 0; i <= symbolSize; i++) {
               if (
                 i == symbolSize ||
-                segmentMetadata["position"] < i * symbolPercentage
+                segmentMetadata['position'] < i * symbolPercentage
               ) {
                 typeIconStyle.push(
                   new Style({
                     geometry: new MultiPoint(symbolPoints),
                     image: new Icon({
                       src: src,
-                      rotation: segmentMetadata["rotation"],
+                      rotation: segmentMetadata['rotation'],
                       rotateWithView: true,
                       snapToPixel: true,
                     }),
@@ -2573,21 +2571,21 @@ export default {
                   break;
                 }
                 segmentIndex += 1;
-                segmentMetadata = metadata["segments"][segmentIndex];
+                segmentMetadata = metadata['segments'][segmentIndex];
                 symbolPoints = [];
               }
               fraction = Math.min(Math.max(i * symbolPercentage, 0), 1);
               symbolPoints.push(linestring.getCoordinateAt(fraction));
             }
           }
-          f["typeIconStyle"] = typeIconStyle;
+          f['typeIconStyle'] = typeIconStyle;
         }
         return baseStyle.concat(typeIconStyle);
       };
     },
     initFeature: function (feature) {
-      var tool = feature.get("toolName")
-        ? this.getTool(feature.get("toolName"))
+      var tool = feature.get('toolName')
+        ? this.getTool(feature.get('toolName'))
         : false;
 
       if (tool) {
@@ -2599,15 +2597,15 @@ export default {
       const map = this.map;
 
       // collection to store all annotation features
-      this.features.on("add", function (ev) {
-        const tool = vm.getTool(ev.element.get("toolName"));
+      this.features.on('add', function (ev) {
+        const tool = vm.getTool(ev.element.get('toolName'));
 
         if (tool.onAdd) {
           tool.onAdd(ev.element);
         }
         vm._rotateAll();
       });
-      this.features.on("remove", function () {
+      this.features.on('remove', function () {
         vm._rotateAll();
       });
 
@@ -2619,8 +2617,8 @@ export default {
         //source: featureSource
       });
 
-      this.featureOverlay.set("id", "annotations");
-      this.featureOverlay.set("name", "My Drawing");
+      this.featureOverlay.set('id', 'annotations');
+      this.featureOverlay.set('name', 'My Drawing');
       // collection for tracking selected features
 
       // the following interacts are bundled into the Select and Edit tools.
@@ -2636,10 +2634,10 @@ export default {
 
       // load default tools
       this.ui.defaultPan = {
-        name: "Pan",
-        icon: "fa-hand-paper-o",
-        cursor: ["-webkit-grab", "-moz-grab"],
-        scope: ["annotation"],
+        name: 'Pan',
+        icon: 'fa-hand-paper-o',
+        cursor: ['-webkit-grab', '-moz-grab'],
+        scope: ['annotation'],
         keepSelection: true,
         interactions: [
           map.dragPanInter,
@@ -2660,9 +2658,9 @@ export default {
         */
       };
       this.ui.editStyle = {
-        name: "Edit Style",
-        icon: "fa-pencil-square-o",
-        scope: ["annotation"],
+        name: 'Edit Style',
+        icon: 'fa-pencil-square-o',
+        scope: ['annotation'],
         interactions: [this.ui.dragSelectInter, this.ui.selectInter],
         onSet: function () {
           vm.ui.dragSelectInter.setMulti(false);
@@ -2670,15 +2668,15 @@ export default {
         },
         comments: [
           {
-            name: "Tips",
-            description: ["Edit selected text node"],
+            name: 'Tips',
+            description: ['Edit selected text node'],
           },
         ],
       };
       this.ui.defaultSelect = {
-        name: "Select",
-        icon: "fa-mouse-pointer",
-        scope: ["annotation"],
+        name: 'Select',
+        icon: 'fa-mouse-pointer',
+        scope: ['annotation'],
         keepSelection: true,
         interactions: [
           this.ui.keyboardInter,
@@ -2693,10 +2691,10 @@ export default {
         },
         comments: [
           {
-            name: "Tips",
+            name: 'Tips',
             description: [
               "Select all features using shortcut key 'Ctrl + A'",
-              "Select features using mouse.",
+              'Select features using mouse.',
               "Hold 'Ctrl' to enable polygon selection",
               "Delete selected features using key 'Del'",
             ],
@@ -2704,9 +2702,9 @@ export default {
         ],
       };
       this.ui.defaultEdit = {
-        name: "Edit Geometry",
-        icon: "fa-pencil",
-        scope: ["annotation"],
+        name: 'Edit Geometry',
+        icon: 'fa-pencil',
+        scope: ['annotation'],
         interactions: [
           this.ui.keyboardInter,
           this.ui.selectInter,
@@ -2719,8 +2717,8 @@ export default {
         },
         comments: [
           {
-            name: "Tips",
-            description: ["Edit annotation features"],
+            name: 'Tips',
+            description: ['Edit annotation features'],
           },
         ],
       };
@@ -2739,19 +2737,19 @@ export default {
         }
         let url;
         if (f) {
-          url = vm.getNoteUrl(f.get("note"));
+          url = vm.getNoteUrl(f.get('note'));
         } else {
           return null;
         }
-        var tint = f["tint"] || f.get("tint") || "notselected";
+        var tint = f['tint'] || f.get('tint') || 'notselected';
         if (!noteStyleCache[url]) {
           noteStyleCache[url] = [];
         }
         if (!noteStyleCache[url][tint]) {
-          var color = tint == "selected" ? "#70BDF0" : undefined;
+          var color = tint == 'selected' ? '#70BDF0' : undefined;
           noteStyleCache[url][tint] = new Style({
             image: new Icon({
-              anchorOrigin: "bottom-left",
+              anchorOrigin: 'bottom-left',
               anchor: [0, 0],
               color: color,
               src: url,
@@ -2761,12 +2759,12 @@ export default {
         return noteStyleCache[url][tint];
       };
       this.ui.defaultText = {
-        name: "Text Note",
-        icon: "fa-comment",
+        name: 'Text Note',
+        icon: 'fa-comment',
         style: noteStyle,
         interactions: [vm.pointDrawFactory()],
         showName: true,
-        scope: ["annotation"],
+        scope: ['annotation'],
         onAdd: function (f) {
           f.getGeometry().defaultGetExtent =
             f.getGeometry().defaultGetExtent || f.getGeometry().getExtent;
@@ -2777,64 +2775,64 @@ export default {
               return this.defaultGetExtent();
             }
           };
-          if (f.get("note")) {
+          if (f.get('note')) {
             return;
           }
-          f.set("note", $.extend({}, vm.note));
+          f.set('note', $.extend({}, vm.note));
         },
         comments: [
           {
-            name: "Tips",
-            description: ["Create a text note and place it into map."],
+            name: 'Tips',
+            description: ['Create a text note and place it into map.'],
           },
         ],
       };
 
       var customAdd = function (f) {
-        if (!f.get("size")) {
-          f.set("size", vm.size);
+        if (!f.get('size')) {
+          f.set('size', vm.size);
         }
-        if (!f.get("colour")) {
-          f.set("colour", vm.colour);
+        if (!f.get('colour')) {
+          f.set('colour', vm.colour);
         }
       };
 
       var customPointAdd = function (f) {
-        if (!f.get("shape")) {
-          f.set("shape", vm.shape);
+        if (!f.get('shape')) {
+          f.set('shape', vm.shape);
         }
-        if (!f.get("colour")) {
-          f.set("colour", vm.colour);
+        if (!f.get('colour')) {
+          f.set('colour', vm.colour);
         }
       };
 
       this.ui.defaultPoint = {
-        name: "Custom Point",
+        name: 'Custom Point',
         icon: function (feature) {
           if (feature) {
             //  console.log(vm.features);
-            return vm._pointShapesMap[feature.get("shape")][0];
+            return vm._pointShapesMap[feature.get('shape')][0];
           } else {
-            return "/symbols/fire/custom_point.svg";
+            return '/symbols/fire/custom_point.svg';
           }
         },
         interactions: [this.pointDrawFactory()],
         showName: true,
-        scope: ["annotation"],
+        scope: ['annotation'],
         onAdd: customPointAdd,
         style: vm.getIconStyleFunction(vm.tints),
         sketchStyle: function () {
           var feat = this;
 
-          feat.set("shape", vm.shape, true);
-          feat.set("colour", vm.colour, true);
+          feat.set('shape', vm.shape, true);
+          feat.set('colour', vm.colour, true);
           var style = vm.map.cacheStyle(
             function (feat) {
-              var src = vm.map.getBlob(feat, ["icon", "tint"], vm.tints || {});
+              var src = vm.map.getBlob(feat, ['icon', 'tint'], vm.tints || {});
               if (!src) {
                 return false;
               }
-              var rot = feat.get("rotation") || 0.0;
+              var rot = feat.get('rotation') || 0.0;
               return new Style({
                 image: new Icon({
                   src: src,
@@ -2846,50 +2844,50 @@ export default {
               });
             },
             feat,
-            ["icon", "tint", "rotation"],
+            ['icon', 'tint', 'rotation'],
           );
 
           return style;
         },
         tint: function (feature) {
-          var shape = feature.get("shape");
-          var colour = feature.get("colour");
+          var shape = feature.get('shape');
+          var colour = feature.get('colour');
           if (shape) {
             return vm.getCustomPointTint(shape, [null, colour]);
           } else {
-            return "default";
+            return 'default';
           }
         },
         selectedTint: function (feature) {
           // console.log("Custom Point defaultPoint selectedTint");
-          var shape = feature.get("shape");
+          var shape = feature.get('shape');
           if (shape) {
-            return vm.getCustomPointTint(shape, ["#2199e8", "#2199e8"]);
+            return vm.getCustomPointTint(shape, ['#2199e8', '#2199e8']);
           } else {
-            return "selected";
+            return 'selected';
           }
         },
         comments: [
           {
-            name: "Tips",
-            description: ["Create a customized point and place it in map. "],
+            name: 'Tips',
+            description: ['Create a customized point and place it in map. '],
           },
         ],
       };
 
       this.ui.defaultLine = {
-        name: "Custom Line",
+        name: 'Custom Line',
         icon: `${iDSpriteSvg}#icon-line`,
         interactions: [this.linestringDrawFactory()],
         showName: true,
-        scope: ["annotation"],
+        scope: ['annotation'],
         onAdd: customAdd,
         style: vm.getVectorStyleFunc(this.tints),
         comments: [
           {
-            name: "Tips",
+            name: 'Tips',
             description: [
-              "Draw a line on map",
+              'Draw a line on map',
               "Hold down the 'SHIFT' key during drawing to enable freehand mode. ",
             ],
           },
@@ -2897,20 +2895,20 @@ export default {
       };
 
       this.ui.defaultPolygon = {
-        name: "Custom Area",
+        name: 'Custom Area',
         icon: `${iDSpriteSvg}#icon-area`,
         interactions: [this.polygonDrawFactory()],
         showName: true,
-        scope: ["annotation"],
+        scope: ['annotation'],
         onAdd: customAdd,
         style: vm.getVectorStyleFunc(this.tints),
         measureLength: true,
         measureArea: true,
         comments: [
           {
-            name: "Tips",
+            name: 'Tips',
             description: [
-              "Draw a polygon on map",
+              'Draw a polygon on map',
               "Hold down the 'SHIFT' key during drawing to enable freehand mode. ",
             ],
           },
@@ -2918,17 +2916,17 @@ export default {
       };
 
       var getFeatureInfo = function (feature) {
-        var tool = vm.getTool(feature.get("toolName"));
+        var tool = vm.getTool(feature.get('toolName'));
         var icon = tool.icon;
-        if (typeof icon === "function") {
+        if (typeof icon === 'function') {
           icon = icon(feature);
         }
 
         if (!icon) {
           return { name: tool.name };
-        } else if (icon.startsWith("fa-")) {
-          return { name: tool.name, icon: "fa " + icon };
-        } else if (icon.search("#") === -1) {
+        } else if (icon.startsWith('fa-')) {
+          return { name: tool.name, icon: 'fa ' + icon };
+        } else if (icon.search('#') === -1) {
           // plain svg/image
           return { name: tool.name, img: icon };
         } else {
@@ -2939,79 +2937,79 @@ export default {
 
       // add annotations layer to catalogue list
       this.$root.catalogue.catalogue.push({
-        type: "Annotations",
-        id: "annotations",
-        name: "My Drawing",
+        type: 'Annotations',
+        id: 'annotations',
+        name: 'My Drawing',
         getFeatureInfo: getFeatureInfo,
       });
 
-      this.measure.register("annotations", this.features);
+      this.measure.register('annotations', this.features);
 
-      this.annotationStatus.phaseEnd("initialize");
+      this.annotationStatus.phaseEnd('initialize');
 
       this.annotationStatus.phaseBegin(
-        "load_features",
+        'load_features',
         10,
-        "Load saved features",
+        'Load saved features',
       );
       var savedFeatures = this.$root.geojson.readFeatures(
         this.$root.store.annotations,
       );
-      this.annotationStatus.phaseEnd("load_features");
+      this.annotationStatus.phaseEnd('load_features');
 
       this.annotationStatus.phaseBegin(
-        "gk-init",
+        'gk-init',
         40,
         "Listen 'gk-init' event",
         true,
         true,
       );
-      this.$on("gk-init", function () {
-        this.annotationStatus.phaseEnd("gk-init");
+      this.$on('gk-init', function () {
+        this.annotationStatus.phaseEnd('gk-init');
 
         this.annotationStatus.phaseBegin(
-          "import_features",
+          'import_features',
           10,
-          "Import features",
+          'Import features',
         );
         if (savedFeatures) {
           //set feature style
 
           $.each(savedFeatures, function (index, feature) {
-            if (!feature.get("id")) {
+            if (!feature.get('id')) {
               vm.drawingSequence += 1;
-              feature.set("id", vm.drawingSequence);
+              feature.set('id', vm.drawingSequence);
             }
             vm.initFeature(feature);
           });
           this.features.extend(savedFeatures);
         }
-        this.annotationStatus.phaseEnd("import_features");
+        this.annotationStatus.phaseEnd('import_features');
 
-        this.annotationStatus.phaseBegin("init_tools", 20, "Initialize tools");
+        this.annotationStatus.phaseBegin('init_tools', 20, 'Initialize tools');
         //initialize tool's interaction
         $.each(vm.tools, function (index, tool) {
           $.each(tool.interactions, function (subindex, interact) {
-            if (typeof interact === "function") {
+            if (typeof interact === 'function') {
               tool.interactions[subindex] = interact(tool);
             }
           });
           tool.keepSelection =
             tool.keepSelection === undefined ? false : tool.keepSelection;
           tool.selectMode =
-            tool.selectMode == undefined ? "feature" : tool.selectMode;
+            tool.selectMode == undefined ? 'feature' : tool.selectMode;
           if (!tool.label) {
             tool.label = tool.name;
           }
         });
         vm.annotationTools = this.tools.filter(function (t) {
-          return t.scope && t.scope.indexOf("annotation") >= 0;
+          return t.scope && t.scope.indexOf('annotation') >= 0;
         });
-        vm.setDefaultTool("annotations", "Edit");
-        this.annotationStatus.phaseEnd("init_tools");
+        vm.setDefaultTool('annotations', 'Edit');
+        this.annotationStatus.phaseEnd('init_tools');
       });
 
-      console.log("annotations ready done");
+      console.log('annotations ready done');
     },
   },
   mounted() {
@@ -3021,10 +3019,10 @@ export default {
     annotationsStore.setComponent(vm);
 
     this.annotationStatus = this.loading.register(
-      "annotation",
-      "Annotation Component",
+      'annotation',
+      'Annotation Component',
     );
-    this.annotationStatus.phaseBegin("initialize", 20, "Initialize");
+    this.annotationStatus.phaseBegin('initialize', 20, 'Initialize');
 
     this._toolStatus = {};
     vm._currentTool = {};
@@ -3038,10 +3036,10 @@ export default {
 
     this._rotateAll = debounce(function () {
       $.each(vm.features.getArray(), function (index, f) {
-        const tool = vm.getTool(f.get("toolName"));
+        const tool = vm.getTool(f.get('toolName'));
         if (tool.perpendicular) {
           f.set(
-            "rotation",
+            'rotation',
             vm.getPerpendicular(f.getGeometry().getCoordinates()),
           );
         }

@@ -604,9 +604,6 @@ export default {
     loading: function () {
       return useLoadingStore();
     },
-    utils: function () {
-      return this.$root.utils;
-    },
     minDate() {
       return moment().subtract(10, "years").format("YYYY-MM-DD") + "T00:00";
     },

@@ -9,12 +9,7 @@
               aria-selected="true"
               style="cursor: pointer; background-color: #ec5840; color: #fefefe"
               @click.stop.prevent="
-                utils.editResource(
-                  $event,
-                  null,
-                  env.bfrsService,
-                  env.bfrsService,
-                )
+                editResource($event, null, env.bfrsService, env.bfrsService)
               "
             >
               <span>Bushfire Reporting System</span>
@@ -47,7 +42,7 @@
                       :title="t.label"
                       style="font-size: 0.9rem"
                       >{{ annotations.icon(t) }}
-                      {{ t.showName ? t.label : "" }}</a
+                      {{ t.showName ? t.label : '' }}</a
                     >
                   </div>
                 </div>
@@ -356,7 +351,7 @@
                   <div v-show="canBatchUpload()" class="button bfrsbutton">
                     <label
                       for="uploadBushfires"
-                      title="{{utils.importSpatialFileTypeDesc}}"
+                      :title="importSpatialFileTypeDesc"
                     >
                       <i class="fa fa-upload"></i><br />Batch<br />Upload
                     </label>
@@ -365,7 +360,7 @@
                       id="uploadBushfires"
                       class="show-for-sr"
                       name="bushfiresfile"
-                      accept="{{utils.importSpatialFileTypes}}"
+                      :accept="importSpatialFileTypes"
                       ref="bushfiresfile"
                       @change="importList()"
                     />
@@ -473,7 +468,7 @@
                     ></a>
                     <a
                       v-if="canEdit(f)"
-                      @click.stop.prevent="utils.editResource($event)"
+                      @click.stop.prevent="editResource($event)"
                       title="Open bushfire form"
                       href="{{editUrl(f)}}"
                       target="{{env.bfrsService}}"
@@ -496,19 +491,19 @@
                         id="bushfire-icon-{{f.get('id')}}"
                         :src="featureIconSrc(f)"
                       />
-                      {{ f.get("fire_number") }} <i><small></small></i>
+                      {{ f.get('fire_number') }} <i><small></small></i>
                     </div>
                   </div>
                   <div class="small-12 columns">
                     <div class="feature-title">
-                      <span class="reportname">{{ f.get("name") }}</span>
+                      <span class="reportname">{{ f.get('name') }}</span>
                     </div>
                     <div
                       v-if="f.get('status') === 'merged'"
                       style="float: right"
                     >
                       <img :src="mergeSvg" />
-                      {{ f.get("linked_bushfire_number") }}
+                      {{ f.get('linked_bushfire_number') }}
                     </div>
                   </div>
                 </div>
@@ -656,7 +651,7 @@
       name="bushfire_create"
       action="{{createUrl()}}"
       method="post"
-      target="{{utils.getWindowTarget(env.bfrsService)}}"
+      :target="getWindowTarget(env.bfrsService)"
     >
       <input type="hidden" name="sss_create" id="sss_create" />
     </form>
@@ -664,32 +659,34 @@
 </template>
 
 <script>
-import { debounce } from "lodash-es";
+import { debounce } from 'lodash-es';
 
-import Foundation from "foundation-sites";
+import Foundation from 'foundation-sites';
 
-import Collection from "ol/Collection";
-import Feature from "ol/Feature";
+import { checkPermission } from '@/utils';
 
-import Point from "ol/geom/Point";
-import MultiPoint from "ol/geom/MultiPoint";
-import Polygon from "ol/geom/Polygon";
-import LineString from "ol/geom/LineString";
-import MultiLineString from "ol/geom/MultiLineString";
-import MultiPolygon from "ol/geom/MultiPolygon";
-import GeometryCollection from "ol/geom/GeometryCollection";
+import Collection from 'ol/Collection';
+import Feature from 'ol/Feature';
 
-import { extend } from "ol/extent";
+import Point from 'ol/geom/Point';
+import MultiPoint from 'ol/geom/MultiPoint';
+import Polygon from 'ol/geom/Polygon';
+import LineString from 'ol/geom/LineString';
+import MultiLineString from 'ol/geom/MultiLineString';
+import MultiPolygon from 'ol/geom/MultiPolygon';
+import GeometryCollection from 'ol/geom/GeometryCollection';
 
-import Style from "ol/style/Style";
-import Fill from "ol/style/Fill";
-import Circle from "ol/style/Circle";
+import { extend } from 'ol/extent';
 
-import { singleClick, shiftKeyOnly, noModifierKeys } from "ol/events/condition";
+import Style from 'ol/style/Style';
+import Fill from 'ol/style/Fill';
+import Circle from 'ol/style/Circle';
 
-import { containsCoordinate } from "ol/extent";
+import { singleClick, shiftKeyOnly, noModifierKeys } from 'ol/events/condition';
 
-import { intersect, point, booleanPointInPolygon, buffer } from "@turf/turf";
+import { containsCoordinate } from 'ol/extent';
+
+import { intersect, point, booleanPointInPolygon, buffer } from '@turf/turf';
 import {
   FeatureTask,
   getDateRange,
@@ -698,37 +695,39 @@ import {
   getFeatureTaskManager,
   getLayerId,
   getLayerUrl,
-} from "@/utils";
+  editResource,
+  getWindowTarget,
+} from '@/utils';
 
-import hash from "object-hash";
+import hash from 'object-hash';
 
-import env from "@/config/env";
+import env from '@/config/env';
 
-import zoomToSelectedSvg from "@/assets/images/zoom-to-selected.svg";
-import iDSpriteSvg from "@/assets/images/iD-sprite.svg";
-import mergeSvg from "@/assets/images/merge.svg";
+import zoomToSelectedSvg from '@/assets/images/zoom-to-selected.svg';
+import iDSpriteSvg from '@/assets/images/iD-sprite.svg';
+import mergeSvg from '@/assets/images/merge.svg';
 
-import dashedOriginSvg from "/symbols/fire/dashed-origin.svg";
-import originSvg from "/symbols/fire/origin.svg";
+import dashedOriginSvg from '/symbols/fire/dashed-origin.svg';
+import originSvg from '/symbols/fire/origin.svg';
 
-import DateTimeInput from "@/components/forms/DateTimeInput.vue";
+import DateTimeInput from '@/components/forms/DateTimeInput.vue';
 
-import { useActiveStore } from "@/stores/active";
-import { useSystemSettingStore } from "@/stores/systemSetting";
-import { useAnnotationsStore } from "@/stores/annotations";
-import { useLoadingStore } from "@/stores/loading";
-import { useStateStore } from "@/stores/state";
-import { useMapStore } from "@/stores/map";
-import { useUserStore } from "@/stores/user";
-import { useSettingsStore } from "@/stores/settings";
+import { useActiveStore } from '@/stores/active';
+import { useSystemSettingStore } from '@/stores/systemSetting';
+import { useAnnotationsStore } from '@/stores/annotations';
+import { useLoadingStore } from '@/stores/loading';
+import { useStateStore } from '@/stores/state';
+import { useMapStore } from '@/stores/map';
+import { useUserStore } from '@/stores/user';
+import { useSettingsStore } from '@/stores/settings';
 
 export default {
   store: {
-    screenHeight: "layout.screenHeight",
-    hintsHeight: "layout.hintsHeight",
-    leftPanelHeadHeight: "layout.leftPanelHeadHeight",
-    activeMenu: "activeMenu",
-    hints: "hints",
+    screenHeight: 'layout.screenHeight',
+    hintsHeight: 'layout.hintsHeight',
+    leftPanelHeadHeight: 'layout.leftPanelHeadHeight',
+    activeMenu: 'activeMenu',
+    hints: 'hints',
   },
   setup() {
     return {
@@ -744,80 +743,81 @@ export default {
   },
   data: function () {
     return {
+      env,
       clippedOnly: false,
-      search: "",
-      statusFilter: "all_reports",
+      search: '',
+      statusFilter: 'all_reports',
       target_feature: null,
-      calculation_status: "",
+      calculation_status: '',
       feature_tasks: [],
-      region: "",
-      district: "",
-      last_uploaded_date: "",
-      submitter: "",
+      region: '',
+      district: '',
+      last_uploaded_date: '',
+      submitter: '',
       featureLabelDisabled: false,
       completeButtonDisabled: true,
       clearButtonDisabled: false,
       showFireboundary: false,
       tools: [],
-      fields: ["fire_number", "name"],
+      fields: ['fire_number', 'name'],
       calculation_result: null,
       progressRequestCount: 0,
       progressRequestPending: false,
       isFeatureListLoading: true,
       //sorted fields list (column,true?ascend:descend)
-      sortedFields: [["fire_detected_or_created", false]],
+      sortedFields: [['fire_detected_or_created', false]],
       drawings: new Collection(),
       features: new Collection(),
       clippedFeatures: [],
       showFilters: false,
       taskDialog: null,
       showToggles: false,
-      startDate: "",
-      endDate: "",
-      dateRange: "",
+      startDate: '',
+      endDate: '',
+      dateRange: '',
       revision: 1,
       selectRevision: 1,
       profileRevision: 1,
       extentFeaturesSize: 0,
       tints: {
-        new: [["#b43232", "#c8c032"]],
-        "new.textStroke": "#c8c032",
-        "new.textFill": "#333",
-        "new.fillColour": [0, 0, 0, 0.25],
-        "new.colour": "#c8c032",
-        unknown: [["#b43232", "#f90c25"]],
-        "unknown.textStroke": "#f90c25",
-        "unknown.textFill": "#333",
-        "unknown.fillColour": [0, 0, 0, 0.25],
-        "unknown.colour": "#f90c25",
-        initial: [["#b43232", "#999999"]],
-        "initial.textStroke": "#CCCCCC",
-        "initial.textFill": "#333",
-        "initial.fillColour": [0, 0, 0, 0.25],
-        "initial.colour": "#D3D3D3",
-        draft_final: [["#b43232", "#FF0000"]],
-        "draft_final.textStroke": "#FF0000",
-        "draft_final.textFill": "#FFFFFF",
-        "draft_final.fillColour": [0, 0, 0, 0.25],
-        "draft_final.colour": "#FF0000",
-        final_authorised: [["#b43232", "#00FF00"]],
-        "final_authorised.textStroke": "#00FF00",
-        "final_authorised.textFill": "#333",
-        "final_authorised.fillColour": [0, 0, 0, 0.25],
-        "final_authorised.colour": "#00FF00",
-        reviewed: [["#b43232", "#00FF00"]],
-        "reviewed.textStroke": "#00FF00",
-        "reviewed.textFill": "#333",
-        "reviewed.fillColour": [0, 0, 0, 0.25],
-        "reviewed.colour": "#00FF00",
-        modified: [["#b43232", "#f57900"]],
-        "modified.textStroke": "#f57900",
-        "modified.textFill": "#333",
-        "modified_authorised.fillColour": [0, 0, 0, 0.25],
-        "modified.colour": "#f57900",
-        selected: [["#b43232", "#2199e8"]],
-        "selected.textStroke": "#2199e8",
-        "selected.textFill": "#333",
+        new: [['#b43232', '#c8c032']],
+        'new.textStroke': '#c8c032',
+        'new.textFill': '#333',
+        'new.fillColour': [0, 0, 0, 0.25],
+        'new.colour': '#c8c032',
+        unknown: [['#b43232', '#f90c25']],
+        'unknown.textStroke': '#f90c25',
+        'unknown.textFill': '#333',
+        'unknown.fillColour': [0, 0, 0, 0.25],
+        'unknown.colour': '#f90c25',
+        initial: [['#b43232', '#999999']],
+        'initial.textStroke': '#CCCCCC',
+        'initial.textFill': '#333',
+        'initial.fillColour': [0, 0, 0, 0.25],
+        'initial.colour': '#D3D3D3',
+        draft_final: [['#b43232', '#FF0000']],
+        'draft_final.textStroke': '#FF0000',
+        'draft_final.textFill': '#FFFFFF',
+        'draft_final.fillColour': [0, 0, 0, 0.25],
+        'draft_final.colour': '#FF0000',
+        final_authorised: [['#b43232', '#00FF00']],
+        'final_authorised.textStroke': '#00FF00',
+        'final_authorised.textFill': '#333',
+        'final_authorised.fillColour': [0, 0, 0, 0.25],
+        'final_authorised.colour': '#00FF00',
+        reviewed: [['#b43232', '#00FF00']],
+        'reviewed.textStroke': '#00FF00',
+        'reviewed.textFill': '#333',
+        'reviewed.fillColour': [0, 0, 0, 0.25],
+        'reviewed.colour': '#00FF00',
+        modified: [['#b43232', '#f57900']],
+        'modified.textStroke': '#f57900',
+        'modified.textFill': '#333',
+        'modified_authorised.fillColour': [0, 0, 0, 0.25],
+        'modified.colour': '#f57900',
+        selected: [['#b43232', '#2199e8']],
+        'selected.textStroke': '#2199e8',
+        'selected.textFill': '#333',
       },
       _featurelist: null,
     };
@@ -874,9 +874,6 @@ export default {
     loading: function () {
       return useLoadingStore();
     },
-    utils: function () {
-      return this.$root.utils;
-    },
     whoami() {
       return useUserStore()?.whoami;
     },
@@ -890,7 +887,7 @@ export default {
       return this.active?.isHidden(this.bushfireMapLayer);
     },
     selectedFeatures: function () {
-      return this.annotations?.getSelectedFeatures("bfrs");
+      return this.annotations?.getSelectedFeatures('bfrs');
     },
     selectedFeaturesSize: function () {
       return this.selectRevision && this.selectedFeatures?.getLength();
@@ -916,7 +913,7 @@ export default {
     regions: function () {
       try {
         var regions =
-          this.profileRevision && this.whoami["bushfire"]["regions"];
+          this.profileRevision && this.whoami['bushfire']['regions'];
         return Array.isArray(regions) ? regions : [];
       } catch {
         return [];
@@ -943,13 +940,13 @@ export default {
       const boundaryStyleFunc = vm.annotations.getVectorStyleFunc(vm.tints);
       const labelStyleFunc = vm.annotations.getLabelStyleFunc(
         vm.tints,
-        "fire_number",
+        'fire_number',
       );
 
       return function (res) {
         const feat = res;
 
-        if (typeof feat.getGeometry === "undefined") {
+        if (typeof feat.getGeometry === 'undefined') {
           return;
         }
 
@@ -985,7 +982,7 @@ export default {
         if (
           vm.map.olmap.getView().getResolution() < 0.003 &&
           geometries.length > 0 &&
-          feat.get("fire_number") &&
+          feat.get('fire_number') &&
           vm.bushfireLabels &&
           !vm.$root.active.isHidden(vm.map.getMapLayer(env.bushfireListLayer))
         ) {
@@ -1059,9 +1056,9 @@ export default {
     hasSpatialData: function (hasSpatialData) {
       if (
         !hasSpatialData &&
-        this.calculation_status === "calculation_completed" &&
+        this.calculation_status === 'calculation_completed' &&
         this.target_feature &&
-        this.target_feature.get("status") === "in_queue" &&
+        this.target_feature.get('status') === 'in_queue' &&
         this.taskDialog &&
         this.taskDialog.isActive
       ) {
@@ -1123,29 +1120,31 @@ export default {
       this.changeEndDate();
     },
     region: function () {
-      this.district = "";
+      this.district = '';
     },
   },
   methods: {
+    editResource,
+    getWindowTarget,
     initialiseMap() {
       const vm = this;
-      vm._bfrsStatus.phaseEnd("gk-init");
+      vm._bfrsStatus.phaseEnd('gk-init');
 
-      vm._bfrsStatus.phaseBegin("attach_event", 10, "Attach events");
-      vm.map.olmap.getView().on("propertychange", function () {
+      vm._bfrsStatus.phaseBegin('attach_event', 10, 'Attach events');
+      vm.map.olmap.getView().on('propertychange', function () {
         vm.updateViewport();
       });
 
-      vm.selectedFeatures.on("add", function (event) {
-        if (vm.annotations.toselectMode === "geometry") {
-          if (event.element["selectedIndex"] === undefined) {
+      vm.selectedFeatures.on('add', function (event) {
+        if (vm.annotations.toselectMode === 'geometry') {
+          if (event.element['selectedIndex'] === undefined) {
             vm.selectDefaultGeometry(event.element);
           }
         }
         vm.refreshSelectedFinalFireboundaryLayer();
         //vm.zoomToSelected(200)
       });
-      vm.selectedFeatures.on("remove", function () {
+      vm.selectedFeatures.on('remove', function () {
         vm.refreshSelectedFinalFireboundaryLayer();
         //vm.zoomToSelected(200)
         if (vm.selectedFeatures.getLength() !== 1) {
@@ -1161,20 +1160,20 @@ export default {
       //vm.annotations.setDefaultTool('bfrs','Pan')
       $.each([vm.annotations.ui.defaultPan], function (index, t) {
         t.scope = t.scope || [];
-        t.scope.push("bfrs");
+        t.scope.push('bfrs');
       });
 
       $.each(
         vm.annotations.tools.filter(function (t) {
-          return t.scope && t.scope.indexOf("bfrs") >= 0;
+          return t.scope && t.scope.indexOf('bfrs') >= 0;
         }),
         function (index, t) {
           vm.tools.splice(index, 0, t);
         },
       );
 
-      vm.map.olmap.on("removeLayer", function (ev) {
-        if (ev.mapLayer.get("id") === env.bushfireListLayer) {
+      vm.map.olmap.on('removeLayer', function (ev) {
+        if (ev.mapLayer.get('id') === env.bushfireListLayer) {
           vm.features.clear();
           vm._featurelist.clear();
           vm.isFeatureListLoading = false;
@@ -1188,18 +1187,18 @@ export default {
 
       vm._resolutionChanged();
 
-      vm.map.olmap.getView().on("change:resolution", function () {
+      vm.map.olmap.getView().on('change:resolution', function () {
         vm._resolutionChanged();
       });
 
-      vm.selectedFeatures.on("add", function () {
+      vm.selectedFeatures.on('add', function () {
         vm.selectRevision += 1;
       });
-      vm.selectedFeatures.on("remove", function () {
+      vm.selectedFeatures.on('remove', function () {
         vm.selectRevision += 1;
       });
 
-      vm._bfrsStatus.phaseEnd("attach_event");
+      vm._bfrsStatus.phaseEnd('attach_event');
       //load user profile
       vm.loadUserProfile();
     },
@@ -1209,40 +1208,40 @@ export default {
         var r = this.regions.find(function (o) {
           return o.region_id === parseInt(vm.region);
         });
-        return this.region ? "region='" + (r ? r.region : "") + "'" : null;
+        return this.region ? "region='" + (r ? r.region : '') + "'" : null;
       } else {
-        return this.region ? "region_id=" + this.region : null;
+        return this.region ? 'region_id=' + this.region : null;
       }
     },
     changeDateRange: function () {
-      if (this.dateRange === "-1") {
+      if (this.dateRange === '-1') {
         //customized
         this.changeStartDate();
         this.changeEndDate();
-      } else if (this.dateRange === "") {
-        this.endDate = "";
-        this.startDate = "";
+      } else if (this.dateRange === '') {
+        this.endDate = '';
+        this.startDate = '';
       } else {
-        var range = getDateRange(this.dateRange, "YYYY-MM-DD HH:mm");
-        this.startDate = range[0] || "";
-        this.endDate = range[1] || "";
+        var range = getDateRange(this.dateRange, 'YYYY-MM-DD HH:mm');
+        this.startDate = range[0] || '';
+        this.endDate = range[1] || '';
       }
     },
     changeStartDate: function () {
-      if (this.dateRange !== "-1") {
+      if (this.dateRange !== '-1') {
         //not in editing mode
         return;
       }
       if (!this._endDatePicker) return;
       try {
-        if (this.startDate === "") {
+        if (this.startDate === '') {
           this._endDatePicker.setStartDate(
-            moment().format("YYYY-MM-DD") + " 00:00",
+            moment().format('YYYY-MM-DD') + ' 00:00',
           );
         } else {
           this._endDatePicker.setStartDate(
-            moment(this.startDate, "YYYY-MM-DD HH:mm").format("YYYY-MM-DD") +
-              " 00:00",
+            moment(this.startDate, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD') +
+              ' 00:00',
           );
         }
       } catch {
@@ -1250,15 +1249,15 @@ export default {
       }
     },
     changeEndDate: function () {
-      if (this.dateRange !== "-1") {
+      if (this.dateRange !== '-1') {
         //not in editing mode
         return;
       }
       if (!this._startDatePicker) return;
       try {
-        if (this.endDate === "") {
+        if (this.endDate === '') {
           this._startDatePicker.setEndDate(
-            moment().format("YYYY-MM-DD") + " 23:59",
+            moment().format('YYYY-MM-DD') + ' 23:59',
           );
         } else {
           this._startDatePicker.setEndDate(this.endDate);
@@ -1268,7 +1267,7 @@ export default {
       }
     },
     dateFilter: function () {
-      if (this.dateRange === "70001") {
+      if (this.dateRange === '70001') {
         var now = moment.utc();
 
         var fyYear = now.month() >= 6 ? now.year() : now.year() - 1;
@@ -1276,59 +1275,59 @@ export default {
 
         return (
           "fire_detected_or_created >= '" +
-          fyStart.format("YYYY-MM-DDTHH:mm:ssZ") +
+          fyStart.format('YYYY-MM-DDTHH:mm:ssZ') +
           "'"
         );
       }
 
-      if (this.dateRange !== "-1") {
+      if (this.dateRange !== '-1') {
         //in predefined range, reset the startDate and endDate
         this.changeDateRange();
       }
 
       var startDate = this.startDate
-        ? moment(this.startDate, "YYYY-MM-DD HH:mm", true)
+        ? moment(this.startDate, 'YYYY-MM-DD HH:mm', true)
         : null;
       if (startDate && !startDate.isValid()) {
-        throw "startDate is under changing.";
+        throw 'startDate is under changing.';
       }
 
       var endDate =
-        this.endDate && this.endDate < moment().format("YYYY-MM-DD HH:mm")
-          ? moment(this.endDate, "YYYY-MM-DD HH:mm", true)
+        this.endDate && this.endDate < moment().format('YYYY-MM-DD HH:mm')
+          ? moment(this.endDate, 'YYYY-MM-DD HH:mm', true)
           : null;
 
       if (endDate && !endDate.isValid()) {
-        throw "endDate is under changing.";
+        throw 'endDate is under changing.';
       }
 
       if (startDate) {
         if (endDate) {
           if (startDate >= endDate) {
-            throw "Start date must be less than end date.";
+            throw 'Start date must be less than end date.';
           }
           return (
             "fire_detected_or_created BETWEEN '" +
-            startDate.utc().format("YYYY-MM-DDTHH:mm:ssZ") +
+            startDate.utc().format('YYYY-MM-DDTHH:mm:ssZ') +
             "' AND '" +
-            nextDate(endDate, "YYYY-MM-DD HH:mm")
+            nextDate(endDate, 'YYYY-MM-DD HH:mm')
               .utc()
-              .format("YYYY-MM-DDTHH:mm:ssZ") +
+              .format('YYYY-MM-DDTHH:mm:ssZ') +
             "'"
           );
         } else {
           return (
             "fire_detected_or_created >= '" +
-            startDate.utc().format("YYYY-MM-DDTHH:mm:ssZ") +
+            startDate.utc().format('YYYY-MM-DDTHH:mm:ssZ') +
             "'"
           );
         }
       } else if (endDate) {
         return (
           "fire_detected_or_created < '" +
-          nextDate(endDate, "YYYY-MM-DD HH:mm")
+          nextDate(endDate, 'YYYY-MM-DD HH:mm')
             .utc()
-            .format("YYYY-MM-DDTHH:mm:ssZ") +
+            .format('YYYY-MM-DDTHH:mm:ssZ') +
           "'"
         );
       }
@@ -1339,7 +1338,7 @@ export default {
 
       return (
         "fire_detected_or_created >= '" +
-        fyStart.format("YYYY-MM-DDTHH:mm:ssZ") +
+        fyStart.format('YYYY-MM-DDTHH:mm:ssZ') +
         "'"
       );
     },
@@ -1350,10 +1349,10 @@ export default {
           return o.id === parseInt(vm.district);
         });
         return this.district
-          ? "district='" + (d ? d.district : "") + "'"
+          ? "district='" + (d ? d.district : '') + "'"
           : null;
       } else {
-        return this.district ? "district_id=" + this.district : null;
+        return this.district ? 'district_id=' + this.district : null;
       }
     },
     originpointCoordinate: function (feat) {
@@ -1402,7 +1401,7 @@ export default {
             if (vm.selectedFinalFireboundaryMapLayer.show) {
               vm.map.enableDependentLayer(
                 vm.bushfireMapLayer,
-                env.bushfireFinalFireBoundaryLatestLayer + "_selected",
+                env.bushfireFinalFireBoundaryLatestLayer + '_selected',
                 false,
               );
             }
@@ -1412,7 +1411,7 @@ export default {
                 "fire_number in ('" +
                 selectedFinalBushfires
                   .map(function (f) {
-                    return f.get("fire_number");
+                    return f.get('fire_number');
                   })
                   .join("','") +
                 "')",
@@ -1420,7 +1419,7 @@ export default {
             if (!vm.selectedFinalFireboundaryMapLayer.show) {
               vm.map.enableDependentLayer(
                 vm.bushfireMapLayer,
-                env.bushfireFinalFireBoundaryLatestLayer + "_selected",
+                env.bushfireFinalFireBoundaryLatestLayer + '_selected',
                 true,
               );
             }
@@ -1430,14 +1429,14 @@ export default {
       this._refreshSelectedFinalFireboundaryLayer.call({ wait: wait });
     },
     featureExtent: function (feat) {
-      if (feat.get("fire_boundary")) {
+      if (feat.get('fire_boundary')) {
         if (feat.getGeometry()) {
           return extend(
             feat.getGeometry().getExtent(),
-            feat.get("fire_boundary"),
+            feat.get('fire_boundary'),
           );
         } else {
-          return feat.get("fire_boundary");
+          return feat.get('fire_boundary');
         }
       } else {
         return feat.getGeometry().getExtent();
@@ -1460,41 +1459,41 @@ export default {
     open: function (options) {
       // PWM: can't find anywhere this is used
       //active bfrs module
-      if (this.activeMenu !== "bfrs") {
-        $("#menu-tab-bfrs-label").trigger("click");
-      } else if (!$("#offCanvasLeft").hasClass("reveal-responsive")) {
-        $("#offCanvasLeft").toggleClass("reveal-responsive");
+      if (this.activeMenu !== 'bfrs') {
+        $('#menu-tab-bfrs-label').trigger('click');
+      } else if (!$('#offCanvasLeft').hasClass('reveal-responsive')) {
+        $('#offCanvasLeft').toggleClass('reveal-responsive');
         self.map.olmap.updateSize();
       }
 
       var vm = this;
       var updateType = null;
-      var action = options["action"] || "select";
+      var action = options['action'] || 'select';
       if (!options) {
         return;
       }
-      if ("region" in options) {
-        if (this.region !== "" && options["region"] !== this.region) {
-          this.region = options["region"] || "";
-          updateType = "region";
+      if ('region' in options) {
+        if (this.region !== '' && options['region'] !== this.region) {
+          this.region = options['region'] || '';
+          updateType = 'region';
         }
       }
-      if ("district" in options) {
-        if (this.district !== "" && options["district"] !== this.district) {
-          this.district = options["district"] || "";
-          updateType = "district";
+      if ('district' in options) {
+        if (this.district !== '' && options['district'] !== this.district) {
+          this.district = options['district'] || '';
+          updateType = 'district';
         }
       }
       if (
-        options["bushfireid"] !== null &&
-        options["bushfireid"] !== undefined
+        options['bushfireid'] !== null &&
+        options['bushfireid'] !== undefined
       ) {
         if (this.selectedFeatures.getLength() > 0) {
           this.selectedFeatures.clear();
         }
         if (this.search && this.search.trim().length > 0) {
           if (this.clippedOnly) this.clippedOnly = false;
-          this.search = "";
+          this.search = '';
           this.updateFeatureFilter(3, 0);
         } else if (this.clippedOnly) {
           this.clippedOnly = false;
@@ -1502,18 +1501,18 @@ export default {
         }
       }
 
-      updateType = updateType || (action === "create" ? "query" : null);
+      updateType = updateType || (action === 'create' ? 'query' : null);
       if (
         !updateType &&
-        options["bushfireid"] !== null &&
-        options["bushfireid"] !== undefined
+        options['bushfireid'] !== null &&
+        options['bushfireid'] !== undefined
       ) {
         var bushfire = this.features.getArray().find(function (f) {
-          return f.get("fire_number") === options["bushfireid"];
+          return f.get('fire_number') === options['bushfireid'];
         });
         if (bushfire) {
           this.selectedFeatures.push(bushfire);
-          if (options["refresh"] || action === "update") {
+          if (options['refresh'] || action === 'update') {
             this.resetFeature(bushfire, false, function () {
               vm.zoomToSelected();
               vm.scrollToSelected();
@@ -1524,34 +1523,34 @@ export default {
           }
           return;
         } else {
-          updateType = "query";
+          updateType = 'query';
         }
       }
 
-      if (updateType || options["refresh"]) {
+      if (updateType || options['refresh']) {
         if (
-          options["bushfireid"] !== null &&
-          options["bushfireid"] !== undefined
+          options['bushfireid'] !== null &&
+          options['bushfireid'] !== undefined
         ) {
           //want to find some bushfire, clear other filters
-          if (this.statusFilter !== "all_reports") {
-            this.statusFilter = "all_reports";
+          if (this.statusFilter !== 'all_reports') {
+            this.statusFilter = 'all_reports';
           }
-          if (this.dateRange !== "") {
-            this.dateRange = "";
-            this.startDate = "";
-            this.endDate = "";
+          if (this.dateRange !== '') {
+            this.dateRange = '';
+            this.startDate = '';
+            this.endDate = '';
           }
         }
         // TODO: Unused
         // updateType = options["refresh"] ? "refresh" : updateType;
         this.updateCQLFilter(1, true, function () {
           if (
-            options["bushfireid"] !== null &&
-            options["bushfireid"] !== undefined
+            options['bushfireid'] !== null &&
+            options['bushfireid'] !== undefined
           ) {
             var feat = vm.features.getArray().find(function (o) {
-              return o.get("fire_number") == options["bushfireid"];
+              return o.get('fire_number') == options['bushfireid'];
             });
             if (feat) {
               vm.selectedFeatures.push(feat);
@@ -1564,8 +1563,8 @@ export default {
     },
     isModifiable: function (bushfire) {
       try {
-        return this.whoami["bushfire"]["permission"][
-          bushfire.get("status") + ".modify"
+        return this.whoami['bushfire']['permission'][
+          bushfire.get('status') + '.modify'
         ];
       } catch {
         return false;
@@ -1573,27 +1572,27 @@ export default {
     },
     isFireboundaryDrawable: function (bushfire) {
       return (
-        bushfire.get("status") === "new" ||
-        bushfire.get("report_status") === 1 ||
-        bushfire.get("report_status") === 2 ||
-        bushfire.get("report_status") === 3
+        bushfire.get('status') === 'new' ||
+        bushfire.get('report_status') === 1 ||
+        bushfire.get('report_status') === 2 ||
+        bushfire.get('report_status') === 3
       );
     },
     isEditable: function (bushfire) {
       try {
-        return this.whoami["bushfire"]["permission"][
-          bushfire.get("status") + ".edit"
+        return this.whoami['bushfire']['permission'][
+          bushfire.get('status') + '.edit'
         ];
       } catch {
         return false;
       }
     },
     isDeletable: function (bushfire) {
-      return bushfire.get("status") === "new";
+      return bushfire.get('status') === 'new';
     },
     isCreatable: function () {
       try {
-        return this.revision && this.whoami["bushfire"]["permission"]["create"];
+        return this.revision && this.whoami['bushfire']['permission']['create'];
       } catch {
         return false;
       }
@@ -1602,7 +1601,7 @@ export default {
       try {
         return (
           this.revision &&
-          this.whoami["bushfire"]["permission"]["final_authorised.modify"]
+          this.whoami['bushfire']['permission']['final_authorised.modify']
         );
       } catch {
         return false;
@@ -1621,41 +1620,41 @@ export default {
     canEdit: function (bushfire) {
       return (
         this.revision &&
-        bushfire.get("status") !== "new" &&
+        bushfire.get('status') !== 'new' &&
         this.isEditable(bushfire) &&
-        bushfire.get("tint") !== "modified"
+        bushfire.get('tint') !== 'modified'
       );
     },
     canUpload: function (bushfire) {
       return (
         this.revision &&
-        bushfire.get("status") !== "new" &&
+        bushfire.get('status') !== 'new' &&
         this.isModifiable(bushfire)
       );
     },
     canModify: function (bushfire) {
       return (
         this.revision &&
-        bushfire.get("status") !== "new" &&
+        bushfire.get('status') !== 'new' &&
         this.isFireboundaryDrawable(bushfire) &&
         this.isModifiable(bushfire)
       );
     },
     canReset: function (bushfire) {
-      return this.revision && bushfire.get("status") !== "new"; // && this.isEditable(bushfire) && bushfire.get('tint') === "modified"
+      return this.revision && bushfire.get('status') !== 'new'; // && this.isEditable(bushfire) && bushfire.get('tint') === "modified"
     },
     canSave: function (bushfire) {
       return (
         this.revision &&
-        bushfire.get("status") !== "new" &&
+        bushfire.get('status') !== 'new' &&
         this.isModifiable(bushfire) &&
-        bushfire.get("tint") === "modified"
+        bushfire.get('tint') === 'modified'
       );
     },
     canCreate: function (bushfire) {
       return (
         this.revision &&
-        bushfire.get("status") === "new" &&
+        bushfire.get('status') === 'new' &&
         bushfire
           .getGeometry()
           .getGeometriesArray()
@@ -1668,26 +1667,26 @@ export default {
       return this.revision && this.isDeletable(bushfire);
     },
     createUrl: function () {
-      return env.bfrsService + "/bfrs/create/";
+      return env.bfrsService + '/bfrs/create/';
     },
     editUrl: function (feat) {
-      var status = feat.get("report_status");
+      var status = feat.get('report_status');
       if (status > 1 && status < 5) {
-        return env.bfrsService + "/bfrs/final/" + feat.get("id") + "/";
+        return env.bfrsService + '/bfrs/final/' + feat.get('id') + '/';
       } else {
-        return env.bfrsService + "/bfrs/initial/" + feat.get("id") + "/";
+        return env.bfrsService + '/bfrs/initial/' + feat.get('id') + '/';
       }
     },
     saveUrl: function (feat) {
       return (
         env.bfrsService +
-        "/api/v1/bushfirespatial/" +
-        feat.get("id") +
-        "/?format=json"
+        '/api/v1/bushfirespatial/' +
+        feat.get('id') +
+        '/?format=json'
       );
     },
     deleteUrl: function (feat) {
-      return env.bfrsService + "/delete/" + feat.get("id");
+      return env.bfrsService + '/delete/' + feat.get('id');
     },
     startEditFeature: function (feat) {
       if (
@@ -1727,14 +1726,14 @@ export default {
           }) || null;
 
         if (!originPoint) {
-          throw "No origin point placed";
+          throw 'No origin point placed';
         }
         if (!this.isFireboundaryDrawable(feat)) {
-          if ((feat.get("modifyType") & 2) !== 2) {
-            if (feat.get("fire_boundary")) {
+          if ((feat.get('modifyType') & 2) !== 2) {
+            if (feat.get('fire_boundary')) {
               //only move  the original point
               originPoint = originPoint.getCoordinates();
-              if (validateType === "getSpatialData") {
+              if (validateType === 'getSpatialData') {
                 //during saving, check agaist the fire boundary
                 const layer_id = getLayerId(
                   env.bushfireFinalFireBoundaryLatestLayer,
@@ -1743,16 +1742,16 @@ export default {
                 $.ajax({
                   url:
                     url +
-                    "/wfs?service=wfs&version=2.0&request=GetPropertyValue&valueReference=fire_number&typeNames=" +
+                    '/wfs?service=wfs&version=2.0&request=GetPropertyValue&valueReference=fire_number&typeNames=' +
                     getLayerId(env.bushfireFinalFireBoundaryLatestLayer) +
                     "&cql_filter=(fire_number='" +
-                    feat.get("fire_number") +
+                    feat.get('fire_number') +
                     "')and (CONTAINS(fire_boundary,POINT(" +
                     originPoint[1] +
-                    " " +
+                    ' ' +
                     originPoint[0] +
-                    ")))",
-                  dataType: "xml",
+                    ')))',
+                  dataType: 'xml',
                   success: function (response) {
                     if (
                       response.firstChild &&
@@ -1762,7 +1761,7 @@ export default {
                       vm._validateBushfireCallback(null, callback);
                     } else if (callback) {
                       vm._validateBushfireCallback(
-                        "Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button",
+                        'Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button',
                         callback,
                       );
                     }
@@ -1780,12 +1779,12 @@ export default {
               } else {
                 //during modifing,check agaist the bbox of fire boundary
                 if (
-                  containsCoordinate(feat.get("fire_boundary"), originPoint)
+                  containsCoordinate(feat.get('fire_boundary'), originPoint)
                 ) {
                   vm._validateBushfireCallback(null, callback);
                 } else {
                   vm._validateBushfireCallback(
-                    "Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button",
+                    'Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button',
                     callback,
                   );
                 }
@@ -1828,7 +1827,7 @@ export default {
               }),
             );
             if (indexes) indexes.push(0);
-            throw "The polygon is self intersecting, please remove intersection";
+            throw 'The polygon is self intersecting, please remove intersection';
           }
         } else if (fireboundary && fireboundary.getPolygons().length > 1) {
           fireboundary = fireboundary.getCoordinates();
@@ -1863,7 +1862,7 @@ export default {
                     }),
                   );
                   if (indexes) indexes.push(index);
-                  throw "One or more fire boundaries are self intersecting, please remove self intersection";
+                  throw 'One or more fire boundaries are self intersecting, please remove self intersection';
                 } else if (
                   index === 0 &&
                   (kinks = kinks(fireboundary[index2])).features.length > 0
@@ -1874,15 +1873,15 @@ export default {
                     }),
                   );
                   if (indexes) indexes.push(index2);
-                  throw "One or more fire boundaries are self intersecting, please remove self intersection";
+                  throw 'One or more fire boundaries are self intersecting, please remove self intersection';
                 } else {
                   if (indexes) indexes.push(index);
-                  throw "One or more fire boundaries are invalid, please fix it";
+                  throw 'One or more fire boundaries are invalid, please fix it';
                 }
               }
               if (checkResult) {
                 if (indexes) indexes.push(index);
-                throw "One or more fire boundaries are intersecting, please remove intersection";
+                throw 'One or more fire boundaries are intersecting, please remove intersection';
               }
             }
           }
@@ -1908,7 +1907,7 @@ export default {
           if (
             inFireboundary !== true &&
             polygon &&
-            validateType !== "deleteFireboundary" &&
+            validateType !== 'deleteFireboundary' &&
             polygonIndex === -1
           ) {
             inFireboundary = false;
@@ -1919,15 +1918,15 @@ export default {
 
           if (inFireboundary === false) {
             indexes = [0];
-            throw "Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button";
+            throw 'Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button';
           }
           convertedToTurf = true;
         }
         vm._validateBushfireCallback(null, callback);
       } catch (ex) {
-        if (!feat.get("external_feature")) {
+        if (!feat.get('external_feature')) {
           if (indexes) {
-            feat["selectedIndex"] = indexes;
+            feat['selectedIndex'] = indexes;
           }
           if (
             this.annotations.selectedFeatures.getLength() !== 1 ||
@@ -1945,7 +1944,7 @@ export default {
       }
     },
     getSpatialData: function (feat, caller, callback, failedCallback) {
-      caller = caller || "get";
+      caller = caller || 'get';
       var vm = this;
       this._defaultFailedCallback =
         this._defaultFailedCallback ||
@@ -1959,59 +1958,59 @@ export default {
           if (
             spatialData &&
             vm.target_feature &&
-            (caller === "import" || caller === "save" || caller === "create")
+            (caller === 'import' || caller === 'save' || caller === 'create')
           ) {
             vm.target_feature.spatial_data = spatialData;
           }
           if (vm.target_feature.spatial_data) {
             spatialData = vm.target_feature.spatial_data;
           }
-          if (vm.target_feature && vm.target_feature.get("fire_number")) {
-            if (feat.get("fire_number")) {
+          if (vm.target_feature && vm.target_feature.get('fire_number')) {
+            if (feat.get('fire_number')) {
               if (
-                vm.target_feature.get("fire_number") === feat.get("fire_number")
+                vm.target_feature.get('fire_number') === feat.get('fire_number')
               ) {
                 feat.tasks = vm.target_feature.tasks;
               }
             }
           }
-          if (vm._taskManager.allTasksSucceed(feat, "getSpatialData")) {
+          if (vm._taskManager.allTasksSucceed(feat, 'getSpatialData')) {
             if (!spatialData) {
               //in case spatial_data is lost, reload the spatial data from the backend again
               vm.completeButtonDisabled = true;
-              vm.showProgress(vm.target_feature, "updateBfrsUploadProgress");
+              vm.showProgress(vm.target_feature, 'updateBfrsUploadProgress');
               return;
             }
-            if ("region" in spatialData && "district" in spatialData) {
+            if ('region' in spatialData && 'district' in spatialData) {
               var region = null;
               var district;
-              spatialData["region_id"] = null;
-              spatialData["district_id"] = null;
+              spatialData['region_id'] = null;
+              spatialData['district_id'] = null;
 
-              var name = spatialData["region"];
-              delete spatialData["region"];
+              var name = spatialData['region'];
+              delete spatialData['region'];
               if (name) {
                 name = name.toLowerCase();
                 region = vm.regions.find(function (o) {
                   return o.region.toLowerCase() === name;
                 });
                 if (region) {
-                  spatialData["region_id"] = region.region_id;
+                  spatialData['region_id'] = region.region_id;
                 } else {
                   failedCallback("Region '" + name + "' is not found");
                   return;
                 }
               }
 
-              name = spatialData["district"];
-              delete spatialData["district"];
+              name = spatialData['district'];
+              delete spatialData['district'];
               if (name && region) {
                 name = name.toLowerCase();
                 district = region.districts.find(function (o) {
                   return o.district.toLowerCase() === name;
                 });
                 if (district) {
-                  spatialData["district_id"] = district.id;
+                  spatialData['district_id'] = district.id;
                 } else {
                   failedCallback(
                     "District '" +
@@ -2025,148 +2024,148 @@ export default {
               }
             }
 
-            if (caller === "batchimport" && spatialData["fire_boundary"]) {
+            if (caller === 'batchimport' && spatialData['fire_boundary']) {
               //try to set capture method if have
-              if (feat.get("capt_meth")) {
-                let method = vm.whoami["bushfire"]["capturemethods"].find(
+              if (feat.get('capt_meth')) {
+                let method = vm.whoami['bushfire']['capturemethods'].find(
                   function (m) {
-                    return m.code === feat.get("capt_meth");
+                    return m.code === feat.get('capt_meth');
                   },
                 );
                 if (method) {
                   //found the capture method in the list
-                  spatialData["capturemethod"] = method.id;
-                } else if (feat.get("capt_desc")) {
+                  spatialData['capturemethod'] = method.id;
+                } else if (feat.get('capt_desc')) {
                   //can't find the capture method in the list, and have non empty capture method description, use 'other'
-                  spatialData["capturemethod"] =
-                    vm.whoami["bushfire"]["other_capturemethod_id"];
+                  spatialData['capturemethod'] =
+                    vm.whoami['bushfire']['other_capturemethod_id'];
                 }
                 if (
-                  spatialData["capturemethod"] ===
-                  vm.whoami["bushfire"]["other_capturemethod_id"]
+                  spatialData['capturemethod'] ===
+                  vm.whoami['bushfire']['other_capturemethod_id']
                 ) {
                   //is other capture method
-                  spatialData["other_capturemethod"] = feat.get("capt_desc");
+                  spatialData['other_capturemethod'] = feat.get('capt_desc');
                 }
               }
               callback(spatialData);
             } else if (
-              caller === "showprogress" &&
-              spatialData["fire_boundary"]
+              caller === 'showprogress' &&
+              spatialData['fire_boundary']
             ) {
-              if (feat.get("original_status") === "new") {
+              if (feat.get('original_status') === 'new') {
                 callback(spatialData);
               } else {
                 vm.target_feature.spatial_data = spatialData;
               }
-            } else if (caller === "save" && spatialData["fire_boundary"]) {
+            } else if (caller === 'save' && spatialData['fire_boundary']) {
               vm.target_feature.spatial_data = spatialData;
             } else if (
-              caller === "capturemethod" &&
+              caller === 'capturemethod' &&
               vm.target_feature.spatial_data &&
-              vm.target_feature.spatial_data["fire_boundary"]
+              vm.target_feature.spatial_data['fire_boundary']
             ) {
               spatialData = vm.target_feature.spatial_data;
               vm.loadCapturemethods(
                 function () {
                   let initData = {};
-                  if (feat.get("capt_meth")) {
-                    let method = vm.whoami["bushfire"]["capturemethods"].find(
+                  if (feat.get('capt_meth')) {
+                    let method = vm.whoami['bushfire']['capturemethods'].find(
                       function (m) {
-                        return m.code === feat.get("capt_meth");
+                        return m.code === feat.get('capt_meth');
                       },
                     );
                     if (method) {
-                      initData["capturemethod"] = method.id;
+                      initData['capturemethod'] = method.id;
                     }
                   }
-                  if (feat.get("capt_desc")) {
-                    initData["other_capturemethod"] = feat.get("capt_desc");
+                  if (feat.get('capt_desc')) {
+                    initData['other_capturemethod'] = feat.get('capt_desc');
                   }
                   vm.taskDialog.close();
                   vm.dialog.show({
-                    title: "Capture Methods",
+                    title: 'Capture Methods',
                     messages:
-                      vm.whoami["bushfire"]["capturemethod_dialogmessage"],
+                      vm.whoami['bushfire']['capturemethod_dialogmessage'],
                     initData: initData,
                     initFunc: function () {
-                      if ("capturemethod" in initData) {
-                        $("#userdialog-button-true").prop("disabled", false);
+                      if ('capturemethod' in initData) {
+                        $('#userdialog-button-true').prop('disabled', false);
                       }
                       if (
-                        initData["capturemethod"] ===
-                        vm.whoami["bushfire"]["other_capturemethod_id"]
+                        initData['capturemethod'] ===
+                        vm.whoami['bushfire']['other_capturemethod_id']
                       ) {
                         $("#userdialog input[name='other_capturemethod']").prop(
-                          "disabled",
+                          'disabled',
                           false,
                         );
                       }
                     },
                     footer: [
                       [
-                        ["", 3],
+                        ['', 3],
                         [
                           true,
                           2,
                           {
-                            type: "button",
+                            type: 'button',
                             disabled: true,
-                            title: "Select",
-                            click: "close",
+                            title: 'Select',
+                            click: 'close',
                             is_valid: function (button, data) {
-                              if (!data["capturemethod"]) {
-                                alert("Please choose a capture method.");
+                              if (!data['capturemethod']) {
+                                alert('Please choose a capture method.');
                                 return false;
                               } else if (
-                                parseInt(data["capturemethod"]) ===
-                                  vm.whoami["bushfire"]["othermethod_id"] &&
-                                !data["other_capturemethod"]
+                                parseInt(data['capturemethod']) ===
+                                  vm.whoami['bushfire']['othermethod_id'] &&
+                                !data['other_capturemethod']
                               ) {
-                                alert("Please input the other capture method.");
+                                alert('Please input the other capture method.');
                                 return false;
                               }
                             },
                           },
                         ],
-                        ["", 2],
+                        ['', 2],
                         [
                           false,
                           2,
                           {
-                            type: "button",
+                            type: 'button',
                             disabled: false,
-                            click: "close",
-                            title: "Cancel",
+                            click: 'close',
+                            title: 'Cancel',
                           },
                         ],
-                        ["", 3],
+                        ['', 3],
                       ],
                     ],
                     defaultOption: false,
                     callback: function (isOk, data) {
                       if (isOk) {
-                        if (!data["capturemethod"]) {
+                        if (!data['capturemethod']) {
                           failedCallback("'Capture Method' is missing.");
                         } else if (
-                          data["capturemethod"] ===
-                            vm.whoami["bushfire"]["othermethod_id"] &&
-                          !data["other_capturemethod"]
+                          data['capturemethod'] ===
+                            vm.whoami['bushfire']['othermethod_id'] &&
+                          !data['other_capturemethod']
                         ) {
                           failedCallback("'Other Capture Method' is missing.");
                         } else {
-                          spatialData["capturemethod"] = data["capturemethod"];
+                          spatialData['capturemethod'] = data['capturemethod'];
                           if (
-                            data["capturemethod"] ===
-                            vm.whoami["bushfire"]["othermethod_id"]
+                            data['capturemethod'] ===
+                            vm.whoami['bushfire']['othermethod_id']
                           ) {
-                            spatialData["other_capturemethod"] =
-                              data["other_capturemethod"] || null;
+                            spatialData['other_capturemethod'] =
+                              data['other_capturemethod'] || null;
                           }
                           callback(spatialData);
                         }
                       } else {
-                        failedCallback("Import cancelled");
+                        failedCallback('Import cancelled');
                       }
                     },
                   });
@@ -2178,14 +2177,14 @@ export default {
             } else {
               callback(spatialData);
             }
-          } else if (vm._taskManager.allTasksFinished(feat, "getSpatialData")) {
+          } else if (vm._taskManager.allTasksFinished(feat, 'getSpatialData')) {
             if (failedCallback === vm._defaultFailedCallback) {
               var msg = vm._taskManager
-                .errorMessages(feat, "getSpatialData")
-                .join("\r\n");
+                .errorMessages(feat, 'getSpatialData')
+                .join('\r\n');
               if (msg) alert(msg);
             } else {
-              failedCallback("");
+              failedCallback('');
             }
           }
         };
@@ -2194,7 +2193,7 @@ export default {
         vm._getSpatialData ||
         function (feat, caller, callback, failedCallback) {
           try {
-            if (caller === "capturemethod") {
+            if (caller === 'capturemethod') {
               vm._getSpatialDataCallback(
                 feat,
                 caller,
@@ -2207,11 +2206,11 @@ export default {
 
             var spatialData = {};
             var modifyType =
-              feat.get("status") === "new" ? 3 : feat.get("modifyType") || 3;
+              feat.get('status') === 'new' ? 3 : feat.get('modifyType') || 3;
 
-            if (caller === "showprogress") {
+            if (caller === 'showprogress') {
               modifyType =
-                feat.get("status") === "new" ? 3 : feat.get("modifyType") || 2;
+                feat.get('status') === 'new' ? 3 : feat.get('modifyType') || 2;
             }
 
             var geometries = feat.getGeometry().getGeometriesArray();
@@ -2227,10 +2226,10 @@ export default {
             // TODO: Unused
             // var area = 0;
             if ((modifyType & 1) === 1) {
-              spatialData["origin_point"] = originPoint;
-              spatialData["origin_point_mga"] = vm.map.getMGA(originPoint);
-              spatialData["tenure_ignition_point"] = null;
-              spatialData["fire_position"] = null;
+              spatialData['origin_point'] = originPoint;
+              spatialData['origin_point_mga'] = vm.map.getMGA(originPoint);
+              spatialData['tenure_ignition_point'] = null;
+              spatialData['fire_position'] = null;
             }
 
             if ((modifyType & 2) === 2) {
@@ -2248,8 +2247,8 @@ export default {
                   ? fireboundary.getCoordinates()
                   : null;
 
-              spatialData["fire_boundary"] = fireboundary;
-              spatialData["area"] = null;
+              spatialData['fire_boundary'] = fireboundary;
+              spatialData['area'] = null;
             }
 
             // Area breakdown should still run when only origin point was modified,
@@ -2278,34 +2277,34 @@ export default {
              *     }
              * }
              */
-            if (fireboundary && caller !== "showprogress") {
-              spatialData["area"] = null;
+            if (fireboundary && caller !== 'showprogress') {
+              spatialData['area'] = null;
               tenure_area_task = tasks.find(
-                (task) => task.taskId === "tenure_area",
+                (task) => task.taskId === 'tenure_area',
               );
               if (!tenure_area_task) {
                 tenure_area_task = vm._taskManager.addTask(
                   feat,
-                  "getSpatialData",
-                  "tenure_area",
-                  "Calculate fire boundary areas",
+                  'getSpatialData',
+                  'tenure_area',
+                  'Calculate fire boundary areas',
                   FeatureTask.WAITING,
                 );
               }
             }
 
-            if (caller === "showprogress") {
+            if (caller === 'showprogress') {
               spatialData = vm.target_feature.spatial_data;
               tenure_area_task = tasks.find(
-                (task) => task.taskId === "tenure_area",
+                (task) => task.taskId === 'tenure_area',
               );
-              if (vm.calculation_result["total_features"] > 0) {
-                var result = vm.calculation_result["features"][0]["area"];
-                if (result["status"]["failed"]) {
+              if (vm.calculation_result['total_features'] > 0) {
+                var result = vm.calculation_result['features'][0]['area'];
+                if (result['status']['failed']) {
                   //failed
                   tenure_area_task.setStatus(
                     FeatureTask.FAILED,
-                    result["status"]["failed"],
+                    result['status']['failed'],
                   );
                   vm._getSpatialDataCallback(
                     feat,
@@ -2314,51 +2313,51 @@ export default {
                     failedCallback,
                     spatialData,
                   );
-                } else if (result["status"]["invalid"]) {
+                } else if (result['status']['invalid']) {
                   //invalid geometry
                   vm._getValidationMessage =
                     vm._getValidationMessage ||
                     function (message) {
                       return (
-                        "Geometry check of the fire shape has found the following error: " +
-                        "\r\n\t" +
+                        'Geometry check of the fire shape has found the following error: ' +
+                        '\r\n\t' +
                         (Array.isArray(message)
-                          ? message.join("\r\n\t")
+                          ? message.join('\r\n\t')
                           : message) +
-                        "\r\n\r\nPlease run a geometry check within ArcGIS before uploading" +
-                        "\r\nFor help contact the Fire Support Systems Team fire_systems_support@dbca.wa.gov.au"
+                        '\r\n\r\nPlease run a geometry check within ArcGIS before uploading' +
+                        '\r\nFor help contact the Fire Support Systems Team fire_systems_support@dbca.wa.gov.au'
                       );
                     };
                   var process_invalid_func = function (result) {
                     var msg = vm._getValidationMessage(
-                      result["status"]["invalid"],
+                      result['status']['invalid'],
                     );
                     vm.dialog.show({
                       messages: msg,
                       defaultOption: false,
                       footer: [
                         [
-                          ["", 3],
+                          ['', 3],
                           [
                             false,
                             2,
                             {
-                              type: "button",
-                              title: "Ok",
-                              click: "close",
+                              type: 'button',
+                              title: 'Ok',
+                              click: 'close',
                             },
                           ],
-                          ["", 2],
+                          ['', 2],
                           [
                             true,
                             2,
                             {
-                              type: "button",
-                              title: "Override",
-                              click: "close",
+                              type: 'button',
+                              title: 'Override',
+                              click: 'close',
                             },
                           ],
-                          ["", 3],
+                          ['', 3],
                         ],
                       ],
                       callback: function (option) {
@@ -2366,41 +2365,41 @@ export default {
                           setTimeout(function () {
                             vm.dialog.show({
                               messages:
-                                "I acknowledge a geometry check has been run and passed in ArcGIS Geometry Tool and this is a valid shape.",
+                                'I acknowledge a geometry check has been run and passed in ArcGIS Geometry Tool and this is a valid shape.',
                               defaultOption: false,
                               footer: [
                                 [
-                                  ["", 3],
+                                  ['', 3],
                                   [
                                     true,
                                     2,
                                     {
-                                      type: "button",
-                                      title: "Yes",
-                                      click: "close",
+                                      type: 'button',
+                                      title: 'Yes',
+                                      click: 'close',
                                     },
                                   ],
-                                  ["", 2],
+                                  ['', 2],
                                   [
                                     false,
                                     2,
                                     {
-                                      type: "button",
-                                      title: "Cancel",
-                                      click: "close",
+                                      type: 'button',
+                                      title: 'Cancel',
+                                      click: 'close',
                                     },
                                   ],
-                                  ["", 3],
+                                  ['', 3],
                                 ],
                               ],
                               callback: function (option) {
                                 setTimeout(function () {
                                   if (option) {
-                                    result["data"]["fb_validation_req"] = true;
-                                    if (result["status"]["overlapped"]) {
+                                    result['data']['fb_validation_req'] = true;
+                                    if (result['status']['overlapped']) {
                                       process_overlap_func(result);
                                     } else {
-                                      spatialData["area"] = result["data"];
+                                      spatialData['area'] = result['data'];
                                       tenure_area_task.setStatus(
                                         FeatureTask.SUCCEED,
                                       );
@@ -2434,50 +2433,50 @@ export default {
                     });
                     return;
                   };
-                  if (!vm.dialog.isActive && !spatialData["area"]) {
+                  if (!vm.dialog.isActive && !spatialData['area']) {
                     vm.taskDialog.close();
                     process_invalid_func(result);
                   }
-                } else if (result["status"]["overlapped"]) {
+                } else if (result['status']['overlapped']) {
                   //found overlap
-                  if (!vm.dialog.isActive && !spatialData["area"]) {
+                  if (!vm.dialog.isActive && !spatialData['area']) {
                     vm.taskDialog.close();
-                    let feature_area = result["data"];
+                    let feature_area = result['data'];
                     vm.dialog.show({
-                      title: "Error",
+                      title: 'Error',
                       messages: [
-                        "The calculated burnt area contains duplicate areas. Please contact fire_systems_support@dbca.wa.gov.au for assistance.",
-                        " ",
-                        "The sum of the burning areas in individual layers is " +
-                          Math.abs(feature_area["other_area"]).toFixed(2) +
-                          " greater than the total burning area " +
-                          feature_area["total_area"].toFixed(2) +
-                          ".",
-                        "The features from the following layers are overlaped.",
+                        'The calculated burnt area contains duplicate areas. Please contact fire_systems_support@dbca.wa.gov.au for assistance.',
+                        ' ',
+                        'The sum of the burning areas in individual layers is ' +
+                          Math.abs(feature_area['other_area']).toFixed(2) +
+                          ' greater than the total burning area ' +
+                          feature_area['total_area'].toFixed(2) +
+                          '.',
+                        'The features from the following layers are overlaped.',
                         [
-                          ["", 1],
+                          ['', 1],
                           [env.legislatedLandsAndWatersLayer, 11],
                         ],
                         [
-                          ["", 1],
+                          ['', 1],
                           [env.deptInterestLandsAndWatersLayer, 11],
                         ],
                         [
-                          ["", 1],
+                          ['', 1],
                           [env.otherTenuresLayer, 11],
                         ],
-                        " ",
+                        ' ',
                       ],
                       defaultOption: false,
                       footer: [
                         [
-                          ["", 2],
+                          ['', 2],
                           [
                             true,
                             6,
                             {
-                              type: "button",
-                              title: "Return to Edit Mode",
+                              type: 'button',
+                              title: 'Return to Edit Mode',
                               click: function () {
                                 let removed = vm.clearQueue(true);
                                 if (removed) {
@@ -2490,19 +2489,19 @@ export default {
                             false,
                             1,
                             {
-                              type: "button",
-                              title: "Close",
-                              click: "close",
+                              type: 'button',
+                              title: 'Close',
+                              click: 'close',
                             },
                           ],
-                          ["", 3],
+                          ['', 3],
                         ],
                       ],
                     });
                   }
                 } else {
-                  result["data"]["fb_validation_req"] = null;
-                  spatialData["area"] = result["data"];
+                  result['data']['fb_validation_req'] = null;
+                  spatialData['area'] = result['data'];
                   tenure_area_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
@@ -2515,7 +2514,7 @@ export default {
               } else {
                 tenure_area_task.setStatus(
                   FeatureTask.FAILED,
-                  "Calculate area failed.",
+                  'Calculate area failed.',
                 );
                 vm._getSpatialDataCallback(
                   feat,
@@ -2536,18 +2535,18 @@ export default {
             var district_task = null;
             var plantation_task = null;
 
-            if (["new", "initial"].indexOf(feat.get("status")) >= 0) {
-              spatialData["plantations"] = null;
+            if (['new', 'initial'].indexOf(feat.get('status')) >= 0) {
+              spatialData['plantations'] = null;
               if (originPoint) {
                 plantation_task = tasks.find(
-                  (task) => task.taskId === "plantation",
+                  (task) => task.taskId === 'plantation',
                 );
                 if (!plantation_task) {
                   plantation_task = vm._taskManager.addTask(
                     feat,
-                    "getSpatialData",
-                    "plantation",
-                    "Find the plantations within 3kms",
+                    'getSpatialData',
+                    'plantation',
+                    'Find the plantations within 3kms',
                     FeatureTask.WAITING,
                   );
                 }
@@ -2555,60 +2554,60 @@ export default {
             }
             if (originPoint && (modifyType & 1) === 1) {
               tenure_origin_point_task = tasks.find(
-                (task) => task.taskId === "tenure_origin_point",
+                (task) => task.taskId === 'tenure_origin_point',
               );
               if (!tenure_origin_point_task) {
                 tenure_origin_point_task = vm._taskManager.addTask(
                   feat,
-                  "getSpatialData",
-                  "tenure_origin_point",
-                  "Get the tenure of ignition point",
+                  'getSpatialData',
+                  'tenure_origin_point',
+                  'Get the tenure of ignition point',
                   FeatureTask.WAITING,
                 );
               }
               fire_position_task = tasks.find(
-                (task) => task.taskId === "fire_position",
+                (task) => task.taskId === 'fire_position',
               );
               if (!fire_position_task) {
                 fire_position_task = vm._taskManager.addTask(
                   feat,
-                  "getSpatialData",
-                  "fire_position",
-                  "Get the fire position",
+                  'getSpatialData',
+                  'fire_position',
+                  'Get the fire position',
                   FeatureTask.WAITING,
                 );
               }
               originpoint_grid_task = tasks.find(
-                (task) => task.taskId === "originpoint_grid",
+                (task) => task.taskId === 'originpoint_grid',
               );
               if (!originpoint_grid_task) {
                 originpoint_grid_task = vm._taskManager.addTask(
                   feat,
-                  "getSpatialData",
-                  "originpoint_grid",
+                  'getSpatialData',
+                  'originpoint_grid',
                   "Get origin point's grid data",
                   FeatureTask.WAITING,
                 );
               }
-              if (["new", "initial"].indexOf(feat.get("status")) >= 0) {
-                region_task = tasks.find((task) => task.taskId === "region");
+              if (['new', 'initial'].indexOf(feat.get('status')) >= 0) {
+                region_task = tasks.find((task) => task.taskId === 'region');
                 if (!region_task) {
                   region_task = vm._taskManager.addTask(
                     feat,
-                    "getSpatialData",
-                    "region",
+                    'getSpatialData',
+                    'region',
                     "Get bushfire's region",
                     FeatureTask.WAITING,
                   );
                 }
                 district_task = tasks.find(
-                  (task) => task.taskId === "district",
+                  (task) => task.taskId === 'district',
                 );
                 if (!district_task) {
                   district_task = vm._taskManager.addTask(
                     feat,
-                    "getSpatialData",
-                    "district",
+                    'getSpatialData',
+                    'district',
                     "Get bushfire's district",
                     FeatureTask.WAITING,
                   );
@@ -2629,79 +2628,79 @@ export default {
                 vm._getValidationMessage ||
                 function (message) {
                   return (
-                    "Geometry check of the fire shape has found the following error: " +
-                    "\r\n\t" +
+                    'Geometry check of the fire shape has found the following error: ' +
+                    '\r\n\t' +
                     (Array.isArray(message)
-                      ? message.join("\r\n\t")
+                      ? message.join('\r\n\t')
                       : message) +
-                    "\r\n\r\nPlease run a geometry check within ArcGIS before uploading" +
-                    "\r\nFor help contact the Fire Support Systems Team fire_systems_support@dbca.wa.gov.au"
+                    '\r\n\r\nPlease run a geometry check within ArcGIS before uploading' +
+                    '\r\nFor help contact the Fire Support Systems Team fire_systems_support@dbca.wa.gov.au'
                   );
                 };
               var process_overlap_func = function (result) {
                 //found overlap
-                let feature_area = result["data"];
-                if (caller === "import") {
+                let feature_area = result['data'];
+                if (caller === 'import') {
                   vm.dialog.show({
                     messages: [
-                      "The sum of the burning areas in individual layers is " +
-                        Math.abs(feature_area["other_area"]).toFixed(2) +
-                        " greater than the total burning area " +
-                        feature_area["total_area"].toFixed(2) +
-                        ".",
-                      "The features from the following layers are overlaped.",
+                      'The sum of the burning areas in individual layers is ' +
+                        Math.abs(feature_area['other_area']).toFixed(2) +
+                        ' greater than the total burning area ' +
+                        feature_area['total_area'].toFixed(2) +
+                        '.',
+                      'The features from the following layers are overlaped.',
                       [
-                        ["", 1],
+                        ['', 1],
                         [env.legislatedLandsAndWatersLayer, 11],
                       ],
                       [
-                        ["", 1],
+                        ['', 1],
                         [env.deptInterestLandsAndWatersLayer, 11],
                       ],
                       [
-                        ["", 1],
+                        ['', 1],
                         [env.otherTenuresLayer, 11],
                       ],
-                      "Do you want to continue?",
+                      'Do you want to continue?',
                     ],
                     defaultOption: false,
                     footer: [
                       [
-                        ["", 3],
+                        ['', 3],
                         [
                           true,
                           2,
                           {
-                            type: "button",
-                            title: "Yes",
-                            click: "close",
+                            type: 'button',
+                            title: 'Yes',
+                            click: 'close',
                           },
                         ],
-                        ["", 2],
+                        ['', 2],
                         [
                           false,
                           2,
                           {
-                            type: "button",
-                            title: "No",
-                            click: "close",
+                            type: 'button',
+                            title: 'No',
+                            click: 'close',
                           },
                         ],
-                        ["", 3],
+                        ['', 3],
                       ],
                     ],
                     callback: function (option) {
                       setTimeout(function () {
                         if (option) {
-                          if (!("fb_validation_req" in feature_area)) {
-                            feature_area["fb_validation_req"] = null;
+                          if (!('fb_validation_req' in feature_area)) {
+                            feature_area['fb_validation_req'] = null;
                           }
-                          spatialData["area"] = feature_area;
+                          spatialData['area'] = feature_area;
                           tenure_area_task.setStatus(FeatureTask.SUCCEED);
                         } else {
                           tenure_area_task.setStatus(
                             FeatureTask.FAIL_CONFIRMED,
-                            "Cancelled",
+                            'Cancelled',
                           );
                         }
                         vm._getSpatialDataCallback(
@@ -2716,10 +2715,10 @@ export default {
                   });
                   return;
                 } else {
-                  if (!("fb_validation_req" in feature_area)) {
-                    feature_area["fb_validation_req"] = null;
+                  if (!('fb_validation_req' in feature_area)) {
+                    feature_area['fb_validation_req'] = null;
                   }
-                  spatialData["area"] = feature_area;
+                  spatialData['area'] = feature_area;
                   tenure_area_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
@@ -2733,34 +2732,34 @@ export default {
 
               process_invalid_func = function (result) {
                 //invalid geometry
-                var msg = vm._getValidationMessage(result["status"]["invalid"]);
-                if (caller === "import") {
+                var msg = vm._getValidationMessage(result['status']['invalid']);
+                if (caller === 'import') {
                   vm.dialog.show({
                     messages: msg,
                     defaultOption: false,
                     footer: [
                       [
-                        ["", 3],
+                        ['', 3],
                         [
                           false,
                           2,
                           {
-                            type: "button",
-                            title: "Ok",
-                            click: "close",
+                            type: 'button',
+                            title: 'Ok',
+                            click: 'close',
                           },
                         ],
-                        ["", 2],
+                        ['', 2],
                         [
                           true,
                           2,
                           {
-                            type: "button",
-                            title: "Override",
-                            click: "close",
+                            type: 'button',
+                            title: 'Override',
+                            click: 'close',
                           },
                         ],
-                        ["", 3],
+                        ['', 3],
                       ],
                     ],
                     callback: function (option) {
@@ -2768,41 +2767,41 @@ export default {
                         setTimeout(function () {
                           vm.dialog.show({
                             messages:
-                              "I acknowledge a geometry check has been run and passed in ArcGIS Geometry Tool and this is a valid shape.",
+                              'I acknowledge a geometry check has been run and passed in ArcGIS Geometry Tool and this is a valid shape.',
                             defaultOption: false,
                             footer: [
                               [
-                                ["", 3],
+                                ['', 3],
                                 [
                                   true,
                                   2,
                                   {
-                                    type: "button",
-                                    title: "Yes",
-                                    click: "close",
+                                    type: 'button',
+                                    title: 'Yes',
+                                    click: 'close',
                                   },
                                 ],
-                                ["", 2],
+                                ['', 2],
                                 [
                                   false,
                                   2,
                                   {
-                                    type: "button",
-                                    title: "Cancel",
-                                    click: "close",
+                                    type: 'button',
+                                    title: 'Cancel',
+                                    click: 'close',
                                   },
                                 ],
-                                ["", 3],
+                                ['', 3],
                               ],
                             ],
                             callback: function (option) {
                               setTimeout(function () {
                                 if (option) {
-                                  result["data"]["fb_validation_req"] = true;
-                                  if (result["status"]["overlapped"]) {
+                                  result['data']['fb_validation_req'] = true;
+                                  if (result['status']['overlapped']) {
                                     process_overlap_func(result);
                                   } else {
-                                    spatialData["area"] = result["data"];
+                                    spatialData['area'] = result['data'];
                                     tenure_area_task.setStatus(
                                       FeatureTask.SUCCEED,
                                     );
@@ -2847,9 +2846,9 @@ export default {
                     },
                   });
                   return;
-                } else if (caller === "batchimport") {
-                  result["data"]["fb_validation_req"] = true;
-                  spatialData["area"] = result["data"];
+                } else if (caller === 'batchimport') {
+                  result['data']['fb_validation_req'] = true;
+                  spatialData['area'] = result['data'];
                   tenure_area_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
@@ -2880,7 +2879,7 @@ export default {
                */
               var layers = [
                 {
-                  id: "legislated_lands_and_waters",
+                  id: 'legislated_lands_and_waters',
                   layerid: env.legislatedLandsAndWatersLayer,
                   cqlfilter: "LEG_CATEGORY<>'State Forest'",
                   kmiservice: getLayerUrl(
@@ -2888,93 +2887,93 @@ export default {
                     env,
                   ),
                   properties: {
-                    category: "LEG_CATEGORY",
+                    category: 'LEG_CATEGORY',
                   },
-                  primary_key: "LEG_PIN",
+                  primary_key: 'LEG_PIN',
                 },
                 {
-                  id: "state_forest_plantation_distribution",
+                  id: 'state_forest_plantation_distribution',
                   layerid: env.stateForestPlantationDistributionLayer,
                   kmiservice: getLayerUrl(
                     env.stateForestPlantationDistributionLayer,
                     env,
                   ),
                   properties: {
-                    category: "FBR_FIRE_REPORT_CLASSIFICATION",
+                    category: 'FBR_FIRE_REPORT_CLASSIFICATION',
                   },
                 },
                 {
-                  id: "dept_interest_lands_and_waters",
+                  id: 'dept_interest_lands_and_waters',
                   layerid: env.deptInterestLandsAndWatersLayer,
                   kmiservice: getLayerUrl(
                     env.deptInterestLandsAndWatersLayer,
                     env,
                   ),
                   properties: {
-                    category: "LOI_CATEGORY",
+                    category: 'LOI_CATEGORY',
                   },
-                  primary_key: "LOI_PIN",
+                  primary_key: 'LOI_PIN',
                 },
                 {
-                  id: "other_tenures",
+                  id: 'other_tenures',
                   layerid: env.otherTenuresLayer,
                   kmiservice: getLayerUrl(env.otherTenuresLayer, env),
                   properties: {
-                    category: "BRC_FMS_Legend",
+                    category: 'BRC_FMS_Legend',
                   },
                 },
                 {
-                  id: "sa_nt_burntarea",
+                  id: 'sa_nt_burntarea',
                   layerid: env.saNtStatePolygonsBurntAreaLayer,
                   kmiservice: getLayerUrl(
                     env.saNtStatePolygonsBurntAreaLayer,
                     env,
                   ),
                   properties: {
-                    category: "Name",
+                    category: 'Name',
                   },
                 },
               ];
               $.ajax({
-                url: "/api/bfrs_calculation_queue",
-                dataType: "json",
+                url: '/api/bfrs_calculation_queue',
+                dataType: 'json',
                 data: {
-                  bfrs: feat.get("fire_number"),
+                  bfrs: feat.get('fire_number'),
                   tasks: JSON.stringify(vm.featureTasks(vm.target_feature)),
                   features: vm.$root.geojson.writeFeatures([feat]),
                   options: JSON.stringify({
                     area: {
-                      action: "getArea",
+                      action: 'getArea',
                       layer_overlap: false,
                       merge_result: true,
-                      unit: "ha",
+                      unit: 'ha',
                       layers: layers,
                     },
                   }),
                 },
-                method: "POST",
+                method: 'POST',
                 success: function () {
                   var feature = vm.featurelist.find(
-                    (f) => f.get("fire_number") === feat.get("fire_number"),
+                    (f) => f.get('fire_number') === feat.get('fire_number'),
                   );
                   if (feature) {
-                    feature.set("original_status", feature.get("status"));
-                    feature.set("status", "in_queue");
+                    feature.set('original_status', feature.get('status'));
+                    feature.set('status', 'in_queue');
                     var import_task = tasks.find(
-                      (task) => task.taskId === "import",
+                      (task) => task.taskId === 'import',
                     );
                     if (import_task) {
                       import_task.setStatus(FeatureTask.SUCCEED);
                     }
                     vm.showProgress(feature);
                   } else {
-                    console.error("Feature not found");
+                    console.error('Feature not found');
                   }
                 },
                 error: function (xhr, status, message) {
                   alert(
                     (FeatureTask.FAILED,
-                    xhr.status + " : " + (xhr.responseText || message)),
+                    xhr.status + ' : ' + (xhr.responseText || message)),
                   );
                   if (xhr.status === 490) {
                     tenure_area_task.setStatus(
@@ -2984,7 +2983,7 @@ export default {
                   } else {
                     tenure_area_task.setStatus(
                       FeatureTask.FAILED,
-                      xhr.status + " : " + (xhr.responseText || message),
+                      xhr.status + ' : ' + (xhr.responseText || message),
                     );
                   }
                   vm._getSpatialDataCallback(
@@ -3006,83 +3005,83 @@ export default {
               let tenure_layers = [
                 {
                   id: env.stateForestPlantationDistributionLayer,
-                  geom_field: "wkb_geometry",
+                  geom_field: 'wkb_geometry',
                   properties: {
-                    id: "ogc_fid",
-                    name: "fbr_fire_r",
-                    category: "fbr_fire_r",
+                    id: 'ogc_fid',
+                    name: 'fbr_fire_r',
+                    category: 'fbr_fire_r',
                   },
                   kb: {
-                    geom_field: "SHAPE",
+                    geom_field: 'SHAPE',
                     properties: {
-                      name: "FBR_FIRE_REPORT_CLASSIFICATION",
-                      category: "FBR_FIRE_REPORT_CLASSIFICATION",
+                      name: 'FBR_FIRE_REPORT_CLASSIFICATION',
+                      category: 'FBR_FIRE_REPORT_CLASSIFICATION',
                     },
                   },
                 },
                 {
                   id: env.legislatedLandsAndWatersLayer,
-                  geom_field: "wkb_geometry",
+                  geom_field: 'wkb_geometry',
                   properties: {
-                    id: "ogc_fid",
-                    name: "name",
-                    category: "category",
+                    id: 'ogc_fid',
+                    name: 'name',
+                    category: 'category',
                   },
                   kb: {
-                    geom_field: "SHAPE",
+                    geom_field: 'SHAPE',
                     properties: {
-                      id: "LEG_PIN",
-                      name: "LEG_NAME",
-                      category: "LEG_CATEGORY",
+                      id: 'LEG_PIN',
+                      name: 'LEG_NAME',
+                      category: 'LEG_CATEGORY',
                     },
                   },
                 },
                 {
                   id: env.deptInterestLandsAndWatersLayer,
-                  geom_field: "wkb_geometry",
+                  geom_field: 'wkb_geometry',
                   properties: {
-                    id: "ogc_fid",
-                    name: "name",
-                    category: "category",
+                    id: 'ogc_fid',
+                    name: 'name',
+                    category: 'category',
                   },
                   kb: {
-                    geom_field: "SHAPE",
+                    geom_field: 'SHAPE',
                     properties: {
-                      id: "LOI_PIN",
-                      name: "LOI_CATEGORY",
-                      category: "LOI_CATEGORY",
+                      id: 'LOI_PIN',
+                      name: 'LOI_CATEGORY',
+                      category: 'LOI_CATEGORY',
                     },
                   },
                 },
                 {
                   id: env.otherTenuresLayer,
-                  geom_field: "wkb_geometry",
+                  geom_field: 'wkb_geometry',
                   properties: {
-                    id: "ogc_fid",
-                    name: "brc_fms_le",
-                    category: "brc_fms_le",
+                    id: 'ogc_fid',
+                    name: 'brc_fms_le',
+                    category: 'brc_fms_le',
                   },
                   kb: {
-                    geom_field: "SHAPE",
+                    geom_field: 'SHAPE',
                     properties: {
-                      name: "BRC_FMS_Legend",
-                      category: "BRC_FMS_Legend",
+                      name: 'BRC_FMS_Legend',
+                      category: 'BRC_FMS_Legend',
                     },
                   },
                 },
                 {
                   id: env.saNtStatePolygonsBurntAreaLayer,
-                  geom_field: "wkb_geometry",
+                  geom_field: 'wkb_geometry',
                   properties: {
-                    id: "ogc_fid",
-                    name: "name",
-                    category: "name",
+                    id: 'ogc_fid',
+                    name: 'name',
+                    category: 'name',
                   },
                   kb: {
-                    geom_field: "SHAPE",
+                    geom_field: 'SHAPE',
                     properties: {
-                      name: "Name",
-                      category: "Name",
+                      name: 'Name',
+                      category: 'Name',
                     },
                   },
                 },
@@ -3091,7 +3090,7 @@ export default {
                 tenure_layers,
                 originPoint,
                 function (feature) {
-                  spatialData["tenure_ignition_point"] = feature;
+                  spatialData['tenure_ignition_point'] = feature;
                   tenure_origin_point_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
@@ -3120,7 +3119,7 @@ export default {
               vm.map.getPosition(
                 originPoint,
                 function (position) {
-                  spatialData["fire_position"] = position;
+                  spatialData['fire_position'] = position;
                   fire_position_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
@@ -3148,7 +3147,7 @@ export default {
               vm.map.getGridData(
                 originPoint,
                 function (grid_data) {
-                  spatialData["origin_point_grid"] = grid_data;
+                  spatialData['origin_point_grid'] = grid_data;
                   originpoint_grid_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
                     feat,
@@ -3174,29 +3173,29 @@ export default {
             if (region_task) {
               let url_prefix = getLayerUrl(getLayerId(env.regionLayer), env);
               var geom_name =
-                url_prefix === env.kbService ? "SHAPE" : "wkb_geometry";
+                url_prefix === env.kbService ? 'SHAPE' : 'wkb_geometry';
               region_task.setStatus(FeatureTask.RUNNING);
               $.ajax({
                 url:
                   url_prefix +
-                  "/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=" +
+                  '/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=' +
                   getLayerId(env.regionLayer) +
-                  "&outputFormat=json&cql_filter=CONTAINS(" +
+                  '&outputFormat=json&cql_filter=CONTAINS(' +
                   geom_name +
-                  ",POINT(" +
+                  ',POINT(' +
                   originPoint[1] +
-                  " " +
+                  ' ' +
                   originPoint[0] +
-                  "))",
-                dataType: "json",
+                  '))',
+                dataType: 'json',
                 success: function (response) {
                   if (response.totalFeatures === 0) {
-                    spatialData["region"] = null;
+                    spatialData['region'] = null;
                   } else {
-                    spatialData["region"] =
+                    spatialData['region'] =
                       url_prefix === env.kbService
-                        ? response.features[0].properties["DRG_REGION_NAME"]
-                        : response.features[0].properties["region"];
+                        ? response.features[0].properties['DRG_REGION_NAME']
+                        : response.features[0].properties['region'];
                   }
                   region_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
@@ -3210,7 +3209,7 @@ export default {
                 error: function (xhr, status, message) {
                   region_task.setStatus(
                     FeatureTask.FAILED,
-                    xhr.status + " : " + (xhr.responseText || message),
+                    xhr.status + ' : ' + (xhr.responseText || message),
                   );
                   //alert(region_task.message)
                   vm._getSpatialDataCallback(
@@ -3230,29 +3229,29 @@ export default {
             if (district_task) {
               let url_prefix = getLayerUrl(getLayerId(env.districtLayer), env);
               geom_name =
-                url_prefix === env.kbService ? "SHAPE" : "wkb_geometry";
+                url_prefix === env.kbService ? 'SHAPE' : 'wkb_geometry';
               district_task.setStatus(FeatureTask.RUNNING);
               $.ajax({
                 url:
                   url_prefix +
-                  "/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=" +
+                  '/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=' +
                   getLayerId(env.districtLayer) +
-                  "&outputFormat=json&cql_filter=CONTAINS(" +
+                  '&outputFormat=json&cql_filter=CONTAINS(' +
                   geom_name +
-                  ",POINT(" +
+                  ',POINT(' +
                   originPoint[1] +
-                  " " +
+                  ' ' +
                   originPoint[0] +
-                  "))",
-                dataType: "json",
+                  '))',
+                dataType: 'json',
                 success: function (response) {
                   if (response.totalFeatures === 0) {
-                    spatialData["district"] = null;
+                    spatialData['district'] = null;
                   } else {
-                    spatialData["district"] =
+                    spatialData['district'] =
                       url_prefix === env.kbService
-                        ? response.features[0].properties["ADMIN_ZONE"]
-                        : response.features[0].properties["district"];
+                        ? response.features[0].properties['ADMIN_ZONE']
+                        : response.features[0].properties['district'];
                   }
                   district_task.setStatus(FeatureTask.SUCCEED);
                   vm._getSpatialDataCallback(
@@ -3266,7 +3265,7 @@ export default {
                 error: function (xhr, status, message) {
                   district_task.setStatus(
                     FeatureTask.FAILED,
-                    xhr.status + " : " + (xhr.responseText || message),
+                    xhr.status + ' : ' + (xhr.responseText || message),
                   );
                   //alert(district_task.message)
                   vm._getSpatialDataCallback(
@@ -3292,59 +3291,59 @@ export default {
             );
           }
 
-          if (plantation_task && caller !== "showprogress") {
+          if (plantation_task && caller !== 'showprogress') {
             plantation_task.setStatus(FeatureTask.RUNNING);
             var point_buffer = buffer(
               {
-                type: "Feature",
+                type: 'Feature',
                 properties: {},
                 geometry: {
-                  type: "Point",
+                  type: 'Point',
                   coordinates: originPoint,
                 },
               },
               3,
-              "kilometers",
+              'kilometers',
             ).geometry.coordinates[0];
             var plantationLayerId = env.plantationAnnualReportLayer;
             var isKbPlantation =
               getLayerUrl(plantationLayerId, vm.env) === env.kbService;
             var url =
               getLayerUrl(plantationLayerId, vm.env) +
-              "/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=" +
+              '/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=' +
               plantationLayerId +
-              "&outputFormat=json&cql_filter=INTERSECTS(" +
-              (isKbPlantation ? "SHAPE" : "wkb_geometry") +
-              ",POLYGON((" +
+              '&outputFormat=json&cql_filter=INTERSECTS(' +
+              (isKbPlantation ? 'SHAPE' : 'wkb_geometry') +
+              ',POLYGON((' +
               point_buffer
                 .map(function (p) {
-                  return p[1] + " " + p[0];
+                  return p[1] + ' ' + p[0];
                 })
-                .join("%2C") +
-              ")))";
+                .join('%2C') +
+              ')))';
             $.ajax({
               url: url,
-              dataType: "json",
+              dataType: 'json',
               success: function (response) {
                 if (response.totalFeatures > 0) {
                   //only send the properties to bfrs
-                  spatialData["plantations"] = response.features.map(
+                  spatialData['plantations'] = response.features.map(
                     function (o) {
                       if (isKbPlantation) {
                         return {
                           ogc_fid: null,
-                          species: o.properties["Species"],
-                          sp_type: o.properties["Map_Symbol"],
-                          area_ha: o.properties["AreaHa"],
-                          classifica: o.properties["Classifica"],
+                          species: o.properties['Species'],
+                          sp_type: o.properties['Map_Symbol'],
+                          area_ha: o.properties['AreaHa'],
+                          classifica: o.properties['Classifica'],
                         };
                       }
                       return {
-                        ogc_fid: o.properties["ogc_fid"],
-                        species: o.properties["species"],
-                        sp_type: o.properties["sp_type"],
-                        area_ha: o.properties["area_ha"],
-                        classifica: o.properties["classifica"],
+                        ogc_fid: o.properties['ogc_fid'],
+                        species: o.properties['species'],
+                        sp_type: o.properties['sp_type'],
+                        area_ha: o.properties['area_ha'],
+                        classifica: o.properties['classifica'],
                       };
                     },
                   );
@@ -3361,7 +3360,7 @@ export default {
               error: function (xhr, status, message) {
                 plantation_task.setStatus(
                   FeatureTask.FAILED,
-                  xhr.status + " : " + (xhr.responseText || message),
+                  xhr.status + ' : ' + (xhr.responseText || message),
                 );
                 vm._getSpatialDataCallback(
                   feat,
@@ -3381,22 +3380,22 @@ export default {
       try {
         if (
           this.isFireboundaryDrawable(feat) ||
-          ((feat.get("modifyType") & 2) !== 2 &&
-            feat.get("fire_boundary") &&
-            caller !== "showprogress")
+          ((feat.get('modifyType') & 2) !== 2 &&
+            feat.get('fire_boundary') &&
+            caller !== 'showprogress')
         ) {
           var tasks = vm.featureTasks(vm.target_feature);
-          var validate_task = tasks.find((task) => task.taskId === "validate");
+          var validate_task = tasks.find((task) => task.taskId === 'validate');
           if (!validate_task) {
             validate_task = vm._taskManager.addTask(
               feat,
-              "getSpatialData",
-              "validate",
-              "Validate bushfire",
+              'getSpatialData',
+              'validate',
+              'Validate bushfire',
               FeatureTask.RUNNING,
             );
           }
-          this.validateBushfire(feat, "getSpatialData", function (error) {
+          this.validateBushfire(feat, 'getSpatialData', function (error) {
             if (error) {
               validate_task.setStatus(FeatureTask.FAILED, error);
               //alert(error)
@@ -3423,34 +3422,34 @@ export default {
       if (feat.imported_feature) {
         feat = feat.imported_feature;
       }
-      caller = caller || "save";
-      if (this.canSave(feat) || caller === "capturemethod") {
+      caller = caller || 'save';
+      if (this.canSave(feat) || caller === 'capturemethod') {
         var vm = this;
-        if (caller !== "showprogress" && caller !== "capturemethod") {
+        if (caller !== 'showprogress' && caller !== 'capturemethod') {
           vm.target_feature =
             vm.featurelist.find(
-              (f) => f.get("fire_number") === feat.get("fire_number"),
+              (f) => f.get('fire_number') === feat.get('fire_number'),
             ) ||
             vm.features
               .getArray()
-              .find((f) => f.get("fire_number") === feat.get("fire_number")) ||
+              .find((f) => f.get('fire_number') === feat.get('fire_number')) ||
             feat;
         } else if (!vm.target_feature || !feat.tasks) {
           vm.target_feature =
             vm.featurelist.find(
-              (f) => f.get("fire_number") === feat.get("fire_number"),
+              (f) => f.get('fire_number') === feat.get('fire_number'),
             ) ||
             vm.features
               .getArray()
-              .find((f) => f.get("fire_number") === feat.get("fire_number")) ||
+              .find((f) => f.get('fire_number') === feat.get('fire_number')) ||
             feat;
         }
         var tasks = vm.featureTasks(vm.target_feature);
 
         //resetting tasks, if failed
         if (
-          caller != "showprogress" &&
-          caller != "capturemethod" &&
+          caller != 'showprogress' &&
+          caller != 'capturemethod' &&
           tasks &&
           tasks.length > 0
         ) {
@@ -3466,7 +3465,7 @@ export default {
         if (!callback && !vm._taskManager.initTasks(feat)) {
           return;
         }
-        var task = tasks.find((task) => task.taskId === "save");
+        var task = tasks.find((task) => task.taskId === 'save');
         if (!task) {
           //'save' task can be missing when this flow was entered via the background
           //processing/capturemethod path (e.g. origin-point-only edits) rather than the
@@ -3474,15 +3473,15 @@ export default {
           //silently abort the completion chain, leaving the bushfire stuck as "Processing Finalised".
           task = vm._taskManager.addTask(
             feat,
-            "save",
-            "save",
-            "Save spatial data",
+            'save',
+            'save',
+            'Save spatial data',
             FeatureTask.RUNNING,
           );
         }
         if (
           (!vm.taskDialog || !vm.taskDialog.isActive) &&
-          caller !== "showprogress"
+          caller !== 'showprogress'
         ) {
           vm.showProgress(feat);
         }
@@ -3495,7 +3494,7 @@ export default {
               status === FeatureTask.WARNING ||
               status === FeatureTask.FAILED
             ) {
-              msg = vm._taskManager.errorMessages(feat).join("\r\n");
+              msg = vm._taskManager.errorMessages(feat).join('\r\n');
               if (msg) alert(msg);
               if (status === FeatureTask.WARNING) {
                 vm.resetFeature(feat, false);
@@ -3509,25 +3508,25 @@ export default {
           }
           $.ajax({
             url: vm.saveUrl(feat),
-            method: "PATCH",
+            method: 'PATCH',
             data: JSON.stringify(spatialData),
-            contentType: "application/json",
+            contentType: 'application/json',
             success: function (response, stat, xhr) {
               if (xhr.status === 280) {
                 //bushfire is invalidated, the new fire_number and id are returned
                 if (response.fire_number && response.id) {
-                  feat.set("fire_number", response.fire_number);
-                  feat.set("id", response.id);
+                  feat.set('fire_number', response.fire_number);
+                  feat.set('id', response.id);
                 } else {
                   task.setStatus(
                     FeatureTask.FAILED,
-                    "The bushfire report is invalidated ,but the new fire_number and id are not returned.",
+                    'The bushfire report is invalidated ,but the new fire_number and id are not returned.',
                   );
                   callback(feat, FeatureTask.FAILED, task.message);
                 }
               }
               if (!vm.isFireboundaryDrawable(feat)) {
-                if ((feat.get("modifyType") & 2) === 2) {
+                if ((feat.get('modifyType') & 2) === 2) {
                   var originPoint =
                     feat
                       .getGeometry()
@@ -3537,14 +3536,14 @@ export default {
                       }) || null;
                   if (originPoint) {
                     var checkTask = tasks.find(
-                      (task) => task.taskId === "check_originpoint",
+                      (task) => task.taskId === 'check_originpoint',
                     );
                     if (!checkTask) {
                       checkTask = vm._taskManager.addTask(
                         feat,
-                        "postsave",
-                        "check_originpoint",
-                        "Check origin within fire shape",
+                        'postsave',
+                        'check_originpoint',
+                        'Check origin within fire shape',
                         FeatureTask.RUNNING,
                       );
                     }
@@ -3557,16 +3556,16 @@ export default {
                     $.ajax({
                       url:
                         url +
-                        "/wfs?service=wfs&version=2.0&request=GetPropertyValue&valueReference=fire_number&typeNames=" +
+                        '/wfs?service=wfs&version=2.0&request=GetPropertyValue&valueReference=fire_number&typeNames=' +
                         getLayerId(env.bushfireFinalFireBoundaryLatestLayer) +
                         "&cql_filter=(fire_number='" +
-                        feat.get("fire_number") +
+                        feat.get('fire_number') +
                         "')and (CONTAINS(fire_boundary,POINT(" +
                         originPoint[1] +
-                        " " +
+                        ' ' +
                         originPoint[0] +
-                        ")))",
-                      dataType: "xml",
+                        ')))',
+                      dataType: 'xml',
                       success: function (response) {
                         if (
                           !response.firstChild ||
@@ -3575,7 +3574,7 @@ export default {
                         ) {
                           checkTask.setStatus(
                             FeatureTask.FAILED,
-                            "Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button",
+                            'Point of Origin is not booleanPointInPolygon fire boundary, please fix using the edit bushfire button',
                           );
                           task.setStatus(FeatureTask.WARNING);
                           callback(
@@ -3593,7 +3592,7 @@ export default {
                       error: function (xhr, status, message) {
                         checkTask.setStatus(
                           FeatureTask.FAILED,
-                          xhr.status + " : " + (xhr.responseText || message),
+                          xhr.status + ' : ' + (xhr.responseText || message),
                         );
                         task.setStatus(FeatureTask.WARNING);
                         callback(feat, FeatureTask.WARNING, checkTask.message);
@@ -3614,7 +3613,7 @@ export default {
             error: function (xhr, status, message) {
               task.setStatus(
                 FeatureTask.FAILED,
-                xhr.status + " : " + (xhr.responseText || message),
+                xhr.status + ' : ' + (xhr.responseText || message),
               );
               callback(feat, FeatureTask.FAILED, task.message);
             },
@@ -3628,9 +3627,9 @@ export default {
     newFireNumber: function (bushfireid, prefix) {
       bushfireid = Math.abs(bushfireid);
       return (
-        (prefix || "New bushfire") +
-        " " +
-        (bushfireid < 10 ? "00" : bushfireid < 100 ? "0" : "") +
+        (prefix || 'New bushfire') +
+        ' ' +
+        (bushfireid < 10 ? '00' : bushfireid < 100 ? '0' : '') +
         bushfireid
       );
     },
@@ -3639,23 +3638,23 @@ export default {
 
       this._bushfireSequence = this._bushfireSequence || 0;
       var featId;
-      if (feat && feat.get("id")) {
-        if (Math.abs(feat.get("id")) > this._bushfireSequence) {
-          this._bushfireSequence = Math.abs(feat.get("id"));
+      if (feat && feat.get('id')) {
+        if (Math.abs(feat.get('id')) > this._bushfireSequence) {
+          this._bushfireSequence = Math.abs(feat.get('id'));
         }
-        featId = Math.abs(feat.get("id"));
+        featId = Math.abs(feat.get('id'));
       } else {
         this._bushfireSequence += 1;
         featId = this._bushfireSequence;
       }
       if (feat) {
-        feat.set("status", "new", true);
-        feat.set("tint", "new", true);
-        feat.set("id", featId * -1, true);
-        feat.set("originalTint", "new", true);
-        feat.set("toolName", "Bfrs Origin Point", true);
-        feat.set("fillColour", this.tints["new.fillColour"], true);
-        feat.set("colour", this.tints["new.colour"], true);
+        feat.set('status', 'new', true);
+        feat.set('tint', 'new', true);
+        feat.set('id', featId * -1, true);
+        feat.set('originalTint', 'new', true);
+        feat.set('toolName', 'Bfrs Origin Point', true);
+        feat.set('fillColour', this.tints['new.fillColour'], true);
+        feat.set('colour', this.tints['new.colour'], true);
         if (feat.getGeometry()) {
           feat.inViewport = containsCoordinate(
             vm.map.extent,
@@ -3667,28 +3666,28 @@ export default {
       } else {
         feat = new Feature({
           geometry: new GeometryCollection([]),
-          status: "new",
-          tint: "new",
+          status: 'new',
+          tint: 'new',
           id: this._bushfireSequence * -1,
-          originalTint: "new",
-          toolName: "Bfrs Origin Point",
-          fillColour: this.tints["new.fillColour"],
-          colour: this.tints["new.colour"],
+          originalTint: 'new',
+          toolName: 'Bfrs Origin Point',
+          fillColour: this.tints['new.fillColour'],
+          colour: this.tints['new.colour'],
         });
         feat.inViewport = true;
       }
 
       feat.setStyle(this.bushfireStyleFunc);
-      feat.set("modifyType", 3, true);
-      feat.set("fire_number", this.newFireNumber(featId), true);
-      feat.set("name", this.newFireNumber(featId, "New bushfire report"), true);
-      feat.set("report_status", 99998, true);
-      if (!feat.get("created")) {
-        feat.set("created", new Date().toISOString(), true);
+      feat.set('modifyType', 3, true);
+      feat.set('fire_number', this.newFireNumber(featId), true);
+      feat.set('name', this.newFireNumber(featId, 'New bushfire report'), true);
+      feat.set('report_status', 99998, true);
+      if (!feat.get('created')) {
+        feat.set('created', new Date().toISOString(), true);
       }
       feat.set(
-        "fire_detected_or_created",
-        feat.get("fire_detected_date") || feat.get("created"),
+        'fire_detected_or_created',
+        feat.get('fire_detected_date') || feat.get('created'),
         true,
       );
       feat.icon = dashedOriginSvg;
@@ -3726,32 +3725,32 @@ export default {
       return feat;
     },
     createFeature: function (feat, caller) {
-      caller = caller || "create";
+      caller = caller || 'create';
       var vm = this;
       vm.target_feature = feat;
 
       function handleSpatialData(spatialData, task) {
-        feat.set("modifyType", 0, true);
-        if (!feat.get("sss_id")) {
+        feat.set('modifyType', 0, true);
+        if (!feat.get('sss_id')) {
           feat.set(
-            "sss_id",
+            'sss_id',
             hash(
-              vm.whoami["email"] +
-                "-" +
+              vm.whoami['email'] +
+                '-' +
                 Date.now() +
-                "-" +
+                '-' +
                 feat
                   .getGeometry()
                   .getGeometriesArray()[0]
                   .getCoordinates()
-                  .join(","),
+                  .join(','),
             ),
             true,
           );
         }
-        spatialData["sss_id"] = feat.get("sss_id");
-        $("#sss_create").val(JSON.stringify(spatialData));
-        submitForm("bushfire_create");
+        spatialData['sss_id'] = feat.get('sss_id');
+        $('#sss_create').val(JSON.stringify(spatialData));
+        submitForm('bushfire_create');
         task.setStatus(FeatureTask.SUCCEED);
         if (vm.taskDialog) {
           vm.taskDialog.close();
@@ -3761,17 +3760,17 @@ export default {
       }
 
       function handleError(task) {
-        task.setStatus(FeatureTask.FAILED, "");
-        var msg = vm._taskManager.errorMessages(feat).join("\r\n");
+        task.setStatus(FeatureTask.FAILED, '');
+        var msg = vm._taskManager.errorMessages(feat).join('\r\n');
         if (msg) alert(msg);
       }
 
-      if (caller === "showprogress") {
+      if (caller === 'showprogress') {
         var tasks = vm.featureTasks(feat);
-        var task = tasks.find((task) => task.taskId === "create");
+        var task = tasks.find((task) => task.taskId === 'create');
         this.getSpatialData(
           feat,
-          "showprogress",
+          'showprogress',
           function (spatialData) {
             handleSpatialData(spatialData, task);
           },
@@ -3786,15 +3785,15 @@ export default {
           }
           task = vm._taskManager.addTask(
             feat,
-            "create",
-            "create",
-            "Open bushfire report form",
+            'create',
+            'create',
+            'Open bushfire report form',
             FeatureTask.RUNNING,
           );
-          vm.showProgress(feat, "create");
+          vm.showProgress(feat, 'create');
           this.getSpatialData(
             feat,
-            "create",
+            'create',
             function (spatialData) {
               handleSpatialData(spatialData, task);
             },
@@ -3822,13 +3821,13 @@ export default {
             vm.features.remove(feat);
             vm.revision += 1;
           };
-        if (feat.get("status") === "new") {
+        if (feat.get('status') === 'new') {
           vm._deleteFeature(feat);
         } else if (
           window.confirm(
-            "The bushfire (" +
-              feat.get("label") +
-              " will be deleted. Are you sure?",
+            'The bushfire (' +
+              feat.get('label') +
+              ' will be deleted. Are you sure?',
           )
         ) {
           $.ajax({
@@ -3837,7 +3836,7 @@ export default {
               vm._deleteFeature(feat);
             },
             error: function (xhr, status, message) {
-              alert(xhr.status + " : " + (xhr.responseText || message));
+              alert(xhr.status + ' : ' + (xhr.responseText || message));
             },
             xhrFields: {
               withCredentials: true,
@@ -3849,18 +3848,18 @@ export default {
     resetFeature: function (feat, manually, callback) {
       var vm = this;
       manually = manually === undefined ? true : manually;
-      var filter = "fire_number='" + feat.get("fire_number") + "'";
+      var filter = "fire_number='" + feat.get('fire_number') + "'";
       if (this.bushfireLayer.cql_filter) {
-        filter = filter + " and " + this.bushfireLayer.cql_filter;
+        filter = filter + ' and ' + this.bushfireLayer.cql_filter;
       }
       this.bushfireMapLayer
         .getSource()
         .retrieveFeatures(filter, function (features) {
-          console.log("BFRS retrieveFeatures");
+          console.log('BFRS retrieveFeatures');
           console.log(features);
           if (
-            feat.get("status") === "in_queue" &&
-            feat.get("original_status") === "new"
+            feat.get('status') === 'in_queue' &&
+            feat.get('original_status') === 'new'
           ) {
             vm.target_feature = feat;
             var clear_queue = vm.clearQueue(true);
@@ -3874,7 +3873,7 @@ export default {
               vm.map.extent,
               vm.originpointCoordinate(features[0]),
             );
-            if (feat.get("status") === "in_queue") {
+            if (feat.get('status') === 'in_queue') {
               vm.target_feature = feat;
               clear_queue = vm.clearQueue(true);
               if (!clear_queue) {
@@ -3898,7 +3897,7 @@ export default {
             }
 
             var index = vm.features.getArray().findIndex(function (f) {
-              return f.get("fire_number") === feat.get("fire_number");
+              return f.get('fire_number') === feat.get('fire_number');
             });
             if (index >= 0) {
               if (
@@ -3913,7 +3912,7 @@ export default {
 
             //features in layer's source is synchronized with _featurelist
             index = vm._featurelist.getArray().findIndex(function (f) {
-              return f.get("fire_number") === feat.get("fire_number");
+              return f.get('fire_number') === feat.get('fire_number');
             });
             if (index >= 0) {
               vm._featurelist.setAt(index, features[0]);
@@ -3921,7 +3920,7 @@ export default {
             }
 
             index = vm.clippedFeatures.findIndex(function (f) {
-              return f.get("fire_number") === feat.get("fire_number");
+              return f.get('fire_number') === feat.get('fire_number');
             });
             if (index >= 0) {
               vm.clippedFeatures[index] = features[0];
@@ -3929,7 +3928,7 @@ export default {
             }
 
             index = vm.selectedFeatures.getArray().findIndex(function (f) {
-              return f.get("fire_number") === feat.get("fire_number");
+              return f.get('fire_number') === feat.get('fire_number');
             });
             if (index >= 0) {
               vm.selectedFeatures.setAt(index, features[0]);
@@ -3958,13 +3957,13 @@ export default {
         });
     },
     adjustHeight: function () {
-      if (this.activeMenu === "bfrs") {
+      if (this.activeMenu === 'bfrs') {
         //$("#bfrs-list").height(this.screenHeight - this.leftPanelHeadHeight - 16 - 16 - 4 - 5 - $("#bfrs-list-controller-container").height() - this.hintsHeight)
-        $("#bfrs-list").height(
+        $('#bfrs-list').height(
           this.screenHeight -
             this.leftPanelHeadHeight -
             41 -
-            $("#bfrs-list-controller-container").height() -
+            $('#bfrs-list-controller-container').height() -
             this.hintsHeight,
         );
       }
@@ -3979,15 +3978,15 @@ export default {
         this._bushfirePostModified ||
         function (bushfire, modifyType) {
           if (
-            bushfire.get("tint") !== "modified" &&
-            (bushfire.get("status") !== "new" || bushfire.get("sss_id"))
+            bushfire.get('tint') !== 'modified' &&
+            (bushfire.get('status') !== 'new' || bushfire.get('sss_id'))
           ) {
-            bushfire.set("tint", "modified", true);
+            bushfire.set('tint', 'modified', true);
             bushfire.set(
-              "fillColour",
-              vm.tints[bushfire.get("tint") + ".fillColour"],
+              'fillColour',
+              vm.tints[bushfire.get('tint') + '.fillColour'],
             );
-            bushfire.set("colour", vm.tints[bushfire.get("tint") + ".colour"]);
+            bushfire.set('colour', vm.tints[bushfire.get('tint') + '.colour']);
           }
           if (modifyType === -1) {
             if (vm.isFireboundaryDrawable(bushfire)) {
@@ -3999,8 +3998,8 @@ export default {
             }
           }
           bushfire.set(
-            "modifyType",
-            (bushfire.get("modifyType") || 0) | modifyType,
+            'modifyType',
+            (bushfire.get('modifyType') || 0) | modifyType,
             true,
           );
         };
@@ -4014,7 +4013,7 @@ export default {
       vm.revision += 1;
     },
     isModified: function (feat) {
-      return feat.get("tint") === "modified";
+      return feat.get('tint') === 'modified';
     },
     toggleSelect: function (f) {
       if (this.isFeatureSelected(f)) {
@@ -4022,9 +4021,9 @@ export default {
       } else {
         if (
           [
-            "Bfrs Origin Point",
-            "Bfrs Edit Geometry",
-            "Bfrs Fire Boundary",
+            'Bfrs Origin Point',
+            'Bfrs Edit Geometry',
+            'Bfrs Fire Boundary',
           ].indexOf(this.annotations.toname) >= 0
         ) {
           //Only one bushfire can be choosed in edit mode
@@ -4044,15 +4043,15 @@ export default {
     },
     initBushfire: function (feature) {
       feature.set(
-        "status",
-        this._reportStatus[feature.get("report_status") || 99999],
+        'status',
+        this._reportStatus[feature.get('report_status') || 99999],
         true,
       );
 
       var geometries = feature.getGeometry() ? [feature.getGeometry()] : [];
-      if (feature.get("fire_boundary")) {
-        var fire_boundary = feature.get("fire_boundary");
-        if (typeof fire_boundary === "string") {
+      if (feature.get('fire_boundary')) {
+        var fire_boundary = feature.get('fire_boundary');
+        if (typeof fire_boundary === 'string') {
           try {
             fire_boundary = JSON.parse(fire_boundary);
           } catch {
@@ -4064,52 +4063,52 @@ export default {
             var fbCoords = fire_boundary.coordinates;
 
             var geom =
-              fire_boundary.type === "MultiPolygon"
+              fire_boundary.type === 'MultiPolygon'
                 ? new MultiPolygon(fbCoords)
                 : new MultiPolygon([fbCoords]);
 
-            feature.set("fire_boundary", geom.getExtent(), true);
+            feature.set('fire_boundary', geom.getExtent(), true);
           } else {
             fbCoords = fire_boundary.coordinates;
             geometries.push(
-              fire_boundary.type === "MultiPolygon"
+              fire_boundary.type === 'MultiPolygon'
                 ? new MultiPolygon(fbCoords)
                 : new MultiPolygon([fbCoords]),
             );
-            feature.unset("fire_boundary", true);
+            feature.unset('fire_boundary', true);
           }
         } else {
-          feature.unset("fire_boundary", true);
+          feature.unset('fire_boundary', true);
         }
       } else {
-        feature.unset("fire_boundary", true);
+        feature.unset('fire_boundary', true);
       }
       feature.setGeometry(new GeometryCollection(geometries), true);
       // TODO: Unused
       // var now = moment();
       // var timestamp = moment(feature.get("created"));
 
-      feature.set("toolName", "Bfrs Origin Point", true);
-      if (feature.get("status") == "merged") {
+      feature.set('toolName', 'Bfrs Origin Point', true);
+      if (feature.get('status') == 'merged') {
         feature.set(
-          "tint",
-          this._reportStatus[feature.get("linked_bushfire_status")],
+          'tint',
+          this._reportStatus[feature.get('linked_bushfire_status')],
           true,
         );
       } else {
-        feature.set("tint", feature.get("status"), true);
+        feature.set('tint', feature.get('status'), true);
       }
-      feature.set("originalTint", feature.get("tint"), true);
+      feature.set('originalTint', feature.get('tint'), true);
       feature.set(
-        "fillColour",
-        this.tints[feature.get("tint") + ".fillColour"],
+        'fillColour',
+        this.tints[feature.get('tint') + '.fillColour'],
       );
-      feature.set("colour", this.tints[feature.get("tint") + ".colour"]);
+      feature.set('colour', this.tints[feature.get('tint') + '.colour']);
       feature.setStyle(this.bushfireStyleFunc);
       if (
-        feature.get("status") === "initial" ||
-        (feature.get("status") === "merged" &&
-          feature.get("linked_bushfire_status") === 1)
+        feature.get('status') === 'initial' ||
+        (feature.get('status') === 'merged' &&
+          feature.get('linked_bushfire_status') === 1)
       ) {
         feature.icon = dashedOriginSvg;
       }
@@ -4129,10 +4128,10 @@ export default {
       //trigger dynamic binding
       return this.map.getBlob(
         f,
-        ["icon", "originalTint"],
+        ['icon', 'originalTint'],
         this.tints,
         function () {
-          $("#bushfire-icon-" + f.get("id")).attr("src", vm.featureIconSrc(f));
+          $('#bushfire-icon-' + f.get('id')).attr('src', vm.featureIconSrc(f));
         },
       );
     },
@@ -4149,13 +4148,13 @@ export default {
       var vm = this;
       var cql_filter;
       this.dialog.show({
-        messages: "Downloading bushfires...",
+        messages: 'Downloading bushfires...',
         footer: null,
       });
-      var bbox = "";
-      var originpoint_filter = "";
-      var fireboundary_filter = "";
-      if (downloadType === "listed" || downloadType === "history") {
+      var bbox = '';
+      var originpoint_filter = '';
+      var fireboundary_filter = '';
+      if (downloadType === 'listed' || downloadType === 'history') {
         if (
           this.clippedOnly ||
           ((vm._download_cql_filter ||
@@ -4167,7 +4166,7 @@ export default {
         ) {
           //use fire id as the filter if clipped only is true or has customer filter and the length of file list is less than 80
           var features = this._featurelist.getArray().filter(function (f) {
-            if (f.get("status") === "new") {
+            if (f.get('status') === 'new') {
               return false;
             }
             if (!vm.showFeature(f)) {
@@ -4179,29 +4178,29 @@ export default {
             "fire_number in ('" +
             features
               .map(function (f) {
-                return f.get("fire_number");
+                return f.get('fire_number');
               })
               .join("','") +
             "')";
-          originpoint_filter = "&cql_filter=" + cql_filter;
+          originpoint_filter = '&cql_filter=' + cql_filter;
           fireboundary_filter = originpoint_filter;
         } else {
-          cql_filter = vm._download_cql_filter || "";
+          cql_filter = vm._download_cql_filter || '';
           if (this.search && this.search.trim().length > 0) {
             cql_filter =
-              (cql_filter ? cql_filter + " and ((" : "((") +
+              (cql_filter ? cql_filter + ' and ((' : '((') +
               this.fields
                 .map(function (field) {
                   return (
-                    "strToLowerCase(" +
+                    'strToLowerCase(' +
                     field +
                     ") like '%25" +
                     vm.search.trim().toLowerCase() +
                     "%25'"
                   );
                 })
-                .join(") or (") +
-              "))";
+                .join(') or (') +
+              '))';
           }
           if (cql_filter.length > 0) {
             if (
@@ -4210,32 +4209,32 @@ export default {
             ) {
               bbox = this.map.extent;
               originpoint_filter =
-                "&cql_filter=" +
+                '&cql_filter=' +
                 (cql_filter +
-                  " and BBOX(origin_point," +
+                  ' and BBOX(origin_point,' +
                   bbox[1] +
-                  "," +
+                  ',' +
                   bbox[0] +
-                  "," +
+                  ',' +
                   bbox[3] +
-                  "," +
+                  ',' +
                   bbox[2] +
-                  ")");
+                  ')');
               fireboundary_filter =
-                "&cql_filter=" +
+                '&cql_filter=' +
                 (cql_filter +
-                  " and BBOX(fire_boundary," +
+                  ' and BBOX(fire_boundary,' +
                   bbox[1] +
-                  "," +
+                  ',' +
                   bbox[0] +
-                  "," +
+                  ',' +
                   bbox[3] +
-                  "," +
+                  ',' +
                   bbox[2] +
-                  ")");
-              bbox = "";
+                  ')');
+              bbox = '';
             } else {
-              originpoint_filter = "&cql_filter=" + cql_filter;
+              originpoint_filter = '&cql_filter=' + cql_filter;
               fireboundary_filter = originpoint_filter;
             }
           }
@@ -4247,147 +4246,147 @@ export default {
         ) {
           bbox = this.map.extent;
           bbox =
-            "&bbox=" + bbox[1] + "," + bbox[0] + "," + bbox[3] + "," + bbox[2];
+            '&bbox=' + bbox[1] + ',' + bbox[0] + ',' + bbox[3] + ',' + bbox[2];
         }
       }
       //console.log("originpoint filter = " + originpoint_filter)
       //console.log("bbox = " + bbox)
       var bushfireLayer = getLayerId(
-        downloadType === "listed" ? env.bushfireLatestLayer : env.bushfireLayer,
+        downloadType === 'listed' ? env.bushfireLatestLayer : env.bushfireLayer,
       );
       var fireboundaryLayer = getLayerId(
-        downloadType === "listed"
+        downloadType === 'listed'
           ? env.bushfireFireBoundaryLatestLayer
           : env.bushfireFireBoundaryLayer,
       );
       var options;
-      if (downloadType === "history") {
+      if (downloadType === 'history') {
         options = {
           filename:
-            "bushfires_" +
+            'bushfires_' +
             downloadType +
-            "_" +
-            moment().format("YYYY-MM-DD-HHmm"),
-          srs: "EPSG:4326",
+            '_' +
+            moment().format('YYYY-MM-DD-HHmm'),
+          srs: 'EPSG:4326',
           layers: [
             {
-              layer: "bushfire_fireboundary",
+              layer: 'bushfire_fireboundary',
               ignore_if_empty: true,
               sourcelayers: {
                 url:
                   env.kmiApiService +
-                  "/geoserver/wfs?servicea=wfs&version=2.0&request=GetFeature&typeNames=" +
+                  '/geoserver/wfs?servicea=wfs&version=2.0&request=GetFeature&typeNames=' +
                   fireboundaryLayer +
                   fireboundary_filter +
                   bbox,
                 fields: [
-                  "fire_number",
-                  "name",
-                  "district",
-                  "financial_year",
-                  "fire_detected_date",
-                  "cause",
-                  "dfes_incident_no",
-                  "other_info",
-                  { name: "author", src: "fireboundary_uploaded_by" },
-                  "capt_meth",
-                  "capt_desc",
+                  'fire_number',
+                  'name',
+                  'district',
+                  'financial_year',
+                  'fire_detected_date',
+                  'cause',
+                  'dfes_incident_no',
+                  'other_info',
+                  { name: 'author', src: 'fireboundary_uploaded_by' },
+                  'capt_meth',
+                  'capt_desc',
                 ],
               },
-              geometry_column: { name: "fire_boundary", type: "MULTIPOLYGON" },
+              geometry_column: { name: 'fire_boundary', type: 'MULTIPOLYGON' },
             },
           ],
         };
       } else {
         options = {
           filename:
-            "bushfires_" +
+            'bushfires_' +
             downloadType +
-            "_" +
-            moment().format("YYYY-MM-DD-HHmm"),
-          srs: "EPSG:4326",
+            '_' +
+            moment().format('YYYY-MM-DD-HHmm'),
+          srs: 'EPSG:4326',
           layers: [
             {
-              layer: "initial_bushfire_originpoint",
+              layer: 'initial_bushfire_originpoint',
               ignore_if_empty: true,
               sourcelayers: {
                 url:
                   env.kmiApiService +
-                  "/geoserver/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=" +
+                  '/geoserver/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=' +
                   bushfireLayer +
                   originpoint_filter +
                   bbox,
                 where: "report_status='Initial Fire Report'",
               },
-              geometry_column: { name: "origin_point", type: "POINT" },
+              geometry_column: { name: 'origin_point', type: 'POINT' },
             },
             {
-              layer: "final_bushfire_originpoint",
+              layer: 'final_bushfire_originpoint',
               ignore_if_empty: true,
               sourcelayers: {
                 url:
                   env.kmiApiService +
-                  "/geoserver/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=" +
+                  '/geoserver/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=' +
                   bushfireLayer +
                   originpoint_filter +
                   bbox,
                 where: "report_status<>'Initial Fire Report'",
               },
-              geometry_column: { name: "origin_point", type: "POINT" },
+              geometry_column: { name: 'origin_point', type: 'POINT' },
             },
             {
-              layer: "initial_bushfire_fireboundary",
+              layer: 'initial_bushfire_fireboundary',
               ignore_if_empty: true,
               sourcelayers: {
                 url:
                   env.kmiApiService +
-                  "/geoserver/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=" +
+                  '/geoserver/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=' +
                   fireboundaryLayer +
                   fireboundary_filter +
                   bbox,
                 where: "report_status='Initial Fire Report'",
               },
-              geometry_column: { name: "fire_boundary", type: "MULTIPOLYGON" },
+              geometry_column: { name: 'fire_boundary', type: 'MULTIPOLYGON' },
             },
             {
-              layer: "final_bushfire_fireboundary",
+              layer: 'final_bushfire_fireboundary',
               ignore_if_empty: true,
               sourcelayers: {
                 url:
                   env.kmiApiService +
-                  "/geoserver/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=" +
+                  '/geoserver/wfs?service=wfs&version=2.0&request=GetFeature&typeNames=' +
                   fireboundaryLayer +
                   fireboundary_filter +
                   bbox,
                 where: "report_status<>'Initial Fire Report'",
               },
-              geometry_column: { name: "fire_boundary", type: "MULTIPOLYGON" },
+              geometry_column: { name: 'fire_boundary', type: 'MULTIPOLYGON' },
             },
           ],
         };
       }
 
-      if (downloadType === "listed") {
+      if (downloadType === 'listed') {
         var geometries = null;
         var feature = null;
         var id = 0;
         var newBushfiresPoint = [];
         var newBushfiresBoundary = [];
         $.each(this._featurelist.getArray(), function (index, f) {
-          if (vm.showFeature(f) && f.get("status") == "new") {
+          if (vm.showFeature(f) && f.get('status') == 'new') {
             geometries = f.getGeometry().getGeometriesArray();
 
             feature = vm.map.cloneFeature(f, false, [
-              "toolName",
-              "tint",
-              "originalTint",
-              "fillColour",
-              "colour",
-              "status",
-              "label",
-              "measurement",
-              "fire_boundary",
-              "modifyType",
+              'toolName',
+              'tint',
+              'originalTint',
+              'fillColour',
+              'colour',
+              'status',
+              'label',
+              'measurement',
+              'fire_boundary',
+              'modifyType',
             ]);
             feature.setGeometry(
               geometries.find(function (g) {
@@ -4408,29 +4407,29 @@ export default {
           }
         });
         if (newBushfiresPoint.length > 0) {
-          options["newBushfiresOriginPoint"] =
+          options['newBushfiresOriginPoint'] =
             this.$root.geojson.writeFeatures(newBushfiresPoint);
-          options["layers"].push({
-            layer: "new_bushfire_point",
+          options['layers'].push({
+            layer: 'new_bushfire_point',
             ignore_if_empty: true,
             sourcelayers: {
-              parameter: "newBushfiresOriginPoint",
-              srs: "EPSG:4326",
+              parameter: 'newBushfiresOriginPoint',
+              srs: 'EPSG:4326',
             },
-            geometry_column: { name: "origin_point", type: "POINT" },
+            geometry_column: { name: 'origin_point', type: 'POINT' },
           });
         }
         if (newBushfiresBoundary.length > 0) {
-          options["newBushfiresFireboundary"] =
+          options['newBushfiresFireboundary'] =
             this.$root.geojson.writeFeatures(newBushfiresBoundary);
-          options["layers"].push({
-            layer: "new_bushfire_fireboundary",
+          options['layers'].push({
+            layer: 'new_bushfire_fireboundary',
             ignore_if_empty: true,
             sourcelayers: {
-              parameter: "newBushfiresFireboundary",
-              srs: "EPSG:4326",
+              parameter: 'newBushfiresFireboundary',
+              srs: 'EPSG:4326',
             },
-            geometry_column: { name: "fire_boundary", type: "MULTIPOLYGON" },
+            geometry_column: { name: 'fire_boundary', type: 'MULTIPOLYGON' },
           });
         }
       }
@@ -4444,26 +4443,26 @@ export default {
     },
 
     uploadBushfire: function (targetFeature) {
-      this._uploadBushfireNumber = targetFeature.get("fire_number");
-      this._uploadType = "fireboundary";
+      this._uploadBushfireNumber = targetFeature.get('fire_number');
+      this._uploadType = 'fireboundary';
       this._uploadTargetOnly = true;
-      $("#uploadBushfires").click();
+      $('#uploadBushfires').click();
     },
 
     updateTasks(targetFeature) {
       var tasks = this.featureTasks(targetFeature);
       if (tasks) {
         $.ajax({
-          url: "/api/update_tasks.json",
-          method: "GET",
-          dataType: "json",
+          url: '/api/update_tasks.json',
+          method: 'GET',
+          dataType: 'json',
           data: {
-            bfrs: targetFeature.get("fire_number"),
+            bfrs: targetFeature.get('fire_number'),
             tasks: JSON.stringify(tasks),
           },
           success: () => {},
           error: function (xhr, status, message) {
-            alert(xhr.status + " : " + (xhr.responseText || message));
+            alert(xhr.status + ' : ' + (xhr.responseText || message));
           },
         });
       }
@@ -4475,9 +4474,9 @@ export default {
         if (
           vm.taskDialog &&
           vm.taskDialog.isActive &&
-          vm.target_feature.get("status") === "in_queue"
+          vm.target_feature.get('status') === 'in_queue'
         ) {
-          vm.showProgress(vm.target_feature, "updateBfrsUploadProgress");
+          vm.showProgress(vm.target_feature, 'updateBfrsUploadProgress');
         }
       }
     },
@@ -4486,11 +4485,11 @@ export default {
     },
 
     showProgress: function (targetFeature, caller) {
-      caller = caller || "showprogress";
+      caller = caller || 'showprogress';
       var vm = this;
       var spatial_data = null;
 
-      if (caller !== "updateBfrsUploadProgress") {
+      if (caller !== 'updateBfrsUploadProgress') {
         vm.progressRequestCount = 0;
       }
 
@@ -4500,11 +4499,11 @@ export default {
 
       var tasks = vm.featureTasks(targetFeature);
       var tenure_area_task = tasks.find(
-        (task) => task.taskId === "tenure_area",
+        (task) => task.taskId === 'tenure_area',
       );
       if (
-        targetFeature.get("status") === "new" ||
-        targetFeature.get("original_status") === "new"
+        targetFeature.get('status') === 'new' ||
+        targetFeature.get('original_status') === 'new'
       ) {
         vm.completeButtonDisabled = true;
       }
@@ -4512,47 +4511,47 @@ export default {
       if (!tenure_area_task) {
         vm.feature_tasks = tasks;
         vm.clearButtonDisabled = true;
-        vm.last_uploaded_date = "";
-        vm.submitter = "";
-        vm.calculation_status = "";
+        vm.last_uploaded_date = '';
+        vm.submitter = '';
+        vm.calculation_status = '';
         vm.completeButtonDisabled = true;
         if (!vm.taskDialog.isActive) {
           vm.taskDialog.open();
         }
-      } else if (targetFeature.get("status") === "in_queue") {
+      } else if (targetFeature.get('status') === 'in_queue') {
         if (vm.progressRequestPending) return;
         vm.progressRequestPending = true;
         vm.clearButtonDisabled = false;
         $.ajax({
-          url: "/api/spatial_calculation_progress.json",
-          method: "POST",
-          dataType: "json",
+          url: '/api/spatial_calculation_progress.json',
+          method: 'POST',
+          dataType: 'json',
           data: {
-            bfrs: targetFeature.get("fire_number"),
+            bfrs: targetFeature.get('fire_number'),
             tasks: JSON.stringify(vm.featureTasks(targetFeature)),
             spatial_data: JSON.stringify(spatial_data),
           },
           success: (response) => {
             vm.progressRequestPending = false;
-            var output = response["result"];
-            var status = response["status"];
-            var imp_feature = response["feature"];
-            var spatial_data = response["spatial_data"];
+            var output = response['result'];
+            var status = response['status'];
+            var imp_feature = response['feature'];
+            var spatial_data = response['spatial_data'];
             var retryForSpatialData = false;
 
             vm.target_feature = targetFeature;
             var tasks = vm.featureTasks(targetFeature);
             var tenure_area_task = tasks.find(
-              (task) => task.taskId === "tenure_area",
+              (task) => task.taskId === 'tenure_area',
             );
-            var import_task = tasks.find((task) => task.taskId === "import");
+            var import_task = tasks.find((task) => task.taskId === 'import');
 
             if (import_task) {
               import_task.setStatus(FeatureTask.SUCCEED);
             }
 
-            vm.last_uploaded_date = response["last_uploaded_date"];
-            vm.submitter = response["submitter"];
+            vm.last_uploaded_date = response['last_uploaded_date'];
+            vm.submitter = response['submitter'];
             vm.completeButtonDisabled = true;
 
             if (
@@ -4563,45 +4562,45 @@ export default {
               vm.completeButtonDisabled = false;
             }
 
-            if (status === "Imported") {
-              vm.calculation_status = "waiting";
+            if (status === 'Imported') {
+              vm.calculation_status = 'waiting';
             }
-            if (status === "Calculating") {
-              vm.calculation_status = "calculating";
+            if (status === 'Calculating') {
+              vm.calculation_status = 'calculating';
             }
             if (
-              caller !== "updateBfrsUploadProgress" &&
-              targetFeature.get("status") === "in_queue"
+              caller !== 'updateBfrsUploadProgress' &&
+              targetFeature.get('status') === 'in_queue'
             ) {
               if (!vm.taskDialog.isActive) {
                 vm.taskDialog.open();
               }
             }
-            if (status === "Calculation Error") {
-              vm.calculation_status = "calculation_error";
-              if (response["error"]) {
+            if (status === 'Calculation Error') {
+              vm.calculation_status = 'calculation_error';
+              if (response['error']) {
                 tenure_area_task.setStatus(
                   FeatureTask.FAILED,
-                  response["error"],
+                  response['error'],
                 );
               } else {
                 tenure_area_task.setStatus(FeatureTask.FAILED);
               }
 
               tasks.forEach((task) => {
-                if (task.taskId !== "tenure_area" && task.status !== 3) {
+                if (task.taskId !== 'tenure_area' && task.status !== 3) {
                   task.setStatus(FeatureTask.FAILED);
                 }
               });
             }
 
-            if (status === "Processing Finalised") {
-              vm.calculation_status = "calculation_completed";
+            if (status === 'Processing Finalised') {
+              vm.calculation_status = 'calculation_completed';
               if ([1, 2, 3].includes(tenure_area_task.status)) {
                 var parsedSpatialData;
                 try {
                   parsedSpatialData =
-                    typeof spatial_data === "string"
+                    typeof spatial_data === 'string'
                       ? JSON.parse(spatial_data)
                       : spatial_data;
                 } catch {
@@ -4621,7 +4620,7 @@ export default {
                   tasks = vm.featureTasks(targetFeature);
                   var allTasksCompleted = true;
                   tasks.forEach((task) => {
-                    if (task.taskId !== "tenure_area" && task.status === -1) {
+                    if (task.taskId !== 'tenure_area' && task.status === -1) {
                       allTasksCompleted = false;
                     }
                   });
@@ -4633,7 +4632,7 @@ export default {
                   }
 
                   var create_task = tasks.find(
-                    (task) => task.taskId === "create",
+                    (task) => task.taskId === 'create',
                   );
                   if (
                     create_task &&
@@ -4643,7 +4642,7 @@ export default {
                     vm.completeButtonDisabled = true;
                     targetFeature.imported_feature.tasks = tasks;
                     vm.calculation_result = output;
-                    vm.createFeature(targetFeature, "showprogress");
+                    vm.createFeature(targetFeature, 'showprogress');
                   } else if (
                     targetFeature.imported_feature &&
                     allTasksCompleted
@@ -4653,7 +4652,7 @@ export default {
                     vm.calculation_result = output;
                     vm.saveFeature(
                       targetFeature.imported_feature,
-                      "showprogress",
+                      'showprogress',
                       () => {},
                     );
                   }
@@ -4672,7 +4671,7 @@ export default {
           },
           error: function (xhr, status, message) {
             vm.progressRequestPending = false;
-            alert(xhr.status + " : " + (xhr.responseText || message));
+            alert(xhr.status + ' : ' + (xhr.responseText || message));
             vm.progressRequestCount++;
             setTimeout(vm.updateBfrsUploadProgress, 5000);
           },
@@ -4697,7 +4696,7 @@ export default {
       var importedFinalFeatures = 0;
       var feat = vm.target_feature;
       var tasks = vm.featureTasks(feat);
-      var import_task = tasks.find((task) => task.taskId === "import");
+      var import_task = tasks.find((task) => task.taskId === 'import');
       var featureImported = function (status, message) {
         if (!import_task) {
           if (status === FeatureTask.SUCCEED) {
@@ -4729,7 +4728,7 @@ export default {
           vm.refreshBushfires();
         }
       };
-      this.saveFeature(feat, "capturemethod", function (f, status, msg) {
+      this.saveFeature(feat, 'capturemethod', function (f, status, msg) {
         vm.taskDialog.open();
         if (import_task) {
           import_task.setStatus(status);
@@ -4742,7 +4741,7 @@ export default {
           selectedFeatures.push(feat);
         }
         if (import_task) {
-          msg = vm._taskManager.errorMessages(feat).join("\r\n");
+          msg = vm._taskManager.errorMessages(feat).join('\r\n');
           if (msg) alert(msg);
         }
         featureImported(status);
@@ -4754,36 +4753,36 @@ export default {
       var removed = false;
       if (
         (!withConfirm ||
-          confirm("Do you want to remove the bush fire from processing?")) &&
-        feat.get("status") === "in_queue"
+          confirm('Do you want to remove the bush fire from processing?')) &&
+        feat.get('status') === 'in_queue'
       ) {
         if (withConfirm) {
           removed = true;
         }
         $.ajax({
-          url: "/api/clear_queue",
-          dataType: "json",
+          url: '/api/clear_queue',
+          dataType: 'json',
           data: {
-            bfrs: feat.get("fire_number"),
+            bfrs: feat.get('fire_number'),
             status: vm.calculation_status,
             removed: removed,
           },
-          method: "POST",
+          method: 'POST',
           success: function () {
             if (feat) {
               if (vm.taskDialog) {
                 vm.taskDialog.close();
               }
               var target_feature = vm.featurelist.find(
-                (f) => f.get("fire_number") === feat.get("fire_number"),
+                (f) => f.get('fire_number') === feat.get('fire_number'),
               );
-              if (feat.get("original_status")) {
-                feat.set("status", feat.get("original_status"));
-                target_feature.set("status", feat.get("original_status"));
-                target_feature.set("tint", feat.get("original_status"));
-                delete feat["original_status"];
-                if (target_feature.get("orinal_status")) {
-                  delete target_feature["original_status"];
+              if (feat.get('original_status')) {
+                feat.set('status', feat.get('original_status'));
+                target_feature.set('status', feat.get('original_status'));
+                target_feature.set('tint', feat.get('original_status'));
+                delete feat['original_status'];
+                if (target_feature.get('orinal_status')) {
+                  delete target_feature['original_status'];
                 }
               }
               if (withConfirm) {
@@ -4792,11 +4791,11 @@ export default {
               }
               vm._taskManager.clearTasks(feat);
             } else {
-              console.error("Feature not found");
+              console.error('Feature not found');
             }
           },
           error: function (xhr, status, message) {
-            alert(xhr.status + " : " + (xhr.responseText || message));
+            alert(xhr.status + ' : ' + (xhr.responseText || message));
           },
         });
         if (vm.taskDialog || vm.taskDialog.isActive) {
@@ -4817,14 +4816,14 @@ export default {
       var targetFeature = null;
       if (this._uploadBushfireNumber) {
         targetFeature = this.features.getArray().find(function (f) {
-          return f.get("fire_number") === vm._uploadBushfireNumber;
+          return f.get('fire_number') === vm._uploadBushfireNumber;
         });
         delete this._uploadBushfireNumber;
         if (!targetFeature) {
           alert(
-            "Bushfire (" +
+            'Bushfire (' +
               this._uploadBushfireNumber +
-              ") does not exist in the bushfire list.",
+              ') does not exist in the bushfire list.',
           );
           return;
         }
@@ -4844,14 +4843,14 @@ export default {
         this.target_feature = targetFeature;
         import_task = this._taskManager.addTask(
           targetFeature,
-          "import",
-          "import",
-          "Import bushfire fire boundary",
+          'import',
+          'import',
+          'Import bushfire fire boundary',
           FeatureTask.RUNNING,
         );
       }
       vm.dialog.show({
-        title: "Importing bushfires...",
+        title: 'Importing bushfires...',
         footer: null,
       });
       vm.export.importVector(
@@ -4862,14 +4861,14 @@ export default {
             if (targetFeature) {
               targetFeature = vm.features.getArray().find(function (f) {
                 return (
-                  f.get("fire_number") === targetFeature.get("fire_number")
+                  f.get('fire_number') === targetFeature.get('fire_number')
                 );
               });
               if (!targetFeature) {
                 alert(
-                  "Bushfire (" +
-                    targetFeature.get("fire_number") +
-                    ") does not exist in the bushfire list.",
+                  'Bushfire (' +
+                    targetFeature.get('fire_number') +
+                    ') does not exist in the bushfire list.',
                 );
                 return;
               }
@@ -4880,7 +4879,7 @@ export default {
             var selectedFeatures = [];
             if (!import_task && features.length > 0) {
               vm.dialog.show({
-                messages: "Importing bushfires...",
+                messages: 'Importing bushfires...',
                 tasks: features.length,
                 footer: null,
               });
@@ -4925,22 +4924,22 @@ export default {
             var properties = null;
             // TODO: This was moved out of the else block to make it's scope correct for later usage
             let targetFeatureFound = false;
-            if (fileFormat === "gpx") {
+            if (fileFormat === 'gpx') {
               //gpx file
-              if (uploadType === "originpoint") {
+              if (uploadType === 'originpoint') {
                 features.length = 0;
               }
               for (var i = features.length - 1; i >= 0; i--) {
                 let feature = features[i];
                 if (targetFeature) {
                   feature.set(
-                    "fire_number",
-                    targetFeature.get("fire_number"),
+                    'fire_number',
+                    targetFeature.get('fire_number'),
                     true,
                   );
-                  feature.set("id", targetFeature.get("id"), true);
+                  feature.set('id', targetFeature.get('id'), true);
                 }
-                if (uploadType === "originpoint") {
+                if (uploadType === 'originpoint') {
                   features.splice(i, 1);
                   featureImported(FeatureTask.IGNORED);
                   continue;
@@ -4979,7 +4978,7 @@ export default {
               //geo json file
               //try to figure out the property name of 'fire_number','capt_meth' and 'capt_desc' in imported files
               var property = null;
-              properties = ["fire_number", "capt_meth", "capt_desc"]; //list the properties, you want to find, from the longest property to shortest property
+              properties = ['fire_number', 'capt_meth', 'capt_desc']; //list the properties, you want to find, from the longest property to shortest property
               var propertyLen = null; //
               $.each(properties, function (index, prop) {
                 property = null;
@@ -5024,20 +5023,20 @@ export default {
                 let feature = features[i];
                 if (
                   targetFeature &&
-                  (feature.get("fire_number") === undefined ||
-                    feature.get("fire_number") === null)
+                  (feature.get('fire_number') === undefined ||
+                    feature.get('fire_number') === null)
                 ) {
                   feature.set(
-                    "fire_number",
-                    targetFeature.get("fire_number"),
+                    'fire_number',
+                    targetFeature.get('fire_number'),
                     true,
                   );
-                  feature.set("id", targetFeature.get("id"), true);
+                  feature.set('id', targetFeature.get('id'), true);
                 }
                 if (
                   targetOnly &&
-                  feature.get("fire_number") !==
-                    targetFeature.get("fire_number")
+                  feature.get('fire_number') !==
+                    targetFeature.get('fire_number')
                 ) {
                   //not target feature, ignore
                   features.splice(i, 1);
@@ -5047,17 +5046,17 @@ export default {
                   targetFeatureFound = true;
                 }
                 if (feature.getGeometry() instanceof Point) {
-                  if (uploadType === "fireboundary") {
+                  if (uploadType === 'fireboundary') {
                     featureImported(FeatureTask.IGNORED);
                     features.splice(i, 1);
                   }
                 } else if (feature.getGeometry() instanceof Polygon) {
-                  if (uploadType === "originpoint") {
+                  if (uploadType === 'originpoint') {
                     featureImported(FeatureTask.IGNORED);
                     features.splice(i, 1);
                   }
                 } else if (feature.getGeometry() instanceof MultiPolygon) {
-                  if (uploadType === "originpoint") {
+                  if (uploadType === 'originpoint') {
                     featureImported(FeatureTask.IGNORED);
                     features.splice(i, 1);
                   }
@@ -5088,27 +5087,27 @@ export default {
                 if (targetFeatureFound) {
                   import_task.setStatus(
                     FeatureTask.WARNING,
-                    "No suitable spataial data for Bushfire(" +
-                      targetFeature.get("fire_number") +
-                      ") in uploaded file.",
+                    'No suitable spataial data for Bushfire(' +
+                      targetFeature.get('fire_number') +
+                      ') in uploaded file.',
                   );
                 } else {
                   import_task.setStatus(
                     FeatureTask.WARNING,
-                    "Bushfire(" +
-                      targetFeature.get("fire_number") +
-                      ") not found",
+                    'Bushfire(' +
+                      targetFeature.get('fire_number') +
+                      ') not found',
                   );
                 }
                 vm._taskManager.clearTasks(targetFeature);
               } else {
-                alert("No bushfire to import");
+                alert('No bushfire to import');
               }
             } else {
               //Combine multiple features of bushfire into one feature.
               features.sort(function (f1, f2) {
-                var id1 = f1.get("fire_number");
-                var id2 = f2.get("fire_number");
+                var id1 = f1.get('fire_number');
+                var id2 = f2.get('fire_number');
                 if (id1) {
                   if (id2) {
                     return id1 === id2 ? 0 : id1 < id2 ? -1 : 1;
@@ -5134,9 +5133,9 @@ export default {
               for (let i = features.length - 1; i >= 0; i--) {
                 if (
                   feat &&
-                  feat.get("fire_number") === features[i].get("fire_number") &&
-                  features[i].get("fire_number") !== undefined &&
-                  features[i].get("fire_number") !== null
+                  feat.get('fire_number') === features[i].get('fire_number') &&
+                  features[i].get('fire_number') !== undefined &&
+                  features[i].get('fire_number') !== null
                 ) {
                   if (features[i].getGeometry() instanceof Point) {
                     if (feat.getGeometry() instanceof MultiPolygon) {
@@ -5271,18 +5270,18 @@ export default {
                 if (points > 5000) {
                   if (feature) {
                     throw (
-                      "The initial bushfire(" +
-                      uploadedFeature.get("fire_number") +
-                      ") has more than 5000 vertex points."
+                      'The initial bushfire(' +
+                      uploadedFeature.get('fire_number') +
+                      ') has more than 5000 vertex points.'
                     );
                   } else {
-                    throw "A uploaded new bushfire has more than 5000 vertex points.";
+                    throw 'A uploaded new bushfire has more than 5000 vertex points.';
                   }
                 }
               };
               if (!targetFeature) {
                 if (vm.search && vm.search.trim().length > 0) {
-                  vm.search = "";
+                  vm.search = '';
                   vm.clippedOnly = false;
                   vm.updateFeatureFilter(3, 0);
                 } else if (vm.clippedOnly) {
@@ -5294,12 +5293,12 @@ export default {
               //var noPermissionBushfires = null
               geometries = null;
               $.each(features, function (index, feature) {
-                if (feature.get("fire_number") !== undefined) {
+                if (feature.get('fire_number') !== undefined) {
                   //existed bushfire report
                   try {
                     var feat = vm.features.getArray().find(function (f) {
                       return (
-                        f.get("fire_number") === feature.get("fire_number")
+                        f.get('fire_number') === feature.get('fire_number')
                       );
                     });
                     canUpload(feature, feat);
@@ -5320,7 +5319,7 @@ export default {
                             return g instanceof MultiPolygon;
                           }) || null;
                       } else {
-                        featureFireboundary = feat.get("fire_boundary");
+                        featureFireboundary = feat.get('fire_boundary');
                       }
                       var uploadedPoint = null;
                       var uploadedFireboundary = null;
@@ -5362,38 +5361,38 @@ export default {
                       ) {
                         modifyType = modifyType | 2;
                       }
-                      if (feature.get("crs")) {
-                        feat.set("crs", feature.get("crs"));
+                      if (feature.get('crs')) {
+                        feat.set('crs', feature.get('crs'));
                       }
                       if (
                         !vm.isFireboundaryDrawable(feat) &&
                         (modifyType & 2) === 2
                       ) {
                         //save to the database directly
-                        feature.set("id", feat.get("id"), true);
-                        feature.set("status", feat.get("status"), true);
+                        feature.set('id', feat.get('id'), true);
+                        feature.set('status', feat.get('status'), true);
                         feature.set(
-                          "report_status",
-                          feat.get("report_status"),
+                          'report_status',
+                          feat.get('report_status'),
                           true,
                         );
                         feature.set(
-                          "fire_number",
-                          feat.get("fire_number"),
+                          'fire_number',
+                          feat.get('fire_number'),
                           true,
                         );
                         feature.set(
-                          "modifyType",
-                          modifyType | (feat.get("modifyType") || 0),
+                          'modifyType',
+                          modifyType | (feat.get('modifyType') || 0),
                           true,
                         );
-                        feature.set("tint", "modified", true);
+                        feature.set('tint', 'modified', true);
                         feature.set(
-                          "fire_boundary",
+                          'fire_boundary',
                           uploadedFireboundary.getExtent(),
                           true,
                         );
-                        feature.set("external_feature", true);
+                        feature.set('external_feature', true);
                         // TODO: Unused
                         // let newGeometries = [];
                         if ((modifyType & 1) === 1) {
@@ -5428,12 +5427,12 @@ export default {
                         feature.tasks = feat.tasks;
                         var target_feature = vm.featurelist.find(
                           (f) =>
-                            f.get("fire_number") === feat.get("fire_number"),
+                            f.get('fire_number') === feat.get('fire_number'),
                         );
                         target_feature.imported_feature = feature;
                         vm.saveFeature(
                           feature,
-                          targetFeature ? "import" : "batchimport",
+                          targetFeature ? 'import' : 'batchimport',
                           function (f, status, msg) {
                             if (import_task) {
                               import_task.setStatus(status);
@@ -5451,7 +5450,7 @@ export default {
                             if (import_task) {
                               msg = vm._taskManager
                                 .errorMessages(feat)
-                                .join("\r\n");
+                                .join('\r\n');
                               if (msg) alert(msg);
                             }
                             featureImported(status);
@@ -5484,9 +5483,9 @@ export default {
                         featureImported(FeatureTask.SUCCEED);
                       }
                     } else if (
-                      feature.get("id") < 0 &&
-                      vm.newFireNumber(feature.get("id")) ===
-                        feature.get("fire_number") &&
+                      feature.get('id') < 0 &&
+                      vm.newFireNumber(feature.get('id')) ===
+                        feature.get('fire_number') &&
                       vm.isCreatable()
                     ) {
                       if (vm.isCreatable()) {
@@ -5518,7 +5517,7 @@ export default {
               });
               //add non existing bushfires
               $.each(features, function (index, feature) {
-                if (feature.get("fire_number") === undefined) {
+                if (feature.get('fire_number') === undefined) {
                   if (vm.isCreatable()) {
                     //non existed bushfire report
                     try {
@@ -5568,7 +5567,7 @@ export default {
           }
         },
         function (ex) {
-          if (ex !== "Cancelled") {
+          if (ex !== 'Cancelled') {
             alert(ex);
           }
           if (import_task) {
@@ -5588,16 +5587,16 @@ export default {
     },
 
     resetFilters: function () {
-      this.region = "";
-      this.district = "";
-      this.dateRange = "70001";
+      this.region = '';
+      this.district = '';
+      this.dateRange = '70001';
       this.changeDateRange();
-      this.statusFilter = "all_reports";
+      this.statusFilter = 'all_reports';
       this.updateCQLFilter(0);
     },
     refreshBushfires: function () {
       this.isFeatureListLoading = true;
-      this.bushfireMapLayer.getSource().loadSource("query");
+      this.bushfireMapLayer.getSource().loadSource('query');
       this.refreshFinalFireboundaryLayer();
       if (this.selectedFeatures.getLength() > 0) {
         this.refreshSelectedFinalFireboundaryLayer();
@@ -5621,13 +5620,13 @@ export default {
             ].filter(function (f) {
               return (f || false) && true;
             });
-            var cql_filter = "";
+            var cql_filter = '';
             if (filters.length === 0) {
-              cql_filter = "";
+              cql_filter = '';
             } else if (filters.length === 1) {
               cql_filter = filters[0];
             } else {
-              cql_filter = "(" + filters.join(") and (") + ")";
+              cql_filter = '(' + filters.join(') and (') + ')';
             }
             if (!force && vm.bushfireLayer.cql_filter === cql_filter) {
               //not changed
@@ -5642,19 +5641,19 @@ export default {
               ].filter(function (f) {
                 return (f || false) && true;
               });
-              cql_filter = "";
+              cql_filter = '';
               if (filters.length === 0) {
-                cql_filter = "";
+                cql_filter = '';
               } else if (filters.length === 1) {
                 cql_filter = filters[0];
               } else {
-                cql_filter = "(" + filters.join(") and (") + ")";
+                cql_filter = '(' + filters.join(') and (') + ')';
               }
               vm._download_cql_filter = cql_filter;
             }
             //clear bushfire filter or change other filter
             vm.isFeatureListLoading = true;
-            vm.bushfireMapLayer.getSource().loadSource("query", callback);
+            vm.bushfireMapLayer.getSource().loadSource('query', callback);
           } catch {
             vm.isFeatureListLoading = false;
             //ignore the exception
@@ -5678,11 +5677,11 @@ export default {
     },
 
     featureOrder: function (a, b) {
-      if (a.get("status") === "new") {
-        if (b.get("status") !== "new") {
+      if (a.get('status') === 'new') {
+        if (b.get('status') !== 'new') {
           return -1;
         }
-      } else if (b.get("status") === "new") {
+      } else if (b.get('status') === 'new') {
         return 1;
       }
       for (var index = 0; index < this.sortedFields.length; index++) {
@@ -5707,13 +5706,13 @@ export default {
     },
 
     featureFilter: function (feat) {
-      if (feat.get("status") === "new") return true;
+      if (feat.get('status') === 'new') return true;
 
-      var search = this.search ? this.search.trim().toLowerCase() : "";
+      var search = this.search ? this.search.trim().toLowerCase() : '';
       if (
         search &&
         !this.fields.some(function (key) {
-          return ("" + feat.get(key)).toLowerCase().indexOf(search) > -1;
+          return ('' + feat.get(key)).toLowerCase().indexOf(search) > -1;
         })
       ) {
         return false;
@@ -5741,7 +5740,7 @@ export default {
       }
       this.clippedFeatures.splice(0, this.clippedFeatures.length);
       for (var index = 0; index < this.features.getLength(); index++) {
-        if (this.features.item(index).get("status") === "new") {
+        if (this.features.item(index).get('status') === 'new') {
           this.clippedFeatures.push(this.features.item(index));
         } else {
           break;
@@ -5751,7 +5750,7 @@ export default {
       $.each(
         this.selectedFeatures.getArray().sort(this.featureOrder),
         function (index, feat) {
-          if (feat.get("status") === "new") {
+          if (feat.get('status') === 'new') {
             //already added in the first step
             return;
           }
@@ -5859,7 +5858,7 @@ export default {
         }
       }
       if (index >= 0) {
-        var listElement = document.getElementById("bfrs-list");
+        var listElement = document.getElementById('bfrs-list');
         if (index < listElement.children.length) {
           listElement.scrollTop +=
             listElement.children[index].getBoundingClientRect().top -
@@ -5872,55 +5871,55 @@ export default {
       var geometries = feature.getGeometry().getGeometriesArray();
       if (geometries.length > 1) {
         if (geometries[1].getPolygons().length === 0) {
-          feature["selectedIndex"] = [0];
+          feature['selectedIndex'] = [0];
         } else {
-          feature["selectedIndex"] = [1, 0];
+          feature['selectedIndex'] = [1, 0];
         }
       } else if (geometries.length === 0) {
-        delete feature["selectedIndex"];
+        delete feature['selectedIndex'];
       } else if (geometries[0] instanceof Point) {
-        feature["selectedIndex"] = [0];
+        feature['selectedIndex'] = [0];
       } else if (geometries[0].getPolygons().length === 0) {
-        delete feature["selectedIndex"];
+        delete feature['selectedIndex'];
       } else {
-        feature["selectedIndex"] = [0, 0];
+        feature['selectedIndex'] = [0, 0];
       }
     },
 
     loadUserProfile: function () {
       var vm = this;
-      vm._bfrsStatus.phaseBegin("load_profile", 20, "Load profile");
+      vm._bfrsStatus.phaseBegin('load_profile', 20, 'Load profile');
       $.ajax({
         //url: env.bfrsService + "/api/v1/profile/?format=json",
-        url: "/api/profile.json",
-        method: "GET",
-        dataType: "json",
+        url: '/api/profile.json',
+        method: 'GET',
+        dataType: 'json',
         success: function (response) {
-          vm.whoami["bushfire"]["profile"] = response;
+          vm.whoami['bushfire']['profile'] = response;
           vm.profileRevision += 1;
-          if (vm.whoami["bushfire"]["regions"]) {
-            vm.region = vm.whoami["bushfire"]["profile"]["region_id"] || "";
-            vm.district = vm.whoami["bushfire"]["profile"]["district_id"] || "";
+          if (vm.whoami['bushfire']['regions']) {
+            vm.region = vm.whoami['bushfire']['profile']['region_id'] || '';
+            vm.district = vm.whoami['bushfire']['profile']['district_id'] || '';
             vm._bfrsStatus.phaseBegin(
-              "load_bushfires",
+              'load_bushfires',
               20,
-              "Load bushfires",
+              'Load bushfires',
               false,
               true,
             );
             vm.updateCQLFilter(0);
             vm.bushfireLayer.initialLoad = true;
           }
-          vm._bfrsStatus.phaseEnd("load_profile");
+          vm._bfrsStatus.phaseEnd('load_profile');
         },
         error: function (xhr, status, message) {
           vm.isFeatureListLoading = false;
-          alert(xhr.status + " : " + (xhr.responseText || message));
+          alert(xhr.status + ' : ' + (xhr.responseText || message));
           vm._bfrsStatus.phaseFailed(
-            "load_profile",
-            "Failed to loading user profile data. status = " +
+            'load_profile',
+            'Failed to loading user profile data. status = ' +
               xhr.status +
-              " , message = " +
+              ' , message = ' +
               (xhr.responseText || message),
           );
         },
@@ -5932,72 +5931,72 @@ export default {
 
     loadCapturemethods: function (callback, failedCallback) {
       var vm = this;
-      if (vm.whoami["bushfire"]["capturemethods"]) {
+      if (vm.whoami['bushfire']['capturemethods']) {
         //already loaded
         callback();
         return;
       }
       var selectCaptureMethod = function (ev) {
-        $("#userdialog-button-true").prop("disabled", false);
+        $('#userdialog-button-true').prop('disabled', false);
         $("#userdialog input[name='other_capturemethod']").prop(
-          "disabled",
+          'disabled',
           $(ev.target).val() !==
-            vm.whoami["bushfire"]["othermethod_id"].toString(),
+            vm.whoami['bushfire']['othermethod_id'].toString(),
         );
       };
       $.ajax({
-        url: env.bfrsService + "/api/v1/capturemethod/?format=json",
-        method: "GET",
-        dataType: "json",
+        url: env.bfrsService + '/api/v1/capturemethod/?format=json',
+        method: 'GET',
+        dataType: 'json',
         success: function (response) {
-          vm.whoami["bushfire"]["capturemethods"] = response;
+          vm.whoami['bushfire']['capturemethods'] = response;
           let dialogmessages = [];
           let othermessage = null;
           let headermessage = [
-            ["", 1],
-            ["Code", 3, { class: "header" }],
-            ["Desc", 8, { class: "header" }],
+            ['', 1],
+            ['Code', 3, { class: 'header' }],
+            ['Desc', 8, { class: 'header' }],
           ];
           dialogmessages.push(headermessage);
           $.each(
-            vm.whoami["bushfire"]["capturemethods"],
+            vm.whoami['bushfire']['capturemethods'],
             function (index, method) {
               let dialogmessage = [];
               dialogmessage.push([
-                method["id"],
+                method['id'],
                 1,
                 {
-                  type: "radio",
-                  name: "capturemethod",
+                  type: 'radio',
+                  name: 'capturemethod',
                   disabled: false,
                   click: selectCaptureMethod,
                 },
               ]);
-              if (method["code"] === "999") {
-                vm.whoami["bushfire"]["other_capturemethod_id"] = method["id"];
-                dialogmessage.push(["Other", 3]);
+              if (method['code'] === '999') {
+                vm.whoami['bushfire']['other_capturemethod_id'] = method['id'];
+                dialogmessage.push(['Other', 3]);
                 dialogmessage.push([
-                  "",
+                  '',
                   8,
-                  { type: "text", name: "other_capturemethod", disabled: true },
+                  { type: 'text', name: 'other_capturemethod', disabled: true },
                 ]);
                 othermessage = dialogmessage;
               } else {
-                dialogmessage.push([method["code"], 3]);
-                dialogmessage.push([method["desc"], 8]);
+                dialogmessage.push([method['code'], 3]);
+                dialogmessage.push([method['desc'], 8]);
                 dialogmessages.push(dialogmessage);
               }
             },
           );
           if (othermessage) {
             dialogmessages.push(othermessage);
-            vm.whoami["bushfire"]["othermethod_id"] = othermessage[0][0];
+            vm.whoami['bushfire']['othermethod_id'] = othermessage[0][0];
           }
-          vm.whoami["bushfire"]["capturemethod_dialogmessage"] = dialogmessages;
+          vm.whoami['bushfire']['capturemethod_dialogmessage'] = dialogmessages;
           callback();
         },
         error: function (xhr, status, message) {
-          failedCallback(xhr.status + " : " + (xhr.responseText || message));
+          failedCallback(xhr.status + ' : ' + (xhr.responseText || message));
         },
         xhrFields: {
           withCredentials: true,
@@ -6007,38 +6006,38 @@ export default {
 
     loadRegions: function () {
       var vm = this;
-      vm._bfrsStatus.phaseBegin("load_regions", 20, "Load regions");
+      vm._bfrsStatus.phaseBegin('load_regions', 20, 'Load regions');
       $.ajax({
         //url: env.bfrsService + "/api/v1/region/?format=json",
-        url: "/api/brfs-region.json",
-        method: "GET",
-        dataType: "json",
+        url: '/api/brfs-region.json',
+        method: 'GET',
+        dataType: 'json',
         success: function (response) {
-          vm.whoami["bushfire"]["regions"] = response;
+          vm.whoami['bushfire']['regions'] = response;
           vm.profileRevision += 1;
-          if (vm.whoami["bushfire"]["profile"]) {
-            vm.region = vm.whoami["bushfire"]["profile"]["region_id"] || "";
-            vm.district = vm.whoami["bushfire"]["profile"]["district_id"] || "";
+          if (vm.whoami['bushfire']['profile']) {
+            vm.region = vm.whoami['bushfire']['profile']['region_id'] || '';
+            vm.district = vm.whoami['bushfire']['profile']['district_id'] || '';
             vm._bfrsStatus.phaseBegin(
-              "load_bushfires",
+              'load_bushfires',
               20,
-              "Load bushfires",
+              'Load bushfires',
               false,
               true,
             );
             vm.updateCQLFilter(0);
             vm.bushfireLayer.initialLoad = true;
           }
-          vm._bfrsStatus.phaseEnd("load_regions");
+          vm._bfrsStatus.phaseEnd('load_regions');
         },
         error: function (xhr, status, message) {
           vm.isFeatureListLoading = false;
-          alert(xhr.status + " : " + (xhr.responseText || message));
+          alert(xhr.status + ' : ' + (xhr.responseText || message));
           vm._bfrsStatus.phaseFailed(
-            "load_regions",
-            "Failed to loading regions data. status = " +
+            'load_regions',
+            'Failed to loading regions data. status = ' +
               xhr.status +
-              " , message = " +
+              ' , message = ' +
               (xhr.responseText || message),
           );
         },
@@ -6051,9 +6050,9 @@ export default {
       var vm = this;
       if (features.getLength() > 0) {
         $.ajax({
-          url: "/api/load_bfrs_status.json",
-          method: "GET",
-          dataType: "json",
+          url: '/api/load_bfrs_status.json',
+          method: 'GET',
+          dataType: 'json',
           success: (response) => {
             if (response.bfrs_list && response.bfrs_list.length > 0) {
               let bfrsList = response.bfrs_list;
@@ -6064,9 +6063,9 @@ export default {
                 // Check if feature already exists
                 let existingFeature = vm.features
                   .getArray()
-                  .find((f) => f.get("fire_number") === fireNumber);
+                  .find((f) => f.get('fire_number') === fireNumber);
 
-                if (fireNumber.startsWith("New bushfire") && !existingFeature) {
+                if (fireNumber.startsWith('New bushfire') && !existingFeature) {
                   // Create new feature
                   var imported_feature = this.$root.geojson.readFeatures(
                     bfrsItem.feature,
@@ -6074,15 +6073,15 @@ export default {
 
                   if (!imported_feature) {
                     console.log(
-                      "No feature found in the imported data for fire number: " +
+                      'No feature found in the imported data for fire number: ' +
                         fireNumber,
                     );
                     return;
                   }
                   imported_feature = vm.newFeature(imported_feature);
-                  imported_feature.set("fire_number", fireNumber);
-                  imported_feature.set("status", "in_queue");
-                  imported_feature.set("original_status", "new");
+                  imported_feature.set('fire_number', fireNumber);
+                  imported_feature.set('status', 'in_queue');
+                  imported_feature.set('original_status', 'new');
 
                   var target_feature = imported_feature;
                   target_feature.imported_feature = imported_feature;
@@ -6142,20 +6141,20 @@ export default {
                   )[0];
                   if (!imported_feature) {
                     console.log(
-                      "No feature found in the imported data for fire number: " +
+                      'No feature found in the imported data for fire number: ' +
                         fireNumber,
                     );
                     return;
                   }
                   existingFeature.set(
-                    "original_status",
-                    imported_feature.get("status"),
+                    'original_status',
+                    imported_feature.get('status'),
                   );
-                  existingFeature.set("status", "in_queue");
+                  existingFeature.set('status', 'in_queue');
 
                   target_feature =
                     vm.featurelist.find(
-                      (f) => f.get("fire_number") === fireNumber,
+                      (f) => f.get('fire_number') === fireNumber,
                     ) || existingFeature;
                   if (!target_feature) {
                     return;
@@ -6215,7 +6214,7 @@ export default {
             }
           },
           error: function () {
-            console.log("Error in loading Bfrs status");
+            console.log('Error in loading Bfrs status');
           },
         });
       }
@@ -6241,12 +6240,12 @@ export default {
 
       //add feature to place an point based on coordinate
       this.$root.search.setSearchPointFunc(function (searchMethod, coords) {
-        if (["DMS", "MGA"].indexOf(searchMethod) < 0) {
+        if (['DMS', 'MGA'].indexOf(searchMethod) < 0) {
           return false;
         }
         if (
           vm.annotations.tool &&
-          vm.annotations.toname === "Bfrs Edit Geometry"
+          vm.annotations.toname === 'Bfrs Edit Geometry'
         ) {
           var feat =
             vm.selectedFeatures.getLength() === 1
@@ -6256,7 +6255,7 @@ export default {
             return false;
           }
           if (!vm.isModifiable(feat)) {
-            alert("Can't modify " + feat.get("status") + " report");
+            alert("Can't modify " + feat.get('status') + ' report');
             return true;
           }
 
@@ -6282,7 +6281,7 @@ export default {
           return true;
         } else if (
           vm.annotations.tool &&
-          vm.annotations.toname === "Bfrs Origin Point"
+          vm.annotations.toname === 'Bfrs Origin Point'
         ) {
           feat = vm.newFeature();
           feat
@@ -6295,7 +6294,7 @@ export default {
           feat.getGeometry().changed();
           vm.selectedFeatures.clear();
           vm.selectedFeatures.push(feat);
-          vm.annotations.setTool("Bfrs Edit Geometry");
+          vm.annotations.setTool('Bfrs Edit Geometry');
           vm.postModified(feat, 1);
           return true;
         }
@@ -6310,30 +6309,30 @@ export default {
   mounted() {
     var vm = this;
 
-    this._download_cql_filter = "";
+    this._download_cql_filter = '';
     this._changingDate = false;
     this._statusFilters = {
-      all_reports: ["fire_not_found=0", "fire_not_found='No'"],
+      all_reports: ['fire_not_found=0', "fire_not_found='No'"],
       initial_fire_report: [
-        "(report_status=1) and (fire_not_found=0)",
+        '(report_status=1) and (fire_not_found=0)',
         "(report_status='Initial Fire Report') and (fire_not_found='No')",
       ],
       notification_submitted: [
-        "(report_status=2) and (fire_not_found=0)",
+        '(report_status=2) and (fire_not_found=0)',
         "(report_status='Notifications Submitted') and (fire_not_found='No')",
       ],
       report_authorised: [
-        "(report_status in (3,4)) and (fire_not_found=0)",
+        '(report_status in (3,4)) and (fire_not_found=0)',
         "(report_status in ('Report Authorised','Reviewed')) and (fire_not_found='No')",
       ],
-      fire_not_found: ["fire_not_found=1", "fire_not_found='Yes'"],
+      fire_not_found: ['fire_not_found=1', "fire_not_found='Yes'"],
     };
 
     this._featurelist = new Collection();
     this._taskManager = getFeatureTaskManager(function () {
       vm.revision++;
     });
-    vm.taskDialog = new Foundation.Reveal($("#progressInfo"));
+    vm.taskDialog = new Foundation.Reveal($('#progressInfo'));
 
     // TODO: Native DateTimeInput replacement currently used.
     // Review whether we want to restore:
@@ -6377,63 +6376,63 @@ export default {
     //   this._endDatePicker = null;
     // }
 
-    vm._bfrsStatus = this.loading.register("bfrs", "Bushfire Report Component");
-    vm._bfrsStatus.phaseBegin("initialize", 10, "Initialize");
+    vm._bfrsStatus = this.loading.register('bfrs', 'Bushfire Report Component');
+    vm._bfrsStatus.phaseBegin('initialize', 10, 'Initialize');
     var map = this.$root.map;
 
     vm._reportStatus = {
-      99999: "unknown",
-      99998: "new",
-      1: "initial",
-      2: "draft_final",
-      3: "final_authorised",
-      4: "reviewed",
-      100: "merged",
+      99999: 'unknown',
+      99998: 'new',
+      1: 'initial',
+      2: 'draft_final',
+      3: 'final_authorised',
+      4: 'reviewed',
+      100: 'merged',
     };
     vm._reportStatusName = {
-      99999: "Unknown",
-      99998: "New Draft Incident",
-      1: "Draft Incident",
-      2: "Incident Submitted",
-      3: "Report Authorised",
-      4: "Report Reviewed",
-      100: "Report Merged",
+      99999: 'Unknown',
+      99998: 'New Draft Incident',
+      1: 'Draft Incident',
+      2: 'Incident Submitted',
+      3: 'Report Authorised',
+      4: 'Report Reviewed',
+      100: 'Report Merged',
     };
 
-    vm.whoami["bushfire"] = vm.whoami["bushfire"] || {};
-    vm.whoami["bushfire"]["permission"] = vm.whoami["bushfire"][
-      "permission"
+    vm.whoami['bushfire'] = vm.whoami['bushfire'] || {};
+    vm.whoami['bushfire']['permission'] = vm.whoami['bushfire'][
+      'permission'
     ] || {
       create: null,
-      "new.edit": false,
-      "new.modify": true,
-      "new.delete": true,
-      "unknown.edit": false,
-      "unknown.modify": false,
-      "unknown.delete": false,
-      "initial.edit": true,
-      "initial.modify": null,
-      "initial.delete": false,
-      "merged.edit": true,
-      "merged.modify": false,
-      "merged.delete": false,
-      "draft_final.edit": true,
-      "draft_final.modify": null,
-      "draft_final.delete": false,
-      "final_authorised.edit": true,
-      "final_authorised.modify": null,
-      "final_authorised.delete": false,
-      "reviewed.edit": true,
-      "reviewed.modify": null,
-      "reviewed.delete": false,
+      'new.edit': false,
+      'new.modify': true,
+      'new.delete': true,
+      'unknown.edit': false,
+      'unknown.modify': false,
+      'unknown.delete': false,
+      'initial.edit': true,
+      'initial.modify': null,
+      'initial.delete': false,
+      'merged.edit': true,
+      'merged.modify': false,
+      'merged.delete': false,
+      'draft_final.edit': true,
+      'draft_final.modify': null,
+      'draft_final.delete': false,
+      'final_authorised.edit': true,
+      'final_authorised.modify': null,
+      'final_authorised.delete': false,
+      'reviewed.edit': true,
+      'reviewed.modify': null,
+      'reviewed.delete': false,
       _checked_: 0,
     };
 
     var permissionConfig = [
       [
-        "create",
+        'create',
         vm.createUrl(),
-        "GET",
+        'GET',
         null,
         function (hasPermission) {
           if (hasPermission) {
@@ -6449,90 +6448,90 @@ export default {
         },
       ],
       [
-        "initial.edit",
+        'initial.edit',
         vm.editUrl,
-        "GET",
+        'GET',
         function (f) {
-          return f.get("status") === "initial";
+          return f.get('status') === 'initial';
         },
         null,
       ],
       [
-        "initial.modify",
+        'initial.modify',
         vm.saveUrl,
-        "PATCH",
+        'PATCH',
         function (f) {
-          return f.get("status") === "initial";
+          return f.get('status') === 'initial';
         },
         null,
       ],
       [
-        "draft_final.edit",
+        'draft_final.edit',
         vm.editUrl,
-        "GET",
+        'GET',
         function (f) {
-          return f.get("status") === "draft_final";
+          return f.get('status') === 'draft_final';
         },
         null,
       ],
       [
-        "draft_final.modify",
+        'draft_final.modify',
         vm.saveUrl,
-        "PATCH",
+        'PATCH',
         function (f) {
-          return f.get("status") === "draft_final";
+          return f.get('status') === 'draft_final';
         },
         null,
       ],
       [
-        "final_authorised.edit",
+        'final_authorised.edit',
         vm.editUrl,
-        "GET",
+        'GET',
         function (f) {
-          return f.get("status") === "final_authorised";
+          return f.get('status') === 'final_authorised';
         },
         null,
       ],
       [
-        "final_authorised.modify",
+        'final_authorised.modify',
         vm.saveUrl,
-        "PATCH",
+        'PATCH',
         function (f) {
-          return f.get("status") === "final_authorised";
+          return f.get('status') === 'final_authorised';
         },
         null,
       ],
       [
-        "reviewed.edit",
+        'reviewed.edit',
         vm.editUrl,
-        "GET",
+        'GET',
         function (f) {
-          return f.get("status") === "reviewed";
+          return f.get('status') === 'reviewed';
         },
         null,
       ],
       [
-        "reviewed.modify",
+        'reviewed.modify',
         vm.saveUrl,
-        "PATCH",
+        'PATCH',
         function (f) {
-          return f.get("status") === "reviewed";
+          return f.get('status') === 'reviewed';
         },
         null,
       ],
       [
-        "merged.edit",
+        'merged.edit',
         vm.editUrl,
-        "GET",
+        'GET',
         function (f) {
-          return f.get("status") === "merged";
+          return f.get('status') === 'merged';
         },
         null,
       ],
     ];
     vm._checkPermission = function (features, callback) {
       if (
-        vm.whoami["bushfire"]["permission"]["_checked_"] ===
+        vm.whoami['bushfire']['permission']['_checked_'] ===
         permissionConfig.length
       ) {
         //All permission checks are done
@@ -6545,8 +6544,8 @@ export default {
       vm._checkPermissionCallback =
         vm._checkPermissionCallback ||
         function (callback) {
-          if (vm.whoami["bushfire"]["permission"]["changed"]) {
-            delete vm.whoami["bushfire"]["permission"]["changed"];
+          if (vm.whoami['bushfire']['permission']['changed']) {
+            delete vm.whoami['bushfire']['permission']['changed'];
             vm.revision += 1;
           }
           if (callback) callback();
@@ -6557,17 +6556,17 @@ export default {
         var p = permissionConfig[index];
         var url = null;
         if (
-          vm.whoami["bushfire"]["permission"][p[0]] === null ||
-          vm.whoami["bushfire"]["permission"][p[0]] === undefined
+          vm.whoami['bushfire']['permission'][p[0]] === null ||
+          vm.whoami['bushfire']['permission'][p[0]] === undefined
         ) {
           if (p[1] === null) {
             //always have the permission
-            vm.whoami["bushfire"]["permission"][p[0]] = true;
-            vm.whoami["bushfire"]["permission"]["changed"] = true;
-            vm.whoami["bushfire"]["permission"]["_checked_"] =
-              vm.whoami["bushfire"]["permission"]["_checked_"] + 1;
+            vm.whoami['bushfire']['permission'][p[0]] = true;
+            vm.whoami['bushfire']['permission']['changed'] = true;
+            vm.whoami['bushfire']['permission']['_checked_'] =
+              vm.whoami['bushfire']['permission']['_checked_'] + 1;
           } else {
-            if (typeof p[1] === "string") {
+            if (typeof p[1] === 'string') {
               //url is a constant string
               url = p[1];
             } else {
@@ -6583,7 +6582,7 @@ export default {
               } else {
                 //can't find a bushfire to test
                 url = null;
-                vm.whoami["bushfire"]["permission"][p[0]] = null;
+                vm.whoami['bushfire']['permission'][p[0]] = null;
               }
             }
           }
@@ -6591,15 +6590,15 @@ export default {
         if (url) {
           taskCounter += 1;
 
-          vm.utils.checkPermission(
+          checkPermission(
             url,
             p[2],
             function (hasPermission, permission) {
-              vm.whoami["bushfire"]["permission"]["_checked_"] =
-                vm.whoami["bushfire"]["permission"]["_checked_"] + 1;
-              vm.whoami["bushfire"]["permission"][permission[0]] =
+              vm.whoami['bushfire']['permission']['_checked_'] =
+                vm.whoami['bushfire']['permission']['_checked_'] + 1;
+              vm.whoami['bushfire']['permission'][permission[0]] =
                 hasPermission;
-              vm.whoami["bushfire"]["permission"]["changed"] = true;
+              vm.whoami['bushfire']['permission']['changed'] = true;
               if (permission[4]) {
                 permission[4](hasPermission);
               }
@@ -6618,7 +6617,7 @@ export default {
       features: vm.features,
       selectedFeatures: vm.selectedFeatures,
       mapLayers: function (layer) {
-        return layer.get("id") === env.bushfireListLayer;
+        return layer.get('id') === env.bushfireListLayer;
       },
     };
     /*
@@ -6666,17 +6665,17 @@ export default {
         }
         return result;
       },
-    })($.extend({ selectMode: "geometry" }, toolConfig));
+    })($.extend({ selectMode: 'geometry' }, toolConfig));
 
     vm.ui.modifyInter = vm.annotations.modifyInterFactory()({
       features: vm.selectedFeatures,
       mapLayers: function (layer) {
-        return layer.get("id") === env.bushfireListLayer;
+        return layer.get('id') === env.bushfireListLayer;
       },
     });
-    vm.ui.modifyInter.on("featuresmodified", function (ev) {
+    vm.ui.modifyInter.on('featuresmodified', function (ev) {
       if (ev.features.getLength() === 1) {
-        vm.validateBushfire(ev.features.item(0), "modifyBushfire");
+        vm.validateBushfire(ev.features.item(0), 'modifyBushfire');
       }
       vm.postModified(ev.features.getArray(), -1);
     });
@@ -6767,8 +6766,8 @@ export default {
     })({
       features: vm.drawings,
     });
-    vm.drawings.on("add", function (ev) {
-      if (vm.annotations.toname === "Bfrs Edit Geometry") {
+    vm.drawings.on('add', function (ev) {
+      if (vm.annotations.toname === 'Bfrs Edit Geometry') {
         if (vm.selectedFeatures.getLength() === 1) {
           var f = vm.selectedFeatures.item(0);
           var indexes;
@@ -6801,10 +6800,10 @@ export default {
           );
           f.getGeometry().changed();
           vm.postModified(f, 2);
-          vm.validateBushfire(f, "addFireboundary");
+          vm.validateBushfire(f, 'addFireboundary');
 
           vm.ui.fireboundaryDraw.dispatchEvent(
-            vm.map.createEvent(vm.ui.fireboundaryDraw, "addfeaturegeometry", {
+            vm.map.createEvent(vm.ui.fireboundaryDraw, 'addfeaturegeometry', {
               feature: f,
               indexes: indexes,
             }),
@@ -6818,7 +6817,7 @@ export default {
             : null;
         if (
           selectedFeat &&
-          selectedFeat.get("status") === "new" &&
+          selectedFeat.get('status') === 'new' &&
           !selectedFeat
             .getGeometry()
             .getGeometriesArray()
@@ -6845,14 +6844,14 @@ export default {
           f.getGeometry().changed();
           vm.selectedFeatures.clear();
           vm.selectedFeatures.push(f);
-          vm.annotations.setTool("Bfrs Edit Geometry");
+          vm.annotations.setTool('Bfrs Edit Geometry');
           vm.scrollToSelected();
         }
         vm.postModified(f, 1);
         //vm.validateBushfire(f,"addOriginPoint")
 
         vm.ui.originPointDraw.dispatchEvent(
-          vm.map.createEvent(vm.ui.originPointDraw, "addfeaturegeometry", {
+          vm.map.createEvent(vm.ui.originPointDraw, 'addfeaturegeometry', {
             feature: f,
             indexes: [0],
           }),
@@ -6864,10 +6863,10 @@ export default {
     //add tools
     var tools = [
       {
-        name: "Bfrs Select",
-        label: "Select",
-        icon: "fa-mouse-pointer",
-        scope: ["bfrs"],
+        name: 'Bfrs Select',
+        label: 'Select',
+        icon: 'fa-mouse-pointer',
+        scope: ['bfrs'],
         keepSelection: true,
         interactions: [
           vm.ui.dragSelectInter,
@@ -6908,9 +6907,9 @@ export default {
               */
       },
       {
-        name: "Bfrs Edit Geometry",
-        label: "Edit Geometry",
-        icon: "fa-pencil",
+        name: 'Bfrs Edit Geometry',
+        label: 'Edit Geometry',
+        icon: 'fa-pencil',
         scope: [],
         interactions: [
           vm.ui.geometrySelectInter,
@@ -6923,11 +6922,11 @@ export default {
               selectedFeatures.forEach(function (feature) {
                 if (
                   vm.isModifiable(feature) &&
-                  feature["selectedIndex"] !== undefined
+                  feature['selectedIndex'] !== undefined
                 ) {
                   var geom = vm.annotations.getSelectedGeometry(feature);
                   if (geom instanceof Point) {
-                    if (feature.get("status") === "new") {
+                    if (feature.get('status') === 'new') {
                       vm.deleteFeature(feature);
                     } else {
                       alert("Can't delete existing bushfire's orgin point.");
@@ -6937,7 +6936,7 @@ export default {
                   vm.annotations.deleteSelectedGeometry(feature, this);
                   vm.selectDefaultGeometry(feature);
                   vm.postModified(feature, 2);
-                  vm.validateBushfire(feature, "deleteFireboundary");
+                  vm.validateBushfire(feature, 'deleteFireboundary');
                 }
               }, this);
             },
@@ -6945,7 +6944,7 @@ export default {
           vm.ui.modifyInter,
           this.ui.fireboundaryDraw,
         ],
-        selectMode: "geometry",
+        selectMode: 'geometry',
         keepSelection: true,
         onUnset: function () {
           vm.selectedFeatures.forEach(function (f) {
@@ -6958,7 +6957,7 @@ export default {
             vm.selectedFeatures.clear();
           } else if (vm.selectedFeatures.getLength() == 1) {
             var selectedFeature = vm.selectedFeatures.item(0);
-            if (selectedFeature["selectedIndex"] === undefined) {
+            if (selectedFeature['selectedIndex'] === undefined) {
               vm.selectDefaultGeometry(selectedFeature);
             }
             // TODO: Why
@@ -6967,19 +6966,19 @@ export default {
         },
         comments: [
           {
-            name: "Tips",
+            name: 'Tips',
             description: [
-              "Click on the map to start drawing a bushfire",
+              'Click on the map to start drawing a bushfire',
               "Hold down the 'SHIFT' key during drawing to enable freehand mode",
               "To delete a fire boundary click booleanPointInPolygon the fire boundary to be deleted and press the 'DELETE' key",
-              "To modify the boundary or origin click and drag to adjust",
+              'To modify the boundary or origin click and drag to adjust',
             ],
           },
         ],
       },
       {
-        name: "Bfrs Origin Point",
-        label: "Add Bushfire",
+        name: 'Bfrs Origin Point',
+        label: 'Add Bushfire',
         icon: originSvg,
         tints: vm.tints,
         selectedFillColour: [0, 0, 0, 0.25],
@@ -6987,7 +6986,7 @@ export default {
         labelStyle: {
           offsetX: 17,
           strokeWidth: 8,
-          font: "Bold 12px Helvetica,Roboto,Arial,sans-serif",
+          font: 'Bold 12px Helvetica,Roboto,Arial,sans-serif',
         },
         size: 2,
         interactions: [vm.ui.originPointDraw],
@@ -7015,9 +7014,9 @@ export default {
         },
         comments: [
           {
-            name: "Tips",
+            name: 'Tips',
             description: [
-              "Click on the map or search a point to create a new bushfire in SSS.",
+              'Click on the map or search a point to create a new bushfire in SSS.',
             ],
           },
         ],
@@ -7029,32 +7028,32 @@ export default {
     });
 
     vm.ui.modifyTool = vm.annotations.tools.find(function (tool) {
-      return tool.name === "Bfrs Edit Geometry";
+      return tool.name === 'Bfrs Edit Geometry';
     });
     vm.ui.originPointTool = vm.annotations.tools.find(function (tool) {
-      return tool.name === "Bfrs Origin Point";
+      return tool.name === 'Bfrs Origin Point';
     });
     vm.ui.panTool = vm.annotations.tools.find(function (tool) {
-      return tool.name === "Pan";
+      return tool.name === 'Pan';
     });
     vm.ui.selectTool = vm.annotations.tools.find(function (tool) {
-      return tool.name === "Bfrs Select";
+      return tool.name === 'Bfrs Select';
     });
 
     useStateStore().fixedLayers.push({
-      type: "WFSLayer",
-      name: "Bushfire Report",
+      type: 'WFSLayer',
+      name: 'Bushfire Report',
       id: env.bushfireListLayer,
       getFeatureInfo: function (f) {
         return {
-          name: f.get("fire_number"),
-          img: map.getBlob(f, ["icon", "tint"]),
+          name: f.get('fire_number'),
+          img: map.getBlob(f, ['icon', 'tint']),
           comments:
-            f.get("name") +
-            "(" +
-            (vm._reportStatusName[f.get("report_status")] ||
+            f.get('name') +
+            '(' +
+            (vm._reportStatusName[f.get('report_status')] ||
               vm._reportStatusName[99999]) +
-            ")",
+            ')',
         };
       },
       initialLoad: false,
@@ -7065,18 +7064,18 @@ export default {
       interval_step: 60,
       dependentLayers: [
         {
-          type: "TileLayer",
-          name: "Fire Boundary of Bushfire Final Report",
+          type: 'TileLayer',
+          name: 'Fire Boundary of Bushfire Final Report',
           id: env.bushfireFinalFireBoundaryLatestLayer,
           autoAdd: false,
           inheritRefresh: true,
         },
         {
-          type: "ImageLayer",
-          name: "Fire Boundary of Selected Bushfire Final Report",
+          type: 'ImageLayer',
+          name: 'Fire Boundary of Selected Bushfire Final Report',
           id: env.bushfireFinalFireBoundaryLatestLayer,
           // style: getLayerId(env.bushfireFinalFireBoundaryLatestLayer) + ".selected",
-          mapLayerId: env.bushfireFinalFireBoundaryLatestLayer + "_selected",
+          mapLayerId: env.bushfireFinalFireBoundaryLatestLayer + '_selected',
           autoAdd: false,
           inheritRefresh: true,
         },
@@ -7099,7 +7098,7 @@ export default {
         */
       onerror: function (status, message) {
         vm.isFeatureListLoading = false;
-        vm._bfrsStatus.phaseFailed("load_bushfires", status + " : " + message);
+        vm._bfrsStatus.phaseFailed('load_bushfires', status + ' : ' + message);
       },
       onload: function (loadType, vectorSource, features) {
         //combine the two spatial columns into one
@@ -7116,34 +7115,34 @@ export default {
 
           for (var index = vm.features.getLength() - 1; index >= 0; index--) {
             f = vm.features.item(index);
-            if (f.get("status") === "new") {
+            if (f.get('status') === 'new') {
               //new features always are the begining and sorted.
-              if (f.get("sss_id")) {
+              if (f.get('sss_id')) {
                 //save before (PWM:saved?)
                 let loadedFeature = features.find(function (f2) {
-                  return f.get("sss_id") === f2.get("sss_id");
+                  return f.get('sss_id') === f2.get('sss_id');
                 });
                 if (!loadedFeature) {
                   //still not save, keep the current new bushfire (PWM: saved?)
                   features.splice(insertPosition, 0, f);
                   insertPosition += 1;
                 } else {
-                  if (f.get("tint") === "modified") {
+                  if (f.get('tint') === 'modified') {
                     //feature was changed after saving
                     //replace the loadedFeature's geometry with the modified version
                     loadedFeature.setGeometry(f.getGeometry());
-                    loadedFeature.set("tint", "modified", true);
+                    loadedFeature.set('tint', 'modified', true);
                     loadedFeature.set(
-                      "fillColour",
-                      vm.tints[loadedFeature.get("tint") + ".fillColour"],
+                      'fillColour',
+                      vm.tints[loadedFeature.get('tint') + '.fillColour'],
                       true,
                     );
                     loadedFeature.set(
-                      "colour",
-                      vm.tints[loadedFeature.get("tint") + ".colour"],
+                      'colour',
+                      vm.tints[loadedFeature.get('tint') + '.colour'],
                       true,
                     );
-                    loadedFeature.set("modifyType", f.get("modifyType"), true);
+                    loadedFeature.set('modifyType', f.get('modifyType'), true);
                   } else {
                     //already saved into the database, and not change after saving, ignore it
                   }
@@ -7153,7 +7152,7 @@ export default {
                   var i = vm.selectedFeatures
                     .getArray()
                     .findIndex(function (o) {
-                      return o.get("fire_number") === f.get("fire_number");
+                      return o.get('fire_number') === f.get('fire_number');
                     });
                   if (i >= 0) {
                     vm.selectedFeatures.removeAt(i);
@@ -7165,26 +7164,26 @@ export default {
                 features.splice(insertPosition, 0, f);
                 insertPosition += 1;
               }
-            } else if (f.get("tint") === "modified" || f.tasks) {
+            } else if (f.get('tint') === 'modified' || f.tasks) {
               let loadedFeature = features.find(function (f2) {
-                return f.get("id") === f2.get("id");
+                return f.get('id') === f2.get('id');
               });
               if (loadedFeature) {
-                if (f.get("tint") === "modified") {
+                if (f.get('tint') === 'modified') {
                   //replace the loadedFeature's geometry with the modified version
                   loadedFeature.setGeometry(f.getGeometry());
-                  loadedFeature.set("tint", "modified", true);
+                  loadedFeature.set('tint', 'modified', true);
                   loadedFeature.set(
-                    "fillColour",
-                    vm.tints[loadedFeature.get("tint") + ".fillColour"],
+                    'fillColour',
+                    vm.tints[loadedFeature.get('tint') + '.fillColour'],
                     true,
                   );
                   loadedFeature.set(
-                    "colour",
-                    vm.tints[loadedFeature.get("tint") + ".colour"],
+                    'colour',
+                    vm.tints[loadedFeature.get('tint') + '.colour'],
                     true,
                   );
-                  loadedFeature.set("modifyType", f.get("modifyType"), true);
+                  loadedFeature.set('modifyType', f.get('modifyType'), true);
                   if (f.intersectionPoints) {
                     loadedFeature.intersectionPoints = f.intersectionPoints;
                   }
@@ -7203,7 +7202,7 @@ export default {
             ) {
               var f = vm.selectedFeatures.item(index);
               let loadedFeature = features.find(function (f1) {
-                return f1.get("fire_number") === f.get("fire_number");
+                return f1.get('fire_number') === f.get('fire_number');
               });
               if (loadedFeature) {
                 if (f.selectedIndex !== undefined) {
@@ -7228,7 +7227,7 @@ export default {
             for (index = vm.clippedFeatures.length - 1; index >= 0; index--) {
               f = vm.clippedFeatures[index];
               let loadedFeature = features.find(function (f1) {
-                return f1.get("fire_number") === f.get("fire_number");
+                return f1.get('fire_number') === f.get('fire_number');
               });
               if (loadedFeature) {
                 vm.clippedFeatures[index] = loadedFeature;
@@ -7242,22 +7241,22 @@ export default {
           vm.updateViewport(0); //if commented out, fires still load
           vm.loadBfrsStatus(vm.features);
           vm.updateFeatureFilter(3, 0);
-          if (vm.whoami["bushfire"]["permission"]["changed"]) {
-            delete vm.whoami["bushfire"]["permission"]["changed"];
+          if (vm.whoami['bushfire']['permission']['changed']) {
+            delete vm.whoami['bushfire']['permission']['changed'];
             vm.revision += 1;
           }
           vm.isFeatureListLoading = false;
-          vm._bfrsStatus.phaseEnd("load_bushfires");
+          vm._bfrsStatus.phaseEnd('load_bushfires');
         }
         vm._checkPermission(features, processResources);
       },
     });
     //this.measure.register("dpaw:bushfirelist_latest",this.features)
 
-    vm._bfrsStatus.phaseEnd("initialize");
+    vm._bfrsStatus.phaseEnd('initialize');
     // setInterval(vm.updateBfrsUploadProgress, 30000);
     vm._bfrsStatus.phaseBegin(
-      "gk-init",
+      'gk-init',
       20,
       "Listen 'gk-init' event",
       true,

@@ -13,29 +13,33 @@
 <style></style>
 
 <script>
-import Feature from "ol/Feature";
-import Collection from "ol/Collection";
+import Feature from 'ol/Feature';
+import Collection from 'ol/Collection';
 
-import VectorSource from "ol/source/Vector";
-import VectorLayer from "ol/layer/Vector";
+import VectorSource from 'ol/source/Vector';
+import VectorLayer from 'ol/layer/Vector';
 
-import Style from "ol/style/Style";
-import Icon from "ol/style/Icon";
+import Style from 'ol/style/Style';
+import Icon from 'ol/style/Icon';
 
-import Draw from "ol/interaction/Draw";
+import Draw from 'ol/interaction/Draw';
 
-import Point from "ol/geom/Point";
+import Point from 'ol/geom/Point';
 
-import { submitForm } from "@/utils";
+import { submitForm } from '@/utils';
 
-import env from "@/config/env";
+import env from '@/config/env';
 
-import weatherForecastSvg from "@/assets/images/weather-forecast.svg";
-import pinSvg from "@/assets/images/pin.svg";
+import weatherForecastSvg from '@/assets/images/weather-forecast.svg';
+import pinSvg from '@/assets/images/pin.svg';
+
+import { useLoadingStore } from '@/stores/loading';
+import { useMapStore } from '@/stores/map';
+import { useAnnotationsStore } from '@/stores/annotations';
 
 export default {
   store: {
-    whoami: "whoami",
+    whoami: 'whoami',
   },
   setup() {
     return {
@@ -48,8 +52,8 @@ export default {
       forecastTool: {},
       forecastTools: [
         {
-          toolid: "incident-weather-forecast",
-          title: "Incident Weather Forecast",
+          toolid: 'incident-weather-forecast',
+          title: 'Incident Weather Forecast',
           icon: weatherForecastSvg,
         },
       ],
@@ -58,13 +62,19 @@ export default {
   // parts of the template to be computed live
   computed: {
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
-    map: function () {
-      return this.$root.map;
+    mapReady() {
+      return useMapStore().ready;
+    },
+    map() {
+      return useMapStore()?.component;
+    },
+    annotationsReady() {
+      return useAnnotationsStore().ready;
     },
     annotations: function () {
-      return this.$root.annotations;
+      return useAnnotationsStore()?.component;
     },
     isControlSelected: function () {
       if (this.annotations) {
@@ -78,6 +88,14 @@ export default {
     },
   },
   watch: {
+    annotationsReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready) {
+          this.initialiseWeatherForecast();
+        }
+      },
+    },
     isControlSelected: function (newValue) {
       if (newValue) {
         this._overlay.setMap(this.map.olmap);
@@ -88,6 +106,64 @@ export default {
   },
   // methods callable from inside the template
   methods: {
+    initialiseWeatherForecast() {
+      const vm = this;
+      vm._weatherforecastStatus.phaseEnd('gk-init');
+
+      vm._weatherforecastStatus.phaseBegin(
+        'initialize',
+        20,
+        'Initialize',
+        true,
+        false,
+      );
+
+      vm._features = new Collection();
+      vm._features.on('add', function (event) {
+        vm.getWeatherForecast(event.element.getGeometry().getCoordinates());
+      });
+      vm._style = new Style({
+        image: new Icon({
+          src: pinSvg,
+          anchorOrigin: 'bottom-left',
+          anchorXUnits: 'pixels',
+          anchorYUnits: 'pixels',
+          anchor: [8, 0],
+        }),
+      });
+      vm._source = new VectorSource({
+        features: vm._features,
+      });
+      vm._overlay = new VectorLayer({
+        source: vm._source,
+        style: vm._style,
+      });
+
+      //initialize the overlay and interactions
+      var weatherforecastInter = new Draw({
+        source: vm._source,
+        type: 'Point',
+        style: vm._style,
+      });
+
+      weatherforecastInter.on(
+        'drawend',
+        function () {
+          vm._features.clear();
+        },
+        vm,
+      );
+
+      vm._weatherforecastTool = {
+        name: 'WeatherForecast',
+        keepSelection: true,
+        interactions: [weatherforecastInter],
+      };
+
+      vm.annotations.tools.push(this._weatherforecastTool);
+
+      vm._weatherforecastStatus.phaseEnd('initialize');
+    },
     toggleTool: function (enable) {
       this.warning = false;
       if (!this._weatherforecastTool) {
@@ -133,9 +209,9 @@ export default {
             position: position,
             forecast_url: env.weatherForecastUrl,
           };
-          $("#weatherforecast_data").val(JSON.stringify(requestData));
+          $('#weatherforecast_data').val(JSON.stringify(requestData));
           submitForm(
-            "get_weatherforecast",
+            'get_weatherforecast',
             {
               width: screen.width > 1890 ? 1890 : screen.width,
               height: screen.height > 1060 ? 1060 : screen.height,
@@ -152,75 +228,17 @@ export default {
   mounted() {
     var vm = this;
     this._weatherforecastStatus = vm.loading.register(
-      "weatherforecast",
-      "Weather Forecast Component",
+      'weatherforecast',
+      'Weather Forecast Component',
     );
 
     this._weatherforecastStatus.phaseBegin(
-      "gk-init",
+      'gk-init',
       80,
       "Listen 'gk-init' event",
       true,
       true,
     );
-
-    this.$on("gk-init", function () {
-      vm._weatherforecastStatus.phaseEnd("gk-init");
-
-      vm._weatherforecastStatus.phaseBegin(
-        "initialize",
-        20,
-        "Initialize",
-        true,
-        false,
-      );
-
-      vm._features = new Collection();
-      vm._features.on("add", function (event) {
-        vm.getWeatherForecast(event.element.getGeometry().getCoordinates());
-      });
-      vm._style = new Style({
-        image: new Icon({
-          src: pinSvg,
-          anchorOrigin: "bottom-left",
-          anchorXUnits: "pixels",
-          anchorYUnits: "pixels",
-          anchor: [8, 0],
-        }),
-      });
-      vm._source = new VectorSource({
-        features: vm._features,
-      });
-      vm._overlay = new VectorLayer({
-        source: vm._source,
-        style: vm._style,
-      });
-
-      //initialize the overlay and interactions
-      var weatherforecastInter = new Draw({
-        source: vm._source,
-        type: "Point",
-        style: vm._style,
-      });
-
-      weatherforecastInter.on(
-        "drawend",
-        function () {
-          vm._features.clear();
-        },
-        vm,
-      );
-
-      vm._weatherforecastTool = {
-        name: "WeatherForecast",
-        keepSelection: true,
-        interactions: [weatherforecastInter],
-      };
-
-      vm.annotations.tools.push(this._weatherforecastTool);
-
-      vm._weatherforecastStatus.phaseEnd("initialize");
-    });
   },
 };
 </script>

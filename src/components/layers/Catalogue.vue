@@ -95,7 +95,7 @@
             <div class="small-10">
               <a
                 v-if="editable(l)"
-                @click.stop.prevent="utils.editResource($event)"
+                @click.stop.prevent="editResource($event)"
                 title="Edit catalogue entry"
                 :href="
                   isKBLayer(l)
@@ -147,6 +147,410 @@
     </div>
   </div>
 </template>
+
+<script>
+import env from '@/config/env';
+
+import Collection from 'ol/Collection';
+
+import View from 'ol/View';
+
+import OverviewMap from 'ol/control/OverviewMap';
+
+import {
+  getLayerId,
+  getIndependentLayerId,
+  checkPermission,
+  editResource,
+} from '@/utils';
+
+import { useCatalogueStore } from '@/stores/catalogue';
+
+// TODO: Discard if unused (looks unused)
+// Vue.filter("lessThan", function (value, length) {
+//   return value.length < length;
+// });
+
+export default {
+  store: {
+    screenHeight: 'layout.screenHeight',
+    leftPanelHeadHeight: 'layout.leftPanelHeadHeight',
+    activeMenu: 'activeMenu',
+    activeSubmenu: 'activeSubmenu',
+    whoami: 'whoami',
+  },
+  data: function () {
+    return {
+      layer: {},
+      catalogue: new Collection(),
+      swapBaseLayers: true,
+      search: '',
+      searchAttrs: ['name'],
+      overview: false,
+      layerDetails: false,
+    };
+  },
+  computed: {
+    catalogueFilters() {
+      return useCatalogueStore().filters;
+    },
+    filteredLayers() {
+      const search = this.search.toLowerCase();
+
+      return [...this.catalogue.getArray()]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .filter((l) => {
+          return (
+            l.name.toLowerCase().includes(search) ||
+            l.id.toLowerCase().includes(search) ||
+            this.containsTag(l.tags, search)
+          );
+        });
+    },
+    map: function () {
+      return this.$root.$refs.app.$refs.map;
+    },
+    app: function () {
+      return this.$root.app;
+    },
+    env: function () {
+      return this.$root.env;
+    },
+    loading: function () {
+      return this.$root.loading;
+    },
+  },
+  watch: {
+    search: function () {
+      this.adjustHeight();
+    },
+  },
+  methods: {
+    getLayerId,
+    getIndependentLayerId,
+    checkPermission,
+    editResource,
+    editable: function (layer) {
+      return layer.systemid && this.whoami.editLayer;
+    },
+    adjustHeight: function () {
+      if (this.activeMenu === 'layers' && this.activeSubmenu === 'catalogue') {
+        $('#catalogue-list-container').height(
+          this.screenHeight -
+            this.leftPanelHeadHeight -
+            $('#catalogue-filter-container').height(),
+        );
+      }
+    },
+    setup: function () {
+      this.adjustHeight();
+    },
+    preview: function (l) {
+      if (
+        !l ||
+        !l.mapLayerId ||
+        !l.mapLayerId.includes('resource_tracking_history')
+      ) {
+        if (this.layer === l) {
+          return;
+        }
+        if (this.layer.preview) {
+          this.layer.preview.setMap(null);
+        }
+        if (!l) {
+          this.layer = {};
+          return;
+        }
+        if (!l.preview) {
+          l.preview = new OverviewMap({
+            className: 'ol-overviewmap ol-previewmap',
+            layers: [
+              this.$root.map['create' + l.type](
+                $.extend({}, l, { refresh: 0, previewLayer: true }),
+              ),
+            ],
+            collapsed: false,
+            collapsible: false,
+            min_ratio: 1,
+            max_ratio: 1,
+            view: new View({
+              projection: 'EPSG:4326',
+            }),
+          });
+        }
+        let previewMap =
+          l.preview.element.getElementsByClassName('ol-overviewmap-map');
+        if (previewMap.length > 0) {
+          previewMap[0].style.width = '100%';
+          previewMap[0].style.height = '100%';
+          previewMap[0].style.border = '0';
+          previewMap[0].style.margin = '0';
+        }
+        // console.log("(this.$root.map.olmap)")
+        // console.log(this.$root.map.olmap);
+        l.preview.setMap(this.$root.map.olmap);
+        var previewEl = $(l.preview.getOverviewMap().getViewport());
+        this.layer = l;
+        if (!previewEl.find('.layerdetails').length > 0) {
+          this.$nextTick(function () {
+            previewEl.prepend(this.$refs.layerdetails.innerHTML);
+          });
+        }
+        let stopeventElement = document.getElementsByClassName(
+          'ol-overlaycontainer-stopevent',
+        );
+        if (stopeventElement.length > 0) {
+          stopeventElement[0].style.zIndex = '';
+        }
+      }
+    },
+    toggleAll: function (checked) {
+      var switches = $(this.$el).find('input.ctlgsw');
+      switches.attr('checked', !checked).trigger('click');
+    },
+
+    // helper function to simulate a <label> style click on a row
+    onToggle: function (index) {
+      $(this.$el)
+        .find('#ctlgsw' + index)
+        .trigger('click');
+    },
+
+    // toggle a layer in the Layer Catalogue
+    //return true if layer's state is changed; otherwise return false
+    onLayerChange: function (layer, checked, event) {
+      // console.log("onLayerChange");
+      // console.log(layer);
+
+      var vm = this;
+      var active = this.$root.active;
+      var map = this.$root.map;
+      // if layer matches state, return
+      if (checked === (map.getMapLayer(layer) !== undefined)) {
+        return false;
+      }
+
+      // make the layer match the state
+      if (checked) {
+        if (
+          layer &&
+          layer.mapLayerId &&
+          layer.mapLayerId.includes('resource_tracking_history') &&
+          layer.cql_filter === false
+        ) {
+          alert('Please add a resource to view the history.');
+          event.target.checked = false;
+          return;
+        } else {
+          var olLayer = map['create' + layer.type](layer);
+          olLayer.setOpacity(layer.opacity || 1);
+          if (layer.base) {
+            // "Switch out base layers automatically" is enabled, remove
+            // all other layers with the "base" option set.
+            if (this.swapBaseLayers) {
+              active.olLayers.forEach(function (mapLayer) {
+                if (vm.getLayer(mapLayer)) {
+                  if (mapLayer.get('dependentLayer')) return;
+                  if (vm.getLayer(mapLayer).base) {
+                    active.removeLayer(mapLayer);
+                  }
+                }
+              });
+            }
+            // add new base layer to bottom
+            map.olmap.getLayers().insertAt(0, olLayer);
+          } else {
+            map.olmap.addLayer(olLayer);
+          }
+          this.map.olmap.dispatchEvent(
+            this.map.createEvent(this.map, 'addLayer', { mapLayer: olLayer }),
+          );
+        }
+      } else {
+        active.removeLayer(map.getMapLayer(layer));
+      }
+      return true;
+    },
+    isKBLayer(l) {
+      const id = (l.id || '').toLowerCase().trim();
+      return id.startsWith('kaartdijin-boodja');
+    },
+
+    containsTag(tags, search) {
+      for (let tag of tags) {
+        if (tag.name.toLowerCase().includes(search)) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    // helper to populate the catalogue from a remote service
+    loadRemoteCatalogue: function (callback, failedCallback) {
+      var vm = this;
+      var req = new window.XMLHttpRequest();
+      req.withCredentials = true;
+      req.onload = function () {
+        var checkingLayer = null;
+        var layers = [];
+
+        JSON.parse(this.responseText).forEach(function (l) {
+          // console.log("JSON LAYERS");
+          // console.log(l);
+          // overwrite layers in the catalogue with the same identifier
+          //let i = 0;
+          if (vm.getLayer(l.identifier)) {
+            vm.catalogue.remove(vm.getLayer(l.identifier));
+            // TODO: The line below was setting a variablt that was then never used
+            // i += 1;
+          }
+          l.systemid = l.id;
+          l.id = getIndependentLayerId(l.identifier, env);
+          // add the base flag for layers tagged 'basemap'
+          l.base = l.tags.some(function (t) {
+            return t.name === 'basemap';
+          });
+          // set the opacity to 50% for layers tagged 'overlaymap'
+          if (
+            l.tags.some(function (t) {
+              return t.name === 'overlaymap';
+            })
+          ) {
+            l.opacity = 0.5;
+          }
+          // set the live map refresh interval
+          if (
+            l.tags.some(function (t) {
+              return t.name === 'livemap_10min';
+            })
+          ) {
+            l.refresh = 600;
+          }
+          if (
+            l.tags.some(function (t) {
+              return t.name === 'livemap_2min';
+            })
+          ) {
+            l.refresh = 120;
+          }
+          if (!checkingLayer) {
+            checkingLayer = l;
+          }
+          layers.push(l);
+        });
+
+        if (checkingLayer) {
+          checkPermission(
+            vm.env.catalogueAdminService +
+              '/admin/catalogue/record/' +
+              checkingLayer.systemid +
+              '/change/',
+            'GET',
+            function (allowed) {
+              vm.whoami.editLayer = allowed;
+              vm.catalogue.extend(layers);
+              /*var my_array = vm.catalogue.getArray()
+                var arrayLength = my_array.length;
+                for (var i = 0; i < arrayLength; i++) {
+                alert(my_array[i]['name'] + ", "  + my_array[i]['id']  + ", "  +  my_array[i]['title'] )}*/
+              callback();
+            },
+          );
+        } else {
+          vm.whoami.editLayer = false;
+          vm.catalogue.extend(layers);
+          callback();
+        }
+      };
+
+      req.onerror = function () {
+        var msg =
+          "Couldn't load layer catalogue!" +
+          (req.statusText ? ' (' + req.statusText + ')' : '');
+        if (failedCallback) {
+          failedCallback(msg);
+        } else {
+          console.error(msg);
+        }
+      };
+      // req.open('GET', vm.env.cswService + "?format=json&application__name=" + getAppId(this.app.toLowerCase()))
+      req.open('GET', '/api/cataloguev2.json');
+
+      req.send();
+    },
+    getLayer: function (id) {
+      // handle openlayers layers as well as raw ids
+      if (id && id.get) {
+        id = id.get('id');
+      }
+      return this.catalogue.getArray().find(function (layer) {
+        return layer.mapLayerId === id;
+      });
+    },
+    getMapLayer: function (id) {
+      return this.$root.map.getMapLayer(id);
+    },
+  },
+  ready: function () {
+    var vm = this;
+    var catalogueStatus = vm.loading.register(
+      'catalogue',
+      'Catalogue Component',
+    );
+    this.catalogue.on('add', function (event) {
+      var l = event.element;
+      // console.log ("MY L.TYPE");
+      // console.log(l.type + ":" + l.identifier);
+      l.id = l.id || l.identifier;
+      l.name = l.name || l.title;
+      l.type = l.type || 'TileLayer';
+
+      if (l.type === 'TileLayer') {
+        if (l.legend) {
+          if (!l.legend.toLowerCase().startsWith('http')) {
+            l.legend = vm.env.catalogueAdminService + l.legend;
+          }
+        } else {
+          l.legend =
+            l.service_type === 'WFS'
+              ? vm.env.legendSrc + getLayerId(l.id)
+              : null;
+        }
+      }
+      l.mapLayerId = l.mapLayerId || l.id;
+      if (l.dependentLayers) {
+        $.each(l.dependentLayers, function (index, layer) {
+          layer.mapLayerId = layer.mapLayerId || layer.id;
+        });
+      }
+
+      if (l.refresh) {
+        vm.map.setRefreshInterval(l, l.refresh);
+      }
+    });
+    catalogueStatus.phaseBegin(
+      'gk-init',
+      80,
+      "Listen 'gk-init' event",
+      true,
+      true,
+    );
+    this.$on('gk-init', function () {
+      catalogueStatus.phaseEnd('gk-init');
+
+      catalogueStatus.phaseBegin('initialize', 20, 'Initialize', true, false);
+      $(this.$root.map.olmap.getTargetElement()).on(
+        'mouseleave',
+        '.ol-previewmap',
+        function () {
+          vm.preview(false);
+        },
+      );
+      catalogueStatus.phaseEnd('initialize');
+    });
+  },
+};
+</script>
 
 <style>
 .short.button {
@@ -203,404 +607,3 @@ div.ol-previewmap.ol-uncollapsible {
   font-size: 12px;
 }
 </style>
-
-<script>
-import env from "@/config/env";
-
-import Collection from "ol/Collection";
-
-import View from "ol/View";
-
-import OverviewMap from "ol/control/OverviewMap";
-
-import { getLayerId, getIndependentLayerId, checkPermission } from "@/utils";
-
-import { useCatalogueStore } from "@/stores/catalogue";
-
-// TODO: Discard if unused (looks unused)
-// Vue.filter("lessThan", function (value, length) {
-//   return value.length < length;
-// });
-
-export default {
-  store: {
-    screenHeight: "layout.screenHeight",
-    leftPanelHeadHeight: "layout.leftPanelHeadHeight",
-    activeMenu: "activeMenu",
-    activeSubmenu: "activeSubmenu",
-    whoami: "whoami",
-  },
-  data: function () {
-    return {
-      layer: {},
-      catalogue: new Collection(),
-      swapBaseLayers: true,
-      search: "",
-      searchAttrs: ["name"],
-      overview: false,
-      layerDetails: false,
-    };
-  },
-  computed: {
-    catalogueFilters() {
-      return useCatalogueStore().filters;
-    },
-    filteredLayers() {
-      const search = this.search.toLowerCase();
-
-      return [...this.catalogue.getArray()]
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .filter((l) => {
-          return (
-            l.name.toLowerCase().includes(search) ||
-            l.id.toLowerCase().includes(search) ||
-            this.containsTag(l.tags, search)
-          );
-        });
-    },
-    map: function () {
-      return this.$root.$refs.app.$refs.map;
-    },
-    app: function () {
-      return this.$root.app;
-    },
-    env: function () {
-      return this.$root.env;
-    },
-    utils: function () {
-      return this.$root.utils;
-    },
-    loading: function () {
-      return this.$root.loading;
-    },
-  },
-  watch: {
-    search: function () {
-      this.adjustHeight();
-    },
-  },
-  methods: {
-    getLayerId,
-    getIndependentLayerId,
-    checkPermission,
-    editable: function (layer) {
-      return layer.systemid && this.whoami.editLayer;
-    },
-    adjustHeight: function () {
-      if (this.activeMenu === "layers" && this.activeSubmenu === "catalogue") {
-        $("#catalogue-list-container").height(
-          this.screenHeight -
-            this.leftPanelHeadHeight -
-            $("#catalogue-filter-container").height(),
-        );
-      }
-    },
-    setup: function () {
-      this.adjustHeight();
-    },
-    preview: function (l) {
-      if (
-        !l ||
-        !l.mapLayerId ||
-        !l.mapLayerId.includes("resource_tracking_history")
-      ) {
-        if (this.layer === l) {
-          return;
-        }
-        if (this.layer.preview) {
-          this.layer.preview.setMap(null);
-        }
-        if (!l) {
-          this.layer = {};
-          return;
-        }
-        if (!l.preview) {
-          l.preview = new OverviewMap({
-            className: "ol-overviewmap ol-previewmap",
-            layers: [
-              this.$root.map["create" + l.type](
-                $.extend({}, l, { refresh: 0, previewLayer: true }),
-              ),
-            ],
-            collapsed: false,
-            collapsible: false,
-            min_ratio: 1,
-            max_ratio: 1,
-            view: new View({
-              projection: "EPSG:4326",
-            }),
-          });
-        }
-        let previewMap =
-          l.preview.element.getElementsByClassName("ol-overviewmap-map");
-        if (previewMap.length > 0) {
-          previewMap[0].style.width = "100%";
-          previewMap[0].style.height = "100%";
-          previewMap[0].style.border = "0";
-          previewMap[0].style.margin = "0";
-        }
-        // console.log("(this.$root.map.olmap)")
-        // console.log(this.$root.map.olmap);
-        l.preview.setMap(this.$root.map.olmap);
-        var previewEl = $(l.preview.getOverviewMap().getViewport());
-        this.layer = l;
-        if (!previewEl.find(".layerdetails").length > 0) {
-          this.$nextTick(function () {
-            previewEl.prepend(this.$refs.layerdetails.innerHTML);
-          });
-        }
-        let stopeventElement = document.getElementsByClassName(
-          "ol-overlaycontainer-stopevent",
-        );
-        if (stopeventElement.length > 0) {
-          stopeventElement[0].style.zIndex = "";
-        }
-      }
-    },
-    toggleAll: function (checked) {
-      var switches = $(this.$el).find("input.ctlgsw");
-      switches.attr("checked", !checked).trigger("click");
-    },
-
-    // helper function to simulate a <label> style click on a row
-    onToggle: function (index) {
-      $(this.$el)
-        .find("#ctlgsw" + index)
-        .trigger("click");
-    },
-
-    // toggle a layer in the Layer Catalogue
-    //return true if layer's state is changed; otherwise return false
-    onLayerChange: function (layer, checked, event) {
-      // console.log("onLayerChange");
-      // console.log(layer);
-
-      var vm = this;
-      var active = this.$root.active;
-      var map = this.$root.map;
-      // if layer matches state, return
-      if (checked === (map.getMapLayer(layer) !== undefined)) {
-        return false;
-      }
-
-      // make the layer match the state
-      if (checked) {
-        if (
-          layer &&
-          layer.mapLayerId &&
-          layer.mapLayerId.includes("resource_tracking_history") &&
-          layer.cql_filter === false
-        ) {
-          alert("Please add a resource to view the history.");
-          event.target.checked = false;
-          return;
-        } else {
-          var olLayer = map["create" + layer.type](layer);
-          olLayer.setOpacity(layer.opacity || 1);
-          if (layer.base) {
-            // "Switch out base layers automatically" is enabled, remove
-            // all other layers with the "base" option set.
-            if (this.swapBaseLayers) {
-              active.olLayers.forEach(function (mapLayer) {
-                if (vm.getLayer(mapLayer)) {
-                  if (mapLayer.get("dependentLayer")) return;
-                  if (vm.getLayer(mapLayer).base) {
-                    active.removeLayer(mapLayer);
-                  }
-                }
-              });
-            }
-            // add new base layer to bottom
-            map.olmap.getLayers().insertAt(0, olLayer);
-          } else {
-            map.olmap.addLayer(olLayer);
-          }
-          this.map.olmap.dispatchEvent(
-            this.map.createEvent(this.map, "addLayer", { mapLayer: olLayer }),
-          );
-        }
-      } else {
-        active.removeLayer(map.getMapLayer(layer));
-      }
-      return true;
-    },
-    isKBLayer(l) {
-      const id = (l.id || "").toLowerCase().trim();
-      return id.startsWith("kaartdijin-boodja");
-    },
-
-    containsTag(tags, search) {
-      for (let tag of tags) {
-        if (tag.name.toLowerCase().includes(search)) {
-          return true;
-        }
-      }
-      return false;
-    },
-
-    // helper to populate the catalogue from a remote service
-    loadRemoteCatalogue: function (callback, failedCallback) {
-      var vm = this;
-      var req = new window.XMLHttpRequest();
-      req.withCredentials = true;
-      req.onload = function () {
-        var checkingLayer = null;
-        var layers = [];
-
-        JSON.parse(this.responseText).forEach(function (l) {
-          // console.log("JSON LAYERS");
-          // console.log(l);
-          // overwrite layers in the catalogue with the same identifier
-          //let i = 0;
-          if (vm.getLayer(l.identifier)) {
-            vm.catalogue.remove(vm.getLayer(l.identifier));
-            // TODO: The line below was setting a variablt that was then never used
-            // i += 1;
-          }
-          l.systemid = l.id;
-          l.id = getIndependentLayerId(l.identifier, env);
-          // add the base flag for layers tagged 'basemap'
-          l.base = l.tags.some(function (t) {
-            return t.name === "basemap";
-          });
-          // set the opacity to 50% for layers tagged 'overlaymap'
-          if (
-            l.tags.some(function (t) {
-              return t.name === "overlaymap";
-            })
-          ) {
-            l.opacity = 0.5;
-          }
-          // set the live map refresh interval
-          if (
-            l.tags.some(function (t) {
-              return t.name === "livemap_10min";
-            })
-          ) {
-            l.refresh = 600;
-          }
-          if (
-            l.tags.some(function (t) {
-              return t.name === "livemap_2min";
-            })
-          ) {
-            l.refresh = 120;
-          }
-          if (!checkingLayer) {
-            checkingLayer = l;
-          }
-          layers.push(l);
-        });
-
-        if (checkingLayer) {
-          checkPermission(
-            vm.env.catalogueAdminService +
-              "/admin/catalogue/record/" +
-              checkingLayer.systemid +
-              "/change/",
-            "GET",
-            function (allowed) {
-              vm.whoami.editLayer = allowed;
-              vm.catalogue.extend(layers);
-              /*var my_array = vm.catalogue.getArray()
-                var arrayLength = my_array.length;
-                for (var i = 0; i < arrayLength; i++) {
-                alert(my_array[i]['name'] + ", "  + my_array[i]['id']  + ", "  +  my_array[i]['title'] )}*/
-              callback();
-            },
-          );
-        } else {
-          vm.whoami.editLayer = false;
-          vm.catalogue.extend(layers);
-          callback();
-        }
-      };
-
-      req.onerror = function () {
-        var msg =
-          "Couldn't load layer catalogue!" +
-          (req.statusText ? " (" + req.statusText + ")" : "");
-        if (failedCallback) {
-          failedCallback(msg);
-        } else {
-          console.error(msg);
-        }
-      };
-      // req.open('GET', vm.env.cswService + "?format=json&application__name=" + getAppId(this.app.toLowerCase()))
-      req.open("GET", "/api/cataloguev2.json");
-
-      req.send();
-    },
-    getLayer: function (id) {
-      // handle openlayers layers as well as raw ids
-      if (id && id.get) {
-        id = id.get("id");
-      }
-      return this.catalogue.getArray().find(function (layer) {
-        return layer.mapLayerId === id;
-      });
-    },
-    getMapLayer: function (id) {
-      return this.$root.map.getMapLayer(id);
-    },
-  },
-  ready: function () {
-    var vm = this;
-    var catalogueStatus = vm.loading.register(
-      "catalogue",
-      "Catalogue Component",
-    );
-    this.catalogue.on("add", function (event) {
-      var l = event.element;
-      // console.log ("MY L.TYPE");
-      // console.log(l.type + ":" + l.identifier);
-      l.id = l.id || l.identifier;
-      l.name = l.name || l.title;
-      l.type = l.type || "TileLayer";
-
-      if (l.type === "TileLayer") {
-        if (l.legend) {
-          if (!l.legend.toLowerCase().startsWith("http")) {
-            l.legend = vm.env.catalogueAdminService + l.legend;
-          }
-        } else {
-          l.legend =
-            l.service_type === "WFS"
-              ? vm.env.legendSrc + getLayerId(l.id)
-              : null;
-        }
-      }
-      l.mapLayerId = l.mapLayerId || l.id;
-      if (l.dependentLayers) {
-        $.each(l.dependentLayers, function (index, layer) {
-          layer.mapLayerId = layer.mapLayerId || layer.id;
-        });
-      }
-
-      if (l.refresh) {
-        vm.map.setRefreshInterval(l, l.refresh);
-      }
-    });
-    catalogueStatus.phaseBegin(
-      "gk-init",
-      80,
-      "Listen 'gk-init' event",
-      true,
-      true,
-    );
-    this.$on("gk-init", function () {
-      catalogueStatus.phaseEnd("gk-init");
-
-      catalogueStatus.phaseBegin("initialize", 20, "Initialize", true, false);
-      $(this.$root.map.olmap.getTargetElement()).on(
-        "mouseleave",
-        ".ol-previewmap",
-        function () {
-          vm.preview(false);
-        },
-      );
-      catalogueStatus.phaseEnd("initialize");
-    });
-  },
-};
-</script>

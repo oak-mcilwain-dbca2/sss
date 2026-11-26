@@ -82,12 +82,20 @@
 </style>
 
 <script>
-import Control from "ol/control/Control";
+import Control from 'ol/control/Control';
 
-import env from "@/config/env";
+import env from '@/config/env';
 
-import toolBoxSvg from "@/assets/images/toolbox.svg";
-import nonToolSvg from "@/assets/images/non-tool.svg";
+import toolBoxSvg from '@/assets/images/toolbox.svg';
+import nonToolSvg from '@/assets/images/non-tool.svg';
+
+import { useLoadingStore } from '@/stores/loading';
+import { useMapStore } from '@/stores/map';
+import { useAnnotationsStore } from '@/stores/annotations';
+import { useMeasureStore } from '@/stores/measure';
+import { useWeatherForecastStore } from '@/stores/weatherForecast';
+import { useWeatherOutlookStore } from '@/stores/weatherOutlook';
+import { useFeatureDetailStore } from '@/stores/featureDetail';
 
 export default {
   store: {},
@@ -103,36 +111,60 @@ export default {
       tool: {},
       tools: [],
       showTools: false,
+      toolboxInitialised: false,
     };
   },
   // parts of the template to be computed live
   computed: {
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
+    },
+    mapReady() {
+      return useMapStore().ready;
+    },
+    map() {
+      return useMapStore()?.component;
+    },
+    annotationsReady() {
+      return useAnnotationsStore().ready;
     },
     annotations: function () {
-      return this.$root.annotations;
+      return useAnnotationsStore()?.component;
     },
-    map: function () {
-      return this.$root.map;
+    measureReady() {
+      return useMeasureStore().ready;
     },
-    env: function () {
-      return this.$root.env;
+    measure() {
+      return useMeasureStore()?.component;
+    },
+    weatherForecastReady() {
+      return useWeatherForecastStore().ready;
+    },
+    weatherForecast() {
+      return useWeatherForecastStore()?.component;
+    },
+    weatherOutlookReady() {
+      return useWeatherOutlookStore().ready;
+    },
+    weatherOutlook() {
+      return useWeatherOutlookStore()?.component;
+    },
+    featureDetailReady() {
+      return useFeatureDetailStore()?.ready;
+    },
+    featureDetail() {
+      return useFeatureDetailStore()?.component;
     },
     components: function () {
       if (env.weatherForecastUrl) {
         return [
-          this.$root.weatheroutlook,
-          this.$root.weatherforecast,
-          this.$root.featuredetail,
-          this.$root.measure,
+          this.weatherOutlook,
+          this.weatherForecast,
+          this.featureDetail,
+          this.measure,
         ];
       } else {
-        return [
-          this.$root.weatheroutlook,
-          this.$root.featuredetail,
-          this.$root.measure,
-        ];
+        return [this.weatherOutlook, this.featureDetail, this.measure];
       }
     },
     enabled: function () {
@@ -142,7 +174,7 @@ export default {
       return 180;
     },
     topPositionStyle: function () {
-      return "top:" + this.topPosition + "px";
+      return 'top:' + this.topPosition + 'px';
     },
     mapControl() {
       // TODO: Legacy code lazily cached the controller in a computed property.
@@ -150,8 +182,8 @@ export default {
       // application is running.
 
       return new Control({
-        element: $("#toolbox_control").get(0),
-        target: $("#external-controls").get(0),
+        element: $('#toolbox_control').get(0),
+        target: $('#external-controls').get(0),
       });
     },
     isControlActivated: function () {
@@ -174,9 +206,78 @@ export default {
       return this.tool.title;
     },
   },
-  watch: {},
+  watch: {
+    componentsReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready && !this._componentsInitialised) {
+          this.initialiseToolbox();
+        }
+      },
+    },
+  },
   // methods callable from inside the template
   methods: {
+    initialiseToolbox() {
+      const vm = this;
+
+      if (vm.toolboxInitialised) {
+        return;
+      }
+
+      this._toolboxStatus = vm.loading.register('toolbox', 'Toolbox Component');
+
+      this._toolboxStatus.phaseBegin(
+        'gk-init',
+        80,
+        "Listen 'gk-init' event",
+        true,
+        true,
+      );
+
+      vm._toolboxStatus.phaseEnd('gk-init');
+
+      vm._toolboxStatus.phaseBegin('initialize', 20, 'Initialize', true, false);
+
+      let defaultTool = null;
+      var nonTool = {
+        toolid: 'deselect-tool',
+        title: '',
+        icon: nonToolSvg,
+        _component: vm,
+        assistantButtons: [],
+      };
+      vm.tools.push(nonTool);
+
+      if (vm.tools.length) {
+        vm.map.mapControls['toolbox'] = {
+          enabled: false,
+          autoenable: false,
+          controls: vm.mapControl,
+        };
+
+        vm.selectTool(defaultTool, false);
+      }
+      vm._toolboxStatus.phaseEnd('initialize');
+
+      var index = 1;
+      $.each(vm.components, function (index1, component) {
+        $.each(component.tools, function (index2, tool) {
+          tool._component = component;
+          tool.assistantButtons =
+            tool.assistantButtons === null ||
+            tool.assistantButtons === undefined
+              ? []
+              : tool.assistantButtons;
+          vm.tools.splice(Math.floor(index / 4) * 4, 0, tool);
+          if (defaultTool === null) {
+            defaultTool = tool;
+          }
+          index += 1;
+        });
+      });
+      this.toolboxInitialised = true;
+    },
     inToolbox: function (component) {
       return (
         this.components.findIndex(function (o) {
@@ -220,60 +321,6 @@ export default {
       if (this.tool._component && this.tool._component !== this)
         this.tool._component.clickAssistantButton(button);
     },
-  },
-  mounted() {
-    var vm = this;
-    this._toolboxStatus = vm.loading.register("toolbox", "Toolbox Component");
-
-    this._toolboxStatus.phaseBegin(
-      "gk-init",
-      80,
-      "Listen 'gk-init' event",
-      true,
-      true,
-    );
-    this.$on("gk-init", function () {
-      vm._toolboxStatus.phaseEnd("gk-init");
-
-      vm._toolboxStatus.phaseBegin("initialize", 20, "Initialize", true, false);
-
-      var defaultTool = null;
-      var nonTool = {
-        toolid: "deselect-tool",
-        title: "",
-        icon: nonToolSvg,
-        _component: vm,
-        assistantButtons: [],
-      };
-      vm.tools.push(nonTool);
-      defaultTool = nonTool;
-      var index = 1;
-      $.each(vm.components, function (index1, component) {
-        $.each(component.tools, function (index2, tool) {
-          tool._component = component;
-          tool.assistantButtons =
-            tool.assistantButtons === null ||
-            tool.assistantButtons === undefined
-              ? []
-              : tool.assistantButtons;
-          vm.tools.splice(Math.floor(index / 4) * 4, 0, tool);
-          if (defaultTool === null) {
-            defaultTool = tool;
-          }
-          index += 1;
-        });
-      });
-      if (vm.tools.length) {
-        vm.map.mapControls["toolbox"] = {
-          enabled: false,
-          autoenable: false,
-          controls: vm.mapControl,
-        };
-
-        vm.selectTool(defaultTool, false);
-      }
-      vm._toolboxStatus.phaseEnd("initialize");
-    });
   },
 };
 </script>

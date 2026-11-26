@@ -198,9 +198,6 @@ export default {
     loading: function () {
       return useLoadingStore();
     },
-    utils: function () {
-      return this.$root.utils;
-    },
     hasFooter: function () {
       return this.footer.length > 0;
     },

@@ -40,7 +40,9 @@ import { useFeatureDetailStore } from "@/stores/featureDetail";
 
 export default {
   data: function () {
-    return {};
+    return {
+      measureInitialised: false,
+    };
   },
   // parts of the template to be computed live
   computed: {
@@ -72,7 +74,7 @@ export default {
       return useAnnotationsStore()?.component;
     },
     measureReady() {
-      return this.map && this.annotations;
+      return !!(this.map && this.annotations);
     },
     measureType: function () {
       if (!this.annotationsReady) {
@@ -171,6 +173,7 @@ export default {
       immediate: true,
       handler(ready) {
         if (ready && !this.measureInitialised) {
+          this.measureInitialised = true;
           this.initialiseMeasure();
         }
       },
@@ -255,8 +258,344 @@ export default {
   },
   // methods callable from inside the template
   methods: {
-    initialiseMeasure() {},
-    initialiseMeasureMapEvents() {},
+    initialiseMeasure() {
+      if (this.measureInitialised) {
+        return;
+      }
+
+      this.measureInitialised = true;
+
+      this.initialiseMeasureTools();
+      this.initialiseMeasureHandlers();
+      this.initialiseMeasureMapEvents();
+      this.initialiseMeasureInteractionEvents();
+    },
+    initialiseMeasureTools() {
+      const vm = this;
+      var measureSnap = new Snap({
+        features: vm.annotations.features,
+      });
+
+      var measureLengthInter = new Draw({
+        source: this.source,
+        type: "LineString",
+        style: this.style,
+      });
+
+      var drawendHandler = function (ev) {
+        vm.endMeasure(ev.feature);
+        vm.drawingFeature = null;
+      };
+      measureLengthInter.on(
+        "drawstart",
+        this.startMeasureFunc(true, false, false),
+        this,
+      );
+      measureLengthInter.on("drawend", drawendHandler, this);
+
+      var measureLength = {
+        name: "MeasureLength",
+        keepSelection: true,
+        interactions: [
+          //vm.map.dragPanInter,
+          //vm.map.doubleClickZoomInter,
+          //vm.map.keyboardPanInter,
+          //vm.map.keyboardZoomInter,
+          measureLengthInter,
+          measureSnap,
+        ],
+      };
+      this.annotations.tools.push(measureLength);
+
+      var measureBearingInter = new Draw({
+        source: this.source,
+        type: "LineString",
+        style: this.style,
+        freehand: false,
+        maxPoints: 2,
+        minPoints: 2,
+      });
+
+      measureBearingInter.on(
+        "drawstart",
+        this.startMeasureFunc(false, false, true),
+        this,
+      );
+      measureBearingInter.on("drawend", drawendHandler, this);
+
+      var measureBearing = {
+        name: "MeasureBearing",
+        keepSelection: true,
+        interactions: [
+          //vm.map.dragPanInter,
+          //vm.map.doubleClickZoomInter,
+          //vm.map.keyboardPanInter,
+          //vm.map.keyboardZoomInter,
+          measureBearingInter,
+          measureSnap,
+        ],
+      };
+      this.annotations.tools.push(measureBearing);
+
+      var measureAreaInter = new Draw({
+        source: this.source,
+        type: "Polygon",
+        style: this.style,
+      });
+      measureAreaInter.on(
+        "drawstart",
+        this.startMeasureFunc(true, true, false),
+        this,
+      );
+      measureAreaInter.on("drawend", drawendHandler, this);
+
+      var measureArea = {
+        name: "MeasureArea",
+        keepSelection: true,
+        interactions: [
+          //vm.map.dragPanInter,
+          //vm.map.doubleClickZoomInter,
+          //vm.map.keyboardPanInter,
+          //vm.map.keyboardZoomInter,
+          measureAreaInter,
+          measureSnap,
+        ],
+      };
+
+      //add measure tooltips when adding annotation layer and measureFeature is true
+      vm._changeOpacityHandler = function (ev) {
+        if (!vm.measureFeature) {
+          return;
+        }
+        if (ev.target.get(ev.key) === 0) {
+          vm.enableLayerMeasurement(ev.target.get("id"), false);
+        } else if (ev.oldValue === 0) {
+          vm.enableLayerMeasurement(ev.target.get("id"), true);
+        }
+      };
+      vm._featureChanged = function (feature) {
+        var tool = vm.annotations.getTool(feature.get("toolName"));
+        if (!tool) {
+          return;
+        }
+        if (!(tool.measureLength || tool.measureArea || tool.measureBearing)) {
+          return;
+        }
+        feature.unset("measurement", true);
+        if (feature.tooltip) {
+          if (vm.measureFeature) {
+            vm.measuring(
+              feature,
+              tool.getMeasureGeometry,
+              tool.measureLength,
+              tool.measureArea,
+              false,
+              "show",
+            );
+            //console.log("Recalculated")
+          } else {
+            feature.unset("measurement", true);
+            //console.log("Remove tooltip because feature is changed")
+          }
+        }
+      };
+
+      this.annotations.tools.push(measureArea);
+      var featuresChangedListener = function (ev) {
+        ev.features.forEach(function (feature) {
+          vm._featureChanged(feature);
+        });
+      };
+      // TODO: Unused. Why?
+      // var featureChangedListener = function (ev) {
+      //   vm._featureChanged(ev.feature);
+      // };
+      var addFeatureGeometryListener = function (ev) {
+        var tool = ev.feature.get("toolName");
+        tool = tool ? vm.annotations.getTool(tool) : null;
+        if (!tool) {
+          return;
+        }
+        if (!(tool.measureLength || tool.measureArea || tool.measureBearing)) {
+          return;
+        }
+
+        vm.createTooltip(
+          ev.feature,
+          tool.getMeasureGeometry,
+          tool.measureLength,
+          tool.measureArea,
+          false,
+          vm.measureFeature,
+          ev.indexes,
+        );
+        vm.measuring(
+          ev.feature,
+          tool.getMeasureGeometry,
+          tool.measureLength,
+          tool.measureArea,
+          false,
+          vm.measureFeature ? "show" : "measure",
+          vm.measureFeature,
+          ev.indexes,
+        );
+      };
+      var deleteFeatureGeometryListener = function (ev) {
+        var tool = ev.feature.get("toolName");
+        tool = tool ? vm.annotations.getTool(tool) : null;
+        if (!tool) {
+          return;
+        }
+        if (!(tool.measureLength || tool.measureArea || tool.measureBearing)) {
+          return;
+        }
+
+        vm.removeTooltip(ev.feature, true, ev.indexes);
+        vm.removeMeasurementObject(
+          ev.feature,
+          "measurement",
+          ev.indexes,
+          null,
+          true,
+        );
+      };
+      var deleteFeatureAllGeometriesListener = function (ev) {
+        var tool = ev.feature.get("toolName");
+        tool = tool ? vm.annotations.getTool(tool) : null;
+        if (!tool) {
+          return;
+        }
+        if (!(tool.measureLength || tool.measureArea || tool.measureBearing)) {
+          return;
+        }
+
+        vm.removeTooltip(ev.feature, true);
+        ev.feature.unset("measurement", true);
+      };
+
+      this.annotations.tools.push(measureArea);
+    },
+    initialiseMeasureMapEvents() {
+      const vm = this;
+
+      this.measureStatus.phaseEnd("gk-init");
+
+      this.measureStatus.phaseBegin(
+        "attach_event_to_olmap",
+        10,
+        "Attach event to olmap",
+      );
+      //add measure tooltips when adding annotation layer and measureFeature is true
+      vm.map.olmap.on("addLayer", function (ev) {
+        var layer = vm._measureLayers.find(function (l) {
+          return l[0] === ev.mapLayer.get("id");
+        });
+        if (layer) {
+          if (vm.measureFeature) {
+            vm.enableLayerMeasurement(layer, true);
+          }
+          ev.mapLayer._change_opacity =
+            ev.mapLayer._change_opacity ||
+            ev.mapLayer.on("change:opacity", vm._changeOpacityHandler);
+        }
+      });
+
+      //remove measure tooltips when removing annotation layer
+      vm.map.olmap.on("removeLayer", function (ev) {
+        var layer = vm._measureLayers.find(function (l) {
+          return l[0] === ev.mapLayer.get("id");
+        });
+        if (layer) {
+          if (ev.mapLayer._change_opacity) {
+            ev.mapLayer.unByKey(ev.mapLayer._change_opacity);
+            delete ev.mapLayer._change_opacity;
+          }
+          if (vm.measureFeature) {
+            vm.enableLayerMeasurement(layer, false);
+          }
+        }
+      });
+      this.measureStatus.phaseEnd("attach_event_to_olmap");
+
+      this.measureStatus.phaseBegin(
+        "gk-postinit",
+        20,
+        "Listen 'gk-postinit' event",
+        true,
+        true,
+      );
+      this.$on("gk-postinit", function () {});
+    },
+    initialiseInteractionEvents() {
+      const vm = this;
+      this.measureStatus.phaseEnd("gk-postinit");
+
+      this.measureStatus.phaseBegin(
+        "attach_event_to_tool",
+        5,
+        "Attach event to tool",
+      );
+      var processedInteractions = [];
+      $.each(vm.annotations.tools, function (index1, tool) {
+        $.each(tool.interactions, function (index2, interaction) {
+          if (
+            !processedInteractions.find(function (o) {
+              return o === interaction;
+            })
+          ) {
+            if (interaction instanceof Modify) {
+              //console.log('===================')
+              interaction.on("featuresmodified", featuresChangedListener);
+            } else if (interaction instanceof Translate) {
+              interaction.on("translateend", featuresChangedListener);
+            } else if (
+              interaction instanceof Draw &&
+              interaction.events &&
+              interaction.events["addfeaturegeometry"]
+            ) {
+              interaction.on("addfeaturegeometry", addFeatureGeometryListener);
+            }
+            if (
+              interaction.events &&
+              interaction.events["deletefeaturegeometry"]
+            ) {
+              interaction.on(
+                "deletefeaturegeometry",
+                deleteFeatureGeometryListener,
+              );
+            }
+            if (
+              interaction.events &&
+              interaction.events["deleteallgeometries"]
+            ) {
+              interaction.on(
+                "deleteallgeometries",
+                deleteFeatureAllGeometriesListener,
+              );
+            }
+            processedInteractions.push(interaction);
+          }
+        });
+      });
+
+      this.measureStatus.phaseEnd("attach_event_to_tool");
+
+      this.measureStatus.phaseBegin(
+        "init_measurable_layers",
+        5,
+        "Initialize measurable layers",
+      );
+      //initialize measure layers
+      if (vm.measureFeature) {
+        $.each(vm._measureLayers, function (index, layer) {
+          if (vm.active.isHidden(vm.map.getMapLayer(layer[0])) === false) {
+            vm.enableLayerMeasurement(layer, true);
+          }
+        });
+      }
+
+      this.measureStatus.phaseEnd("init_measurable_layers");
+    },
     initialiseMeasureToolEvents() {},
     //layer can be layer id, layer object
     register: function (layer, features, filter) {
@@ -580,11 +919,6 @@ export default {
               measurement = measurement || {};
               var area;
               if (!measurement["area"] || mode === "drawing") {
-                /*
-                        var sourceProj = vm.$root.map.olmap.getView().getProjection()
-                        var geom = (polygon.clone().transform(
-                            sourceProj, 'EPSG:4326'))
-                        */
                 area = vm.getArea(geom);
                 measurement["area"] = area;
               } else {
@@ -1252,7 +1586,7 @@ export default {
     },
     getLength: function (coordinates) {
       var length = 0;
-      var sourceProj = this.$root.map.olmap.getView().getProjection();
+      var sourceProj = this.map.olmap.getView().getProjection();
       for (var i = 0, ii = coordinates.length - 1; i < ii; ++i) {
         var c1 = transform(coordinates[i], sourceProj, "EPSG:4326");
         var c2 = transform(coordinates[i + 1], sourceProj, "EPSG:4326");
@@ -1460,12 +1794,15 @@ export default {
     },
   },
   mounted() {
-    var vm = this;
+    const vm = this;
     this._degrees2radians = Math.PI / 180;
     this._radians2degrees = 180 / Math.PI;
-    var measureStatus = vm.loading.register("measure", "Measurement Component");
+    this.measureStatus = vm.loading.register(
+      "measure",
+      "Measurement Component",
+    );
 
-    measureStatus.phaseBegin("initialize", 30, "Initialize");
+    this.measureStatus.phaseBegin("initialize", 30, "Initialize");
 
     //initialize the overlay and interactions
     this.features = new Collection();
@@ -1499,338 +1836,15 @@ export default {
       style: this.style,
     });
 
-    var measureSnap = new Snap({
-      features: vm.annotations.features,
-    });
+    this.measureStatus.phaseEnd("initialize");
 
-    var measureLengthInter = new Draw({
-      source: this.source,
-      type: "LineString",
-      style: this.style,
-    });
-
-    var drawendHandler = function (ev) {
-      vm.endMeasure(ev.feature);
-      vm.drawingFeature = null;
-    };
-    measureLengthInter.on(
-      "drawstart",
-      this.startMeasureFunc(true, false, false),
-      this,
-    );
-    measureLengthInter.on("drawend", drawendHandler, this);
-
-    var measureLength = {
-      name: "MeasureLength",
-      keepSelection: true,
-      interactions: [
-        //vm.map.dragPanInter,
-        //vm.map.doubleClickZoomInter,
-        //vm.map.keyboardPanInter,
-        //vm.map.keyboardZoomInter,
-        measureLengthInter,
-        measureSnap,
-      ],
-    };
-    this.annotations.tools.push(measureLength);
-
-    var measureBearingInter = new Draw({
-      source: this.source,
-      type: "LineString",
-      style: this.style,
-      freehand: false,
-      maxPoints: 2,
-      minPoints: 2,
-    });
-
-    measureBearingInter.on(
-      "drawstart",
-      this.startMeasureFunc(false, false, true),
-      this,
-    );
-    measureBearingInter.on("drawend", drawendHandler, this);
-
-    var measureBearing = {
-      name: "MeasureBearing",
-      keepSelection: true,
-      interactions: [
-        //vm.map.dragPanInter,
-        //vm.map.doubleClickZoomInter,
-        //vm.map.keyboardPanInter,
-        //vm.map.keyboardZoomInter,
-        measureBearingInter,
-        measureSnap,
-      ],
-    };
-    this.annotations.tools.push(measureBearing);
-
-    var measureAreaInter = new Draw({
-      source: this.source,
-      type: "Polygon",
-      style: this.style,
-    });
-    measureAreaInter.on(
-      "drawstart",
-      this.startMeasureFunc(true, true, false),
-      this,
-    );
-    measureAreaInter.on("drawend", drawendHandler, this);
-
-    var measureArea = {
-      name: "MeasureArea",
-      keepSelection: true,
-      interactions: [
-        //vm.map.dragPanInter,
-        //vm.map.doubleClickZoomInter,
-        //vm.map.keyboardPanInter,
-        //vm.map.keyboardZoomInter,
-        measureAreaInter,
-        measureSnap,
-      ],
-    };
-
-    //add measure tooltips when adding annotation layer and measureFeature is true
-    vm._changeOpacityHandler = function (ev) {
-      if (!vm.measureFeature) {
-        return;
-      }
-      if (ev.target.get(ev.key) === 0) {
-        vm.enableLayerMeasurement(ev.target.get("id"), false);
-      } else if (ev.oldValue === 0) {
-        vm.enableLayerMeasurement(ev.target.get("id"), true);
-      }
-    };
-    vm._featureChanged = function (feature) {
-      var tool = vm.annotations.getTool(feature.get("toolName"));
-      if (!tool) {
-        return;
-      }
-      if (!(tool.measureLength || tool.measureArea || tool.measureBearing)) {
-        return;
-      }
-      feature.unset("measurement", true);
-      if (feature.tooltip) {
-        if (vm.measureFeature) {
-          vm.measuring(
-            feature,
-            tool.getMeasureGeometry,
-            tool.measureLength,
-            tool.measureArea,
-            false,
-            "show",
-          );
-          //console.log("Recalculated")
-        } else {
-          feature.unset("measurement", true);
-          //console.log("Remove tooltip because feature is changed")
-        }
-      }
-    };
-
-    this.annotations.tools.push(measureArea);
-    var featuresChangedListener = function (ev) {
-      ev.features.forEach(function (feature) {
-        vm._featureChanged(feature);
-      });
-    };
-    // TODO: Unused. Why?
-    // var featureChangedListener = function (ev) {
-    //   vm._featureChanged(ev.feature);
-    // };
-    var addFeatureGeometryListener = function (ev) {
-      var tool = ev.feature.get("toolName");
-      tool = tool ? vm.annotations.getTool(tool) : null;
-      if (!tool) {
-        return;
-      }
-      if (!(tool.measureLength || tool.measureArea || tool.measureBearing)) {
-        return;
-      }
-
-      vm.createTooltip(
-        ev.feature,
-        tool.getMeasureGeometry,
-        tool.measureLength,
-        tool.measureArea,
-        false,
-        vm.measureFeature,
-        ev.indexes,
-      );
-      vm.measuring(
-        ev.feature,
-        tool.getMeasureGeometry,
-        tool.measureLength,
-        tool.measureArea,
-        false,
-        vm.measureFeature ? "show" : "measure",
-        vm.measureFeature,
-        ev.indexes,
-      );
-    };
-    var deleteFeatureGeometryListener = function (ev) {
-      var tool = ev.feature.get("toolName");
-      tool = tool ? vm.annotations.getTool(tool) : null;
-      if (!tool) {
-        return;
-      }
-      if (!(tool.measureLength || tool.measureArea || tool.measureBearing)) {
-        return;
-      }
-
-      vm.removeTooltip(ev.feature, true, ev.indexes);
-      vm.removeMeasurementObject(
-        ev.feature,
-        "measurement",
-        ev.indexes,
-        null,
-        true,
-      );
-    };
-    var deleteFeatureAllGeometriesListener = function (ev) {
-      var tool = ev.feature.get("toolName");
-      tool = tool ? vm.annotations.getTool(tool) : null;
-      if (!tool) {
-        return;
-      }
-      if (!(tool.measureLength || tool.measureArea || tool.measureBearing)) {
-        return;
-      }
-
-      vm.removeTooltip(ev.feature, true);
-      ev.feature.unset("measurement", true);
-    };
-
-    this.annotations.tools.push(measureArea);
-
-    measureStatus.phaseEnd("initialize");
-
-    measureStatus.phaseBegin(
+    this.measureStatus.phaseBegin(
       "gk-init",
       30,
       "Listen 'gk-init' event",
       true,
       true,
     );
-    this.$on("gk-init", function () {
-      measureStatus.phaseEnd("gk-init");
-
-      measureStatus.phaseBegin(
-        "attach_event_to_olmap",
-        10,
-        "Attach event to olmap",
-      );
-      //add measure tooltips when adding annotation layer and measureFeature is true
-      vm.map.olmap.on("addLayer", function (ev) {
-        var layer = vm._measureLayers.find(function (l) {
-          return l[0] === ev.mapLayer.get("id");
-        });
-        if (layer) {
-          if (vm.measureFeature) {
-            vm.enableLayerMeasurement(layer, true);
-          }
-          ev.mapLayer._change_opacity =
-            ev.mapLayer._change_opacity ||
-            ev.mapLayer.on("change:opacity", vm._changeOpacityHandler);
-        }
-      });
-
-      //remove measure tooltips when removing annotation layer
-      vm.map.olmap.on("removeLayer", function (ev) {
-        var layer = vm._measureLayers.find(function (l) {
-          return l[0] === ev.mapLayer.get("id");
-        });
-        if (layer) {
-          if (ev.mapLayer._change_opacity) {
-            ev.mapLayer.unByKey(ev.mapLayer._change_opacity);
-            delete ev.mapLayer._change_opacity;
-          }
-          if (vm.measureFeature) {
-            vm.enableLayerMeasurement(layer, false);
-          }
-        }
-      });
-      measureStatus.phaseEnd("attach_event_to_olmap");
-
-      measureStatus.phaseBegin(
-        "gk-postinit",
-        20,
-        "Listen 'gk-postinit' event",
-        true,
-        true,
-      );
-      this.$on("gk-postinit", function () {
-        measureStatus.phaseEnd("gk-postinit");
-
-        measureStatus.phaseBegin(
-          "attach_event_to_tool",
-          5,
-          "Attach event to tool",
-        );
-        var processedInteractions = [];
-        $.each(vm.annotations.tools, function (index1, tool) {
-          $.each(tool.interactions, function (index2, interaction) {
-            if (
-              !processedInteractions.find(function (o) {
-                return o === interaction;
-              })
-            ) {
-              if (interaction instanceof Modify) {
-                //console.log('===================')
-                interaction.on("featuresmodified", featuresChangedListener);
-              } else if (interaction instanceof Translate) {
-                interaction.on("translateend", featuresChangedListener);
-              } else if (
-                interaction instanceof Draw &&
-                interaction.events &&
-                interaction.events["addfeaturegeometry"]
-              ) {
-                interaction.on(
-                  "addfeaturegeometry",
-                  addFeatureGeometryListener,
-                );
-              }
-              if (
-                interaction.events &&
-                interaction.events["deletefeaturegeometry"]
-              ) {
-                interaction.on(
-                  "deletefeaturegeometry",
-                  deleteFeatureGeometryListener,
-                );
-              }
-              if (
-                interaction.events &&
-                interaction.events["deleteallgeometries"]
-              ) {
-                interaction.on(
-                  "deleteallgeometries",
-                  deleteFeatureAllGeometriesListener,
-                );
-              }
-              processedInteractions.push(interaction);
-            }
-          });
-        });
-
-        measureStatus.phaseEnd("attach_event_to_tool");
-
-        measureStatus.phaseBegin(
-          "init_measurable_layers",
-          5,
-          "Initialize measurable layers",
-        );
-        //initialize measure layers
-        if (vm.measureFeature) {
-          $.each(vm._measureLayers, function (index, layer) {
-            if (vm.active.isHidden(vm.map.getMapLayer(layer[0])) === false) {
-              vm.enableLayerMeasurement(layer, true);
-            }
-          });
-        }
-
-        measureStatus.phaseEnd("init_measurable_layers");
-      });
-    });
   },
 };
 </script>

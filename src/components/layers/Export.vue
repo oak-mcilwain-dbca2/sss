@@ -130,7 +130,7 @@
               <label
                 class="button expanded"
                 for="spatialInfo"
-                title="{{utils.importSpatialFileTypeDesc}}"
+                :title="importSpatialFileTypeDesc"
               >
                 <i class="fa fa-info"></i> Spatial Info
               </label>
@@ -141,7 +141,7 @@
                 name="spatialinfofile"
                 ref="spatialinfofile"
                 @change="getSpatialInfo()"
-                accept="{{utils.importSpatialFileTypes}}"
+                :accept="importSpatialFileTypes"
               />
             </div>
           </div>
@@ -154,7 +154,7 @@
               <label
                 class="button expanded convertbutton"
                 for="togeojson"
-                title="{{utils.importSpatialFileTypeDesc}}"
+                :title="importSpatialFileTypeDesc"
               >
                 <i class="fa fa-exchange"></i><br />Transform<br />(geojson)
               </label>
@@ -165,13 +165,13 @@
                 name="convertfile"
                 ref="togeojson"
                 @change="convertFormat('geojson', $event)"
-                accept="{{utils.importSpatialFileTypes}}"
+                :accept="importSpatialFileTypes"
               />
 
               <label
                 class="button expanded convertbutton"
                 for="togpkg"
-                title="{{utils.importSpatialFileTypeDesc}}"
+                :title="importSpatialFileTypeDesc"
               >
                 <i class="fa fa-exchange"></i><br />Transform<br />(gpkg)
               </label>
@@ -182,13 +182,13 @@
                 name="convertfile"
                 ref="togpkg"
                 @change="convertFormat('gpkg', $event)"
-                accept="{{utils.importSpatialFileTypes}}"
+                :accept="importSpatialFileTypes"
               />
 
               <label
                 class="button expanded convertbutton"
                 for="toshp"
-                title="{{utils.importSpatialFileTypeDesc}}"
+                :title="importSpatialFileTypeDesc"
               >
                 <i class="fa fa-exchange"></i><br />Transform<br />(shp)
               </label>
@@ -199,13 +199,13 @@
                 name="convertfile"
                 ref="toshp"
                 @change="convertFormat('shp', $event)"
-                accept="{{utils.importSpatialFileTypes}}"
+                :accept="importSpatialFileTypes"
               />
 
               <label
                 class="button expanded convertbutton"
                 for="tocsv"
-                title="{{utils.importSpatialFileTypeDesc}}"
+                :title="importSpatialFileTypeDesc"
               >
                 <i class="fa fa-exchange"></i><br />Transform<br />(csv)
               </label>
@@ -216,7 +216,7 @@
                 name="convertfile"
                 ref="tocsv"
                 @change="convertFormat('csv', $event)"
-                accept="{{utils.importSpatialFileTypes}}"
+                :accept="importSpatialFileTypes"
               />
             </div>
           </div>
@@ -334,7 +334,7 @@
       >
         <div class="row" v-if="spatialInfo['datasourceCount'] > 1">
           <div class="small-12 columns datasource">
-            <a>{{ dslayers["datasource"] }}</a>
+            <a>{{ dslayers['datasource'] }}</a>
           </div>
         </div>
         <div
@@ -381,43 +381,43 @@
 }
 </style>
 <script>
-import localforage from "localforage";
-import hash from "object-hash";
-import kjua from "kjua";
-import html2canvas from "html2canvas";
-import { saveAs } from "file-saver";
+import localforage from 'localforage';
+import hash from 'object-hash';
+import kjua from 'kjua';
+import html2canvas from 'html2canvas';
+import { saveAs } from 'file-saver';
 
-import { getPointResolution } from "ol/proj";
+import { getPointResolution } from 'ol/proj';
 
-import { unByKey } from "ol/Observable";
+import { unByKey } from 'ol/Observable';
 
-import GeoJSON from "ol/format/GeoJSON";
+import GeoJSON from 'ol/format/GeoJSON';
 
-import ScaleLine from "ol/control/ScaleLine";
+import ScaleLine from 'ol/control/ScaleLine';
 
-import gkLegend from "./Legend.vue";
-import gkLayerlegends from "./LayerLegends.vue";
+import gkLegend from './Legend.vue';
+import gkLayerlegends from './LayerLegends.vue';
 
-import mapDisclaimerSvg from "@/assets/images/map-disclaimer.svg";
+import mapDisclaimerSvg from '@/assets/images/map-disclaimer.svg';
 
-import { useSettingsStore } from "@/stores/settings";
-import { useLoadingStore } from "@/stores/loading";
+import { useSettingsStore } from '@/stores/settings';
+import { useLoadingStore } from '@/stores/loading';
 
-import { eventBus } from "@/services/gokart";
-import { useMapStore } from "@/stores/map";
+import { eventBus } from '@/services/gokart';
+import { useMapStore } from '@/stores/map';
 
 export default {
   store: {
-    whoami: "whoami",
-    dpmm: "dpmm",
-    view: "view",
-    mmPerInch: "mmPerInch",
-    displayResolution: "displayResolution",
-    activeMenu: "activeMenu",
-    activeSubmenu: "activeSubmenu",
-    screenHeight: "layout.screenHeight",
-    hintsHeight: "layout.hintsHeight",
-    leftPanelHeadHeight: "layout.leftPanelHeadHeight",
+    whoami: 'whoami',
+    dpmm: 'dpmm',
+    view: 'view',
+    mmPerInch: 'mmPerInch',
+    displayResolution: 'displayResolution',
+    activeMenu: 'activeMenu',
+    activeSubmenu: 'activeSubmenu',
+    screenHeight: 'layout.screenHeight',
+    hintsHeight: 'layout.hintsHeight',
+    leftPanelHeadHeight: 'layout.leftPanelHeadHeight',
   },
   components: { gkLegend, gkLayerlegends },
   setup() {
@@ -437,21 +437,21 @@ export default {
         A3: [420, 297],
         A4: [297, 210],
       },
-      paperSize: "A3",
+      paperSize: 'A3',
       printStatus: {
         oldLayout: {},
         layout: {},
         overviewMap: {},
         jobs: 0,
       },
-      title: "",
-      vectorFormat: "geojson",
+      title: '',
+      vectorFormat: 'geojson',
       states: [],
       vectorFormats: [
-        { format: "geojson", title: "GeoJSON (web GIS)", name: "GeoJSON" },
-        { format: "sqlite", title: "SQLite", name: "SQLite" },
-        { format: "gpkg", title: "GeoPackage", name: "GeoPackage" },
-        { format: "csv", title: "CSV (Spreadsheet/Excel)", name: "CSV" },
+        { format: 'geojson', title: 'GeoJSON (web GIS)', name: 'GeoJSON' },
+        { format: 'sqlite', title: 'SQLite', name: 'SQLite' },
+        { format: 'gpkg', title: 'GeoPackage', name: 'GeoPackage' },
+        { format: 'csv', title: 'CSV (Spreadsheet/Excel)', name: 'CSV' },
       ],
     };
   },
@@ -468,9 +468,6 @@ export default {
     },
     annotations: function () {
       return this.$root.annotations;
-    },
-    utils: function () {
-      return this.$root.utils;
     },
     layerlegends: function () {
       return this.$refs.layerlegends;
@@ -496,11 +493,11 @@ export default {
       },
     },
     finalTitle: function () {
-      return this.title.length == 0 ? "Quick Print" : this.title.trim();
+      return this.title.length == 0 ? 'Quick Print' : this.title.trim();
     },
     hashKey: function () {
       return hash({
-        extent: this.printStatus.layout.extent.join(" "),
+        extent: this.printStatus.layout.extent.join(' '),
         author: this.legendInfo().author,
         filename: this.finalTitle,
         time: Date.now(),
@@ -510,14 +507,14 @@ export default {
   // methods callable from inside the template
   methods: {
     adjustHeight: function () {
-      if (this.activeMenu === "layers" && this.activeSubmenu === "export") {
+      if (this.activeMenu === 'layers' && this.activeSubmenu === 'export') {
         //console.log("screenHeight=" + this.screenHeight)
         //console.log("fixedHeight=" + $("#settings-fixpart").height() )
-        $("#settings-flexible").height(
+        $('#settings-flexible').height(
           this.screenHeight -
             this.leftPanelHeadHeight -
             16 -
-            $("#settings-fixpart").height() -
+            $('#settings-fixpart').height() -
             this.hintsHeight,
         );
       }
@@ -539,42 +536,42 @@ export default {
       }
       var result = {
         title: this.finalTitle,
-        author: "Produced by the Department of Parks and Wildlife", //this.whoami.email,
-        date: "Map last amended " + moment().toLocaleString(),
+        author: 'Produced by the Department of Parks and Wildlife', //this.whoami.email,
+        date: 'Map last amended ' + moment().toLocaleString(),
       };
       if (this.$root.map) {
         result.km = (
           Math.round(this.$root.map.getScale() * 40) / 1000
         ).toLocaleString();
-        result.scale = this.paperSize + " " + this.$root.scales.scaleString;
+        result.scale = this.paperSize + ' ' + this.$root.scales.scaleString;
       }
       return result;
     },
     exportVector: function (features, name, format) {
       //add applicaiton name and timestamp
       const filename =
-        (name || "") +
-        "." +
+        (name || '') +
+        '.' +
         this.$root.profile.name +
-        "_export_" +
-        moment().format("YYYYMMDD_HHmmss");
+        '_export_' +
+        moment().format('YYYYMMDD_HHmmss');
       var result = this.$root.geojson.writeFeatures(features);
       format = format || this.vectorFormat;
-      if (format === "geojson") {
+      if (format === 'geojson') {
         var blob = new window.Blob([result], {
-          type: "application/json;charset=utf-8",
+          type: 'application/json;charset=utf-8',
         });
-        saveAs(blob, filename + ".geojson");
+        saveAs(blob, filename + '.geojson');
       } else {
         this.downloadVector(format, {
           filename: filename,
           datasources: {
-            parameter: "features",
-            default_geometry_type: "auto",
-            default_srs: "EPSG:4326",
+            parameter: 'features',
+            default_geometry_type: 'auto',
+            default_srs: 'EPSG:4326',
           },
           features: result,
-          srs: "EPSG:4326",
+          srs: 'EPSG:4326',
         });
       }
     },
@@ -596,23 +593,23 @@ export default {
 
       var fileFormat = this.getFileFormat(file.name);
       if (!fileFormat) {
-        alert("Unsupported file format(" + file.name + ")");
+        alert('Unsupported file format(' + file.name + ')');
         return;
       }
       if (fileFormat[0] === format) {
-        alert("Target format is the same as source format.");
+        alert('Target format is the same as source format.');
         return;
       }
 
       this.downloadVector(format, {
         datasources: {
-          parameter: "datafile",
-          default_geometry_type: "auto",
+          parameter: 'datafile',
+          default_geometry_type: 'auto',
         },
         files: {
           datafile: file,
         },
-        srs: "EPSG:4326",
+        srs: 'EPSG:4326',
       });
     },
     downloadVector: function (format, options, callback) {
@@ -633,22 +630,22 @@ export default {
         }
         try {
           var req = new window.XMLHttpRequest();
-          req.open("POST", "/download/" + format);
-          req.responseType = "blob";
+          req.open('POST', '/download/' + format);
+          req.responseType = 'blob';
           req.withCredentials = true;
           req.onload = function () {
             try {
               if (req.status >= 400) {
                 var reader = new FileReader();
-                reader.addEventListener("loadend", function (e) {
+                reader.addEventListener('loadend', function (e) {
                   callback(false, e.target.result);
                 });
                 reader.readAsText(req.response);
               } else {
                 var filename = null;
-                if (req.getResponseHeader("Content-Disposition")) {
+                if (req.getResponseHeader('Content-Disposition')) {
                   var matches = vm._filename_re.exec(
-                    req.getResponseHeader("Content-Disposition"),
+                    req.getResponseHeader('Content-Disposition'),
                   );
                   filename = matches && matches[1] ? matches[1] : null;
                 }
@@ -656,7 +653,7 @@ export default {
                   // TODO: Legacy code referenced undefined variables
                   // "files" and "fileFormat" here.
                   // Determine intended fallback filename.
-                  filename = "download." + format;
+                  filename = 'download.' + format;
                   //   filename =
                   //     files[0].name.substring(
                   //       0,
@@ -666,7 +663,7 @@ export default {
                   //     format;
                 }
                 if (!filename) {
-                  filename = "download." + format;
+                  filename = 'download.' + format;
                 }
                 saveAs(req.response, filename);
                 callback(true);
@@ -682,19 +679,19 @@ export default {
       };
       try {
         $.each(options, function (key, value) {
-          if (key === "layers") {
-            formData.append("layers", JSON.stringify(options["layers"]));
-          } else if (key === "datasources") {
+          if (key === 'layers') {
+            formData.append('layers', JSON.stringify(options['layers']));
+          } else if (key === 'datasources') {
             formData.append(
-              "datasources",
-              JSON.stringify(options["datasources"]),
+              'datasources',
+              JSON.stringify(options['datasources']),
             );
-          } else if (key === "files") {
+          } else if (key === 'files') {
             $.each(value, function (name, file) {
               tasks += 1;
               var fileFormat = vm.getFileFormat(file.name);
               if (!fileFormat) {
-                throw "Unsupported file format(" + file.name + ")";
+                throw 'Unsupported file format(' + file.name + ')';
               }
               if (!defaultFileName) {
                 defaultFileName =
@@ -702,7 +699,7 @@ export default {
                     0,
                     file.name.length - fileFormat[1].length,
                   ) +
-                  "." +
+                  '.' +
                   format;
               }
 
@@ -745,7 +742,7 @@ export default {
       }
       var fileFormat = this.getFileFormat(file.name);
       if (!fileFormat) {
-        alert("Unsupported file format(" + file.name + ")");
+        alert('Unsupported file format(' + file.name + ')');
         return;
       }
       var vm = this;
@@ -754,40 +751,40 @@ export default {
         try {
           var formData = new window.FormData();
           formData.append(
-            "datasource",
+            'datasource',
             new window.Blob([e.target.result], { type: fileFormat[2] }),
             file.name,
           );
           var req = new window.XMLHttpRequest();
-          req.open("POST", "/ogrinfo");
-          req.responseType = "blob";
+          req.open('POST', '/ogrinfo');
+          req.responseType = 'blob';
           req.withCredentials = true;
           req.onload = function () {
             try {
               if (req.status >= 400) {
                 var reader = new FileReader();
                 reader.readAsText(req.response);
-                reader.addEventListener("loadend", function (e) {
+                reader.addEventListener('loadend', function (e) {
                   alert(e.target.result);
                 });
                 delete vm._importData;
               } else {
                 reader = new FileReader();
                 reader.readAsText(req.response);
-                reader.addEventListener("loadend", function (e) {
+                reader.addEventListener('loadend', function (e) {
                   if (!e.target.result) {
-                    alert("No spatial data");
+                    alert('No spatial data');
                     return;
                   }
                   var spatialInfo = JSON.parse(e.target.result);
-                  if (!spatialInfo || !spatialInfo["layerCount"]) {
-                    alert("No spatial data");
+                  if (!spatialInfo || !spatialInfo['layerCount']) {
+                    alert('No spatial data');
                     return;
                   } else {
                     vm.spatialInfo = spatialInfo;
                     vm.spatialInfo.title = file.name;
                     vm.spatialInfo.upload = false;
-                    $("#spatialInfoDialog").foundation("open");
+                    $('#spatialInfoDialog').foundation('open');
                   }
                 });
               }
@@ -808,7 +805,7 @@ export default {
       var vm = this;
       var fileFormat = this.getFileFormat(file.name);
       if (!fileFormat) {
-        var msg = "Unsupported file format(" + file.name + ")";
+        var msg = 'Unsupported file format(' + file.name + ')';
         if (failedCallback) {
           failedCallback(msg);
         } else {
@@ -818,12 +815,12 @@ export default {
       }
 
       try {
-        if (fileFormat[0] === "geojson" || fileFormat[0] === "json") {
+        if (fileFormat[0] === 'geojson' || fileFormat[0] === 'json') {
           var reader = new window.FileReader();
           reader.onload = function (e) {
             try {
               var features = new GeoJSON().readFeatures(e.target.result, {
-                dataProjection: "EPSG:4326",
+                dataProjection: 'EPSG:4326',
               });
               if (features && features.length) {
                 callback(features, fileFormat[0]);
@@ -843,23 +840,23 @@ export default {
                 failedCallback: failedCallback,
               };
               vm._importData.formData.append(
-                "datasource",
+                'datasource',
                 new window.Blob([e.target.result], { type: fileFormat[2] }),
                 file.name,
               );
               if (crsValidation) {
-                vm._importData.formData.append("crs_validation", crsValidation);
+                vm._importData.formData.append('crs_validation', crsValidation);
               }
               var req = new window.XMLHttpRequest();
-              req.open("POST", "/ogrinfo");
-              req.responseType = "blob";
+              req.open('POST', '/ogrinfo');
+              req.responseType = 'blob';
               req.withCredentials = true;
               req.onload = function () {
                 try {
                   if (req.status >= 400) {
                     let reader = new FileReader();
                     reader.readAsText(req.response);
-                    reader.addEventListener("loadend", function (e) {
+                    reader.addEventListener('loadend', function (e) {
                       if (failedCallback) {
                         failedCallback(e.target.result);
                       } else {
@@ -870,27 +867,27 @@ export default {
                   } else {
                     let reader = new FileReader();
                     reader.readAsText(req.response);
-                    reader.addEventListener("loadend", function (e) {
+                    reader.addEventListener('loadend', function (e) {
                       if (!e.target.result) {
-                        if (failedCallback) failedCallback("No spatial data");
+                        if (failedCallback) failedCallback('No spatial data');
                         return;
                       }
                       var spatialInfo = JSON.parse(e.target.result);
-                      if (!spatialInfo || !spatialInfo["layerCount"]) {
-                        callback([], "geojson");
+                      if (!spatialInfo || !spatialInfo['layerCount']) {
+                        callback([], 'geojson');
                         return;
-                      } else if (spatialInfo["layerCount"] === 1) {
+                      } else if (spatialInfo['layerCount'] === 1) {
                         vm.importLayer(
-                          spatialInfo["datasources"][0]["datasource"],
-                          spatialInfo["datasources"][0]["layers"][0],
+                          spatialInfo['datasources'][0]['datasource'],
+                          spatialInfo['datasources'][0]['layers'][0],
                           true,
                         );
                       } else {
                         vm.spatialInfo = spatialInfo;
                         vm.spatialInfo.title =
-                          "Please choose the layer to import";
+                          'Please choose the layer to import';
                         vm.spatialInfo.upload = true;
-                        $("#spatialInfoDialog").foundation("open");
+                        $('#spatialInfoDialog').foundation('open');
                       }
                     });
                   }
@@ -919,11 +916,11 @@ export default {
 
       try {
         if (!importData) {
-          alert("Import data is missing.");
+          alert('Import data is missing.');
           return;
         }
         if (!fileFormat) {
-          let msg = "Unsupported file format(" + datasource + ")";
+          let msg = 'Unsupported file format(' + datasource + ')';
           if (importData.failedCallback) {
             importData.failedCallback(msg);
           } else {
@@ -932,7 +929,7 @@ export default {
           return;
         }
         if (!selectedLayer) {
-          let msg = "Please choose import layer.";
+          let msg = 'Please choose import layer.';
           if (importData.failedCallback) {
             importData.failedCallback(msg);
           } else {
@@ -941,24 +938,24 @@ export default {
           return;
         }
         if (selectedLayer.featureCount <= 0) {
-          importData.callback([], "geojson");
+          importData.callback([], 'geojson');
           return;
         }
         var layers = {
-          default_geometry_type: "POINT",
+          default_geometry_type: 'POINT',
           layer: selectedLayer.layer,
-          srs: "EPSG:4326",
+          srs: 'EPSG:4326',
           sourcelayers: {
-            parameter: "datasource",
+            parameter: 'datasource',
             datasource: datasource,
             layer: selectedLayer.layer,
             //default_srs:"EPSG:4326"
           },
         };
-        importData.formData.append("layers", JSON.stringify(layers));
+        importData.formData.append('layers', JSON.stringify(layers));
         var req = new window.XMLHttpRequest();
-        req.open("POST", "/download/geojson");
-        req.responseType = "text";
+        req.open('POST', '/download/geojson');
+        req.responseType = 'text';
         req.withCredentials = true;
         req.onload = function () {
           try {
@@ -970,11 +967,11 @@ export default {
               }
             } else {
               var features = GeoJSON().readFeatures(req.response, {
-                dataProjection: "EPSG:4326",
+                dataProjection: 'EPSG:4326',
               });
               if (features && features.length) {
                 features.forEach((feature) => {
-                  feature.set("crs", selectedLayer.crs);
+                  feature.set('crs', selectedLayer.crs);
                 });
                 importData.callback(features, fileFormat[0]);
               }
@@ -997,26 +994,26 @@ export default {
       } finally {
         delete this._importData;
         if (!autoChoose) {
-          $("#spatialInfoDialog").foundation("close");
+          $('#spatialInfoDialog').foundation('close');
         }
       }
     },
     // resize map to page dimensions (in mm) for printing, save layout
     prepareMapForPrinting: function () {
       var vm = this;
-      $("body").css("cursor", "progress");
+      $('body').css('cursor', 'progress');
       if (this.printStatus.jobs <= 0) {
         //save overviewMap status and enable overviewMap if not enabled
         this.printStatus.overviewMap.enabled =
-          this.map.isControlEnabled("overviewMap");
+          this.map.isControlEnabled('overviewMap');
         this.printStatus.overviewMap.collapsed = this.map
-          .getControl("overviewMap")
+          .getControl('overviewMap')
           .getCollapsed();
         if (this.printStatus.overviewMap.collapsed) {
-          this.map.getControl("overviewMap").setCollapsed(false);
+          this.map.getControl('overviewMap').setCollapsed(false);
         }
         if (!this.printStatus.overviewMap.enabled) {
-          this.map.enableControl("overviewMap", true);
+          this.map.enableControl('overviewMap', true);
         }
 
         //no print job is processing, get the map size and scale for recovering.
@@ -1040,7 +1037,7 @@ export default {
         //disable the controls to prevent the user from operating the map
         this.printStatus.controls = [];
         $.each(this.map.mapControls, function (key, control) {
-          if (key === "overviewMap") {
+          if (key === 'overviewMap') {
             //overviewMap has been processed, ignore here
             return;
           }
@@ -1086,10 +1083,10 @@ export default {
       }
       // Add scale line to the printed map
       const resolution = getPointResolution(
-        "EPSG:4326",
+        'EPSG:4326',
         this.olmap.getView().getResolution(),
         this.olmap.getView().getCenter(),
-        "m",
+        'm',
       );
       const dpi = 96;
       const inchesPerMeter = 1000 / 25.4;
@@ -1134,10 +1131,10 @@ export default {
         //all print jobs are done
         //restore overview map
         if (this.printStatus.overviewMap.collapsed) {
-          this.map.getControl("overviewMap").setCollapsed(true);
+          this.map.getControl('overviewMap').setCollapsed(true);
         }
         if (!this.printStatus.overviewMap.enabled) {
-          this.map.enableControl("overviewMap", false);
+          this.map.enableControl('overviewMap', false);
         }
         //restore the map size and map scale
         this.olmap.setSize(this.printStatus.oldLayout.size);
@@ -1150,8 +1147,8 @@ export default {
         $.each(this.printStatus.controls, function (index, controlKey) {
           vm.map.enableControl(controlKey, true);
         });
-        const scaleWrapper = document.getElementById("scaleWrapper");
-        const scaleElement = document.querySelector(".ol-scale-bar");
+        const scaleWrapper = document.getElementById('scaleWrapper');
+        const scaleElement = document.querySelector('.ol-scale-bar');
         if (scaleWrapper) {
           scaleWrapper.remove(); // Removes the element from the DOM
         }
@@ -1159,20 +1156,20 @@ export default {
           scaleWrapper.remove();
         }
         this.printStatus.endTime = new Date();
-        $("body").css("cursor", "default");
+        $('body').css('cursor', 'default');
       }
     },
     // generate legend block, scale ruler is 40mm wide
     renderLegend: function (hashKey) {
       var qrcanvas = hashKey
         ? kjua({
-            text: this.env.s3Service + "/download/" + hashKey + ".pdf",
-            render: "canvas",
+            text: this.env.s3Service + '/download/' + hashKey + '.pdf',
+            render: 'canvas',
             size: 100,
           })
         : null;
       return [
-        "data:image/svg+xml;utf8," +
+        'data:image/svg+xml;utf8,' +
           encodeURIComponent(this.$refs.legendsvg.innerHTML),
         qrcanvas,
       ];
@@ -1188,30 +1185,30 @@ export default {
             var chunk = blob.slice(start, end);
 
             var formData = new window.FormData();
-            formData.append("extent", vm.printStatus.layout.extent.join(" "));
-            formData.append("chunk", chunk, name + ".chunk");
-            formData.append("start", start);
-            formData.append("end", end);
-            formData.append("totalSize", blob.size);
-            formData.append("upload_id", uploadId);
+            formData.append('extent', vm.printStatus.layout.extent.join(' '));
+            formData.append('chunk', chunk, name + '.chunk');
+            formData.append('start', start);
+            formData.append('end', end);
+            formData.append('totalSize', blob.size);
+            formData.append('upload_id', uploadId);
 
-            if (format === "pdf" && legendData) {
-              formData.append("legends", legendData, name + ".legend.pdf");
+            if (format === 'pdf' && legendData) {
+              formData.append('legends', legendData, name + '.legend.pdf');
             }
             formData.append(
-              "dpi",
+              'dpi',
               Math.round(vm.printStatus.layout.canvasPxPerMM * 25.4),
             );
-            formData.append("title", vm.finalTitle);
-            formData.append("author", vm.legendInfo().author);
+            formData.append('title', vm.finalTitle);
+            formData.append('author', vm.legendInfo().author);
             if (hashKey) {
-              formData.append("hash_key", hashKey);
+              formData.append('hash_key', hashKey);
             }
 
             var req = new window.XMLHttpRequest();
-            req.open("POST", "/gdal/" + format);
+            req.open('POST', '/gdal/' + format);
             req.withCredentials = true;
-            req.responseType = "blob";
+            req.responseType = 'blob';
 
             req.onload = function () {
               if (req.status >= 200 && req.status < 300) {
@@ -1219,7 +1216,7 @@ export default {
                   // Send the next chunk
                   sendChunk(end, uploadId);
                 } else {
-                  saveAs(req.response, name + "." + format);
+                  saveAs(req.response, name + '.' + format);
                 }
               } else {
                 var reader = new FileReader();
@@ -1227,12 +1224,12 @@ export default {
                   try {
                     var response = JSON.parse(reader.result);
                     if (response.error) {
-                      alert("Error: " + response.error);
+                      alert('Error: ' + response.error);
                     } else {
-                      alert("An error occurred. Please try again.");
+                      alert('An error occurred. Please try again.');
                     }
                   } catch {
-                    alert("An error occurred. Please try again.");
+                    alert('An error occurred. Please try again.');
                   }
                 };
                 reader.readAsText(req.response);
@@ -1240,7 +1237,7 @@ export default {
             };
 
             req.onerror = function () {
-              alert("Request failed. Please try again.");
+              alert('Request failed. Please try again.');
             };
 
             req.send(formData);
@@ -1257,10 +1254,10 @@ export default {
           // Start sending chunks
           sendChunk(0, uploadId);
         } catch (error) {
-          alert("An error occurred: " + error.message);
+          alert('An error occurred: ' + error.message);
         }
       };
-      if (format === "pdf") {
+      if (format === 'pdf') {
         vm.layerlegends.getLegendBlob(true, true, function (legendData) {
           _func(legendData);
         });
@@ -1276,19 +1273,19 @@ export default {
       var timer;
       var vm = this;
       // wait until map is rendered before continuing
-      var whiteout = vm.olmap.on("precompose", function () {
-        var mapElement = document.getElementById("map");
-        var canvas = mapElement.querySelector("canvas");
-        var ctx = canvas.getContext("2d");
+      var whiteout = vm.olmap.on('precompose', function () {
+        var mapElement = document.getElementById('map');
+        var canvas = mapElement.querySelector('canvas');
+        var ctx = canvas.getContext('2d');
         ctx.beginPath();
         ctx.rect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "white";
+        ctx.fillStyle = 'white';
         ctx.fill();
       });
       var mainmap_composing = null;
       var overviewmap_composing = null;
-      var mapElement = document.getElementById("map");
-      var canvas = mapElement.querySelector("canvas");
+      var mapElement = document.getElementById('map');
+      var canvas = mapElement.querySelector('canvas');
       var overviewmap_canvas = null;
       var postcomposeFunc = function () {
         timer && clearTimeout(timer);
@@ -1297,11 +1294,11 @@ export default {
           unByKey(whiteout);
           unByKey(mainmap_composing);
           unByKey(overviewmap_composing);
-          var ctx = canvas.getContext("2d");
+          var ctx = canvas.getContext('2d');
 
           var img = new window.Image();
-          var hashKey = format !== "jpg" ? vm.hashKey : null;
-          var legend = vm.renderLegend(format === "pdf" ? hashKey : null);
+          var hashKey = format !== 'jpg' ? vm.hashKey : null;
+          var legend = vm.renderLegend(format === 'pdf' ? hashKey : null);
           var url = legend[0];
           var qrcanvas = legend[1];
           // wait until legend is rendered
@@ -1311,17 +1308,17 @@ export default {
           };
           img.onload = function () {
             // Add Scale bar to the canvas
-            const scaleElement = document.querySelector(".ol-scale-bar");
-            const scaleWrapper = document.createElement("div");
+            const scaleElement = document.querySelector('.ol-scale-bar');
+            const scaleWrapper = document.createElement('div');
 
-            scaleWrapper.id = "scaleWrapper";
-            scaleWrapper.style.border = "2px solid black";
-            scaleWrapper.style.position = "relative";
-            scaleWrapper.style.display = "inline-block";
+            scaleWrapper.id = 'scaleWrapper';
+            scaleWrapper.style.border = '2px solid black';
+            scaleWrapper.style.position = 'relative';
+            scaleWrapper.style.display = 'inline-block';
             scaleWrapper.style.width = `${scaleElement.offsetWidth + 40}px`;
-            scaleWrapper.style.padding = "40px";
-            scaleWrapper.style.paddingTop = "15px";
-            scaleWrapper.style.background = "rgba(255, 255, 255, 0.8)";
+            scaleWrapper.style.padding = '40px';
+            scaleWrapper.style.paddingTop = '15px';
+            scaleWrapper.style.background = 'rgba(255, 255, 255, 0.8)';
 
             // Wrap the scaleElement inside the new wrapper
             scaleElement.parentNode.insertBefore(scaleWrapper, scaleElement);
@@ -1343,7 +1340,7 @@ export default {
                 overviewmap_canvas.height,
               );
               //draw overview map rectangle
-              var box = $(".ol-custom-overviewmap").find(".ol-overviewmap-box");
+              var box = $('.ol-custom-overviewmap').find('.ol-overviewmap-box');
               if (box.length) {
                 var width = box.width() * vm.displayResolution[0];
                 let height = box.height() * vm.displayResolution[1];
@@ -1356,7 +1353,7 @@ export default {
                   width,
                   height,
                 );
-                ctx.strokeStyle = "red";
+                ctx.strokeStyle = 'red';
                 ctx.lineWidth = 2;
                 ctx.stroke();
               }
@@ -1368,7 +1365,7 @@ export default {
                 overviewmap_canvas.width + 4,
                 overviewmap_canvas.height + 4,
               );
-              ctx.strokeStyle = "black";
+              ctx.strokeStyle = 'black';
               ctx.lineWidth = 2;
               ctx.stroke();
               // legend is 12cm wide
@@ -1385,7 +1382,7 @@ export default {
                 height,
               );
 
-              var disclaimerImg = $("#map-disclaimer").get(0);
+              var disclaimerImg = $('#map-disclaimer').get(0);
               height = disclaimerImg.height;
               ctx.drawImage(
                 disclaimerImg,
@@ -1400,17 +1397,17 @@ export default {
                 ctx.drawImage(qrcanvas, 2, canvas.height - qrcanvas.height - 2);
               }
               window.URL.revokeObjectURL(url);
-              var filename = vm.finalTitle.replace(/ +/g, "_");
+              var filename = vm.finalTitle.replace(/ +/g, '_');
               canvas.toBlob(
                 function (blob) {
                   vm.restoreMapFromPrinting();
-                  if (format === "jpg") {
-                    saveAs(blob, filename + ".jpg");
+                  if (format === 'jpg') {
+                    saveAs(blob, filename + '.jpg');
                   } else {
                     vm.blobGDAL(blob, filename, format, hashKey);
                   }
                 },
-                "image/jpeg",
+                'image/jpeg',
                 0.9,
               );
             });
@@ -1420,18 +1417,18 @@ export default {
           // only output after 5 seconds of no tiles
         }, 5000);
       };
-      mainmap_composing = vm.olmap.on("postcompose", function () {
-        var mapElement = document.getElementById("map");
-        var canvas = mapElement.querySelector("canvas");
+      mainmap_composing = vm.olmap.on('postcompose', function () {
+        var mapElement = document.getElementById('map');
+        var canvas = mapElement.querySelector('canvas');
         if (!overviewmap_composing) {
           overviewmap_composing = vm.map
-            .getControl("overviewMap")
+            .getControl('overviewMap')
             .getOverviewMap()
-            .on("postcompose", function () {
+            .on('postcompose', function () {
               overviewmap_canvas = canvas;
               postcomposeFunc();
             });
-          vm.map.getControl("overviewMap").getOverviewMap().renderSync();
+          vm.map.getControl('overviewMap').getOverviewMap().renderSync();
         }
       });
       vm.olmap.renderSync();
@@ -1439,32 +1436,32 @@ export default {
     download: function (key) {
       if (key) {
         // download JSON blob from the state store
-        localforage.getItem("sssStateStore").then(function (store) {
+        localforage.getItem('sssStateStore').then(function (store) {
           if (key in store) {
             var blob = new window.Blob([JSON.stringify(store[key], null, 2)], {
-              type: "application/json;charset=utf-8",
+              type: 'application/json;charset=utf-8',
             });
-            saveAs(blob, key + ".sss");
+            saveAs(blob, key + '.sss');
           }
         });
       } else {
         // download JSON blob of the current state
-        localforage.getItem("sssOfflineStore").then(function (store) {
+        localforage.getItem('sssOfflineStore').then(function (store) {
           var blob = new window.Blob([JSON.stringify(store, null, 2)], {
-            type: "application/json;charset=utf-8",
+            type: 'application/json;charset=utf-8',
           });
           saveAs(
             blob,
-            "sss_view_" + moment().format("YYYY-MM-DD-HHmm") + ".sss",
+            'sss_view_' + moment().format('YYYY-MM-DD-HHmm') + '.sss',
           );
         });
       }
     },
     open: function (key) {
       // load the JSON blob from the state store into the offline store
-      localforage.getItem("sssStateStore").then(function (store) {
+      localforage.getItem('sssStateStore').then(function (store) {
         if (key in store) {
-          localforage.setItem("sssOfflineStore", store[key]).then(function () {
+          localforage.setItem('sssOfflineStore', store[key]).then(function () {
             document.location.reload();
           });
         }
@@ -1473,11 +1470,11 @@ export default {
     remove: function (key) {
       // if there's a key matching in the state store, remove it
       var vm = this;
-      localforage.getItem("sssStateStore").then(function (store) {
+      localforage.getItem('sssStateStore').then(function (store) {
         if (key in store) {
           delete store[key];
           vm.states = Object.keys(store);
-          localforage.setItem("sssStateStore", store);
+          localforage.setItem('sssStateStore', store);
         }
       });
     },
@@ -1487,15 +1484,15 @@ export default {
       var reader = new window.FileReader();
       if (this.$refs.statefile.files.length > 0) {
         const filename = this.$refs.statefile.files[0].name;
-        const key = filename.substring(0, filename.lastIndexOf("."));
+        const key = filename.substring(0, filename.lastIndexOf('.'));
         reader.onload = function (e) {
-          localforage.getItem("sssStateStore", function (err, value) {
+          localforage.getItem('sssStateStore', function (err, value) {
             var store = {};
             if (value) {
               store = value;
             }
             store[key] = JSON.parse(e.target.result);
-            localforage.setItem("sssStateStore", store).then(function () {
+            localforage.setItem('sssStateStore', store).then(function () {
               vm.states = Object.keys(store);
             });
           });
@@ -1506,7 +1503,7 @@ export default {
     saveStateButton: function () {
       var key = this.$refs.savestatename.value;
       if (!key) {
-        key = moment().format("DD/MM/YYYY HH:mm");
+        key = moment().format('DD/MM/YYYY HH:mm');
       }
       this.saveState(key);
     },
@@ -1546,20 +1543,20 @@ export default {
 
       // save in the offline store
       localforage
-        .setItem("sssOfflineStore", vm.$root.persistentData)
+        .setItem('sssOfflineStore', vm.$root.persistentData)
         .then(function () {
           vm.$root.saved = moment().toLocaleString();
         });
 
       // if key is defined, store in state store
       if (key) {
-        localforage.getItem("sssStateStore", function (err, value) {
+        localforage.getItem('sssStateStore', function (err, value) {
           var states = {};
           if (value) {
             states = value;
           }
           states[key] = vm.$root.persistentData;
-          localforage.setItem("sssStateStore", states).then(function () {
+          localforage.setItem('sssStateStore', states).then(function () {
             vm.states = Object.keys(states);
           });
         });
@@ -1570,60 +1567,60 @@ export default {
     const vm = this;
     const mapStore = useMapStore();
 
-    const exportStatus = vm.loading.register("export", "Export Component");
+    const exportStatus = vm.loading.register('export', 'Export Component');
 
-    exportStatus.phaseBegin("initialize", 10, "Initialize");
+    exportStatus.phaseBegin('initialize', 10, 'Initialize');
 
-    this._filename_re = new RegExp("filename=['\"](.+)['\"]");
+    this._filename_re = new RegExp('filename=[\'"](.+)[\'"]');
 
     this._fileformats = [
-      ["geojson", ".geojson", "application/vnd.geo+json"],
-      ["shp", ".shp", "application/shp"],
-      ["json", ".geojson", "application/json"],
-      ["gpx", ".gpx", "application/gpx+xml"],
-      ["gpkg", ".gpkg", "application/x-sqlite3"],
-      ["7zip", ".7z", "application/x-7z-compressed"],
-      ["zip", ".zip", "application/zip"],
-      ["tar", ".tar", "application/x-tar"],
-      ["tar.gz", ".tar.gz", "application/x-gtar-compressed"],
-      ["tar.bz", ".tar.bz", "application/gzip"],
-      ["tar.xz", ".tar.xz", "application/gzip"],
+      ['geojson', '.geojson', 'application/vnd.geo+json'],
+      ['shp', '.shp', 'application/shp'],
+      ['json', '.geojson', 'application/json'],
+      ['gpx', '.gpx', 'application/gpx+xml'],
+      ['gpkg', '.gpkg', 'application/x-sqlite3'],
+      ['7zip', '.7z', 'application/x-7z-compressed'],
+      ['zip', '.zip', 'application/zip'],
+      ['tar', '.tar', 'application/x-tar'],
+      ['tar.gz', '.tar.gz', 'application/x-gtar-compressed'],
+      ['tar.bz', '.tar.bz', 'application/gzip'],
+      ['tar.xz', '.tar.xz', 'application/gzip'],
     ];
 
-    $("#spatialInfoDialog").on("closed.zf.reveal", function () {
+    $('#spatialInfoDialog').on('closed.zf.reveal', function () {
       if (vm._importData) {
         if (vm._importData.failedCallback) {
-          vm._importData.failedCallback("Cancelled");
+          vm._importData.failedCallback('Cancelled');
         }
         delete vm._importData;
       }
     });
 
-    exportStatus.phaseEnd("initialize");
+    exportStatus.phaseEnd('initialize');
 
     exportStatus.phaseBegin(
-      "gk-init",
+      'gk-init',
       80,
       "Listen 'gk-init' event",
       true,
       true,
     );
 
-    eventBus.on("gk-init", () => {
-      exportStatus.phaseEnd("gk-init");
+    eventBus.on('gk-init', () => {
+      exportStatus.phaseEnd('gk-init');
 
       vm.olmap = mapStore.olmap;
 
       exportStatus.phaseBegin(
-        "load_states",
+        'load_states',
         10,
-        "Load states from file system",
+        'Load states from file system',
         true,
         false,
       );
 
       vm.olmap.on(
-        "postrender",
+        'postrender',
         global.debounce(
           () => {
             vm.saveState();
@@ -1633,7 +1630,7 @@ export default {
         ),
       );
 
-      exportStatus.phaseEnd("load_states");
+      exportStatus.phaseEnd('load_states');
     });
   },
 };
