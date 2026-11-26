@@ -38,6 +38,18 @@ export const useLoadingStore = defineStore('loading', {
         }
 
         _change() {
+          console.log(
+            this.id,
+            'processing=',
+            this.processing,
+            'completed=',
+            this.completed,
+            'processed=',
+            this.processed,
+            'phases=',
+            this.phases.length,
+          );
+
           store.revision++;
         }
 

@@ -23,6 +23,9 @@ export const useStateStore = defineStore('state', {
     activeMenu: null,
     activeSubmenu: null,
   }),
+  getters: {
+    activeModule: (state) => state.activeSubmenu || state.activeMenu,
+  },
   actions: {
     startTour(version) {
       this.tourVersion = version;
