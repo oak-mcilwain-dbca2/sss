@@ -290,7 +290,6 @@ import aboutSvg from '@/assets/images/about.svg';
 import appInfo from '@/config/appInfo';
 
 import { useTour } from '@/composables/useTour';
-const { takeTour } = useTour();
 
 import { useLoadingStore } from '@/stores/loading';
 import { useSettingsStore } from '@/stores/settings';
@@ -440,7 +439,9 @@ export default {
     },
   },
   methods: {
-    takeTour,
+    takeTour() {
+      useTour().takeTour();
+    },
     initialiseMapElements() {
       this.settingStatus.phaseEnd('gk-postinit');
       this.settingStatus.phaseBegin(

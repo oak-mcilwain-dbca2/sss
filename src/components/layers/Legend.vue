@@ -4,6 +4,8 @@
 <script>
 import legendSvg from '@/assets/images/legend.svg';
 
+import { useExportStore } from '@/stores/export';
+
 export default {
   // TODO: Currently not referenced by Export.vue template.
   // Retained during migration pending review of export subsystem.
@@ -13,13 +15,16 @@ export default {
     };
   },
   computed: {
+    export() {
+      return useExportStore().component;
+    },
     legendInfo: {
       get: function () {
-        return this.$root.export.legendInfo();
+        return this.export?.legendInfo();
       },
     },
     title: function () {
-      return this.$root.export.title;
+      return this.export?.title;
     },
   },
 };

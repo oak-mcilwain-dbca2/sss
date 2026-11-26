@@ -155,7 +155,7 @@ export default {
   // parts of the template to be computed live
   computed: {
     map: function () {
-      return this.$root.map;
+      return this.map;
     },
     sliderTimeline: {
       get() {
@@ -318,7 +318,7 @@ export default {
       return (this.refreshRevision && l && l.get('updated')) || '';
     },
     activeLayers: function () {
-      var catalogue = this.$root.catalogue;
+      var catalogue = this.catalogue;
       var results = [];
       var success = this.olLayers.every(function (layer) {
         // catlayer doesn't exist at startup, need to
@@ -342,16 +342,16 @@ export default {
       return results;
     },
     mapLayer: function (id) {
-      if (!this.$root.map) {
+      if (!this.map) {
         return null;
       }
-      return this.$root.map.getMapLayer(id || this.layer);
+      return this.map.getMapLayer(id || this.layer);
     },
     getLayer: function (id) {
       if (id == 'hotspots:hotspot_centroids_two') {
-        return this.$root.catalogue.getLayer('hotspots:hotspot_centroids');
+        return this.catalogue.getLayer('hotspots:hotspot_centroids');
       }
-      return this.$root.catalogue.getLayer(id);
+      return this.catalogue.getLayer(id);
     },
     removeLayer: function (olLayer) {
       var layer = olLayer.layer;
@@ -369,7 +369,7 @@ export default {
     },
     // change order of OL layers based on "Map Layers" list order
     updateOrder: function (el) {
-      var map = this.$root.map;
+      var map = this.map;
       Array.prototype.slice
         .call(el.parentNode.children)
         .reverse()

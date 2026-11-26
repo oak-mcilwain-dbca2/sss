@@ -341,6 +341,9 @@ import iDSpriteSvg from '@/assets/images/iD-sprite.svg';
 import { useLoadingStore } from '@/stores/loading';
 import { useAnnotationsStore } from '@/stores/annotations';
 import { useMapStore } from '@/stores/map';
+import { useExportStore } from '@/stores/export.js';
+import { useMeasureStore } from '@/stores/measure.js';
+import { useStateStore } from '@/stores/state.js';
 
 export default {
   store: {
@@ -426,17 +429,16 @@ export default {
       return this.mapReady ? useMapStore().component : null;
     },
     export: function () {
-      return this.$root.export;
+      return useExportStore().component;
     },
     active: function () {
-      return this.$root.active;
+      return useActiveStore().component;
     },
-
     search: function () {
-      return this.$root.search;
+      return useSearchStore().component;
     },
     measure: function () {
-      return this.$root.measure;
+      return useMeasureStore().component;
     },
     loading: function () {
       return useLoadingStore();
@@ -445,7 +447,7 @@ export default {
       return this.$refs.drawinglogs;
     },
     activeModule: function () {
-      return this.$root.activeModule;
+      return useStateStore().activeModule;
     },
     selectedAnnotations: function () {
       return this.getSelectedFeatures('annotations');
@@ -737,7 +739,7 @@ export default {
         if (ignoredFeatures.length) {
           console.warn(
             'The following features are ignored.\r\n' +
-              vm.$root.geojson.writeFeatures(features),
+              vm.geojson.writeFeatures(features),
           );
         }
         if (features && features.length > 0) {
@@ -751,15 +753,11 @@ export default {
       });
     },
     downloadAnnotations: function (fmt) {
-      this.$root.export.exportVector(
-        this.features.getArray(),
-        'annotations',
-        fmt,
-      );
+      this.export.exportVector(this.features.getArray(), 'annotations', fmt);
     },
     getPerpendicular: function (coords) {
       // find the nearest Polygon or lineString in the annotations layer
-      var nearestFeature = this.$root.annotations.featureOverlay
+      var nearestFeature = this.annotations.featureOverlay
         .getSource()
         .getClosestFeatureToCoordinate(coords, function (feat) {
           var geom = feat.getGeometry();
@@ -1859,7 +1857,7 @@ export default {
       if (t.onSet) {
         t.onSet(this.tool);
       }
-      this.$root.setHints(t.comments);
+      this.setHints(t.comments);
     },
     selectAll: function (features, selectedFeatures) {
       features = features || this.features;
@@ -1962,7 +1960,7 @@ export default {
       this.restoreSelectedFeatures();
 
       // enable annotations layer, if disabled
-      var catalogue = this.$root.catalogue;
+      var catalogue = this.catalogue;
       if (!this.map.getMapLayer('annotations')) {
         catalogue.onLayerChange(catalogue.getLayer('annotations'), true);
       } else if (this.active.isHidden(this.map.getMapLayer('annotations'))) {
@@ -2943,7 +2941,7 @@ export default {
       };
 
       // add annotations layer to catalogue list
-      this.$root.catalogue.catalogue.push({
+      this.catalogue.catalogue.push({
         type: 'Annotations',
         id: 'annotations',
         name: 'My Drawing',
@@ -2959,7 +2957,7 @@ export default {
         10,
         'Load saved features',
       );
-      var savedFeatures = this.$root.geojson.readFeatures(
+      var savedFeatures = this.geojson.readFeatures(
         this.$root.store.annotations,
       );
       this.annotationStatus.phaseEnd('load_features');

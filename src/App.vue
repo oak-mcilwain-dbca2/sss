@@ -16,11 +16,11 @@
           <gk-dialog ref="dialog" />
         </div>
         <div
-          v-if="$root.hasHints"
+          v-if="hasHints"
           class="tool-slice row collapse"
           style="width: 100%; margin-top: -32px"
         >
-          <div v-if="$root.isShowHints" id="hints">
+          <div v-if="showHints" id="hints">
             <hr class="small-12" style="margin-bottom: 0; margin-top: 0" />
             <template v-for="(hint, index) in hints" :key="index">
               <div class="small-12">{{ hint.name }}:</div>
@@ -40,7 +40,7 @@
             <img
               :src="questionMarkPng"
               style="height: 32px; width: 32px"
-              @click="systemsetting.toggleShowHints()"
+              @click="toggleShowHints()"
             />
           </div>
         </div>
@@ -102,6 +102,9 @@ import questionMarkPng from '@/assets/images/question-mark.png';
 import spriteUrlSvg from '@/assets/images/iD-sprite.svg';
 
 import { useStateStore } from '@/stores/state';
+import { useSystemSettingStore } from '@/stores/systemSetting';
+import { useLayoutStore } from './stores/layout';
+import { useInfoStore } from './stores/info';
 
 export default {
   store: {
@@ -125,16 +128,13 @@ export default {
   },
   computed: {
     layers: function () {
-      return this.$root.layers;
+      return useLayoutStore().component;
     },
     info: function () {
-      return this.$root.info;
+      return useInfoStore().component;
     },
     systemsetting: function () {
-      return this.$root.systemsetting;
-    },
-    settings: function () {
-      return this.$root.settings;
+      return useSystemSettingStore().component;
     },
     hints() {
       return useStateStore().hints;

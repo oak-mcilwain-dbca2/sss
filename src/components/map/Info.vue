@@ -45,6 +45,8 @@ import { toStringXY } from 'ol/coordinate';
 
 import { useMapStore } from '@/stores/map';
 import { useLoadingStore } from '@/stores/loading';
+import { useCatalogueStore } from '@/stores/catalogue';
+import { useAnnotationsStore } from '@/stores/annotations';
 
 export default {
   store: {
@@ -69,10 +71,10 @@ export default {
       return useMapStore()?.component;
     },
     catalogue: function () {
-      return this.$root.catalogue;
+      return useCatalogueStore().component;
     },
     annotations: function () {
-      return this.$root.$refs.app.$refs.annotations;
+      return useAnnotationsStore().component;
     },
     loading: function () {
       return useLoadingStore();
@@ -110,7 +112,7 @@ export default {
       return css;
     },
     enabled: function () {
-      return this.hoverInfo && this.$root.annotations.tool.name === 'Pan';
+      return this.hoverInfo && this.annotations.tool.name === 'Pan';
     },
   },
   watch: {
@@ -130,7 +132,7 @@ export default {
       this.infoStatus.phaseBegin('initialize', 20, 'Initialize', true, false);
 
       // display hover popups
-      this.$root.map.olmap.on('pointermove', this.onPointerMove);
+      this.map.olmap.on('pointermove', this.onPointerMove);
 
       this.infoStatus.phaseEnd('initialize');
     },
@@ -144,9 +146,9 @@ export default {
         return;
       }
 
-      var pixel = this.$root.map.olmap.getEventPixel(event.originalEvent);
+      var pixel = this.map.olmap.getEventPixel(event.originalEvent);
       var features = [];
-      this.$root.map.olmap.forEachFeatureAtPixel(pixel, function (f, layer) {
+      this.map.olmap.forEachFeatureAtPixel(pixel, function (f, layer) {
         if (vm.hoverable.indexOf(layer) >= 0) {
           features.push([f, layer]);
         }
@@ -154,7 +156,7 @@ export default {
       if (features.length > 0) {
         this.features = features;
         this.coordinate = toStringXY(
-          this.$root.map.olmap.getCoordinateFromPixel(pixel),
+          this.map.olmap.getCoordinateFromPixel(pixel),
           3,
         );
         this.pixel = pixel;
@@ -165,7 +167,7 @@ export default {
       }
     },
     selected: function (f) {
-      return this.$root.annotations.selectedFeatures.getArray().indexOf(f) > -1;
+      return this.annotations.selectedFeatures.getArray().indexOf(f) > -1;
     },
     featureInfo: function (feature, mapLayer) {
       if (this._feature === feature) {

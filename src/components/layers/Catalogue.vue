@@ -166,6 +166,8 @@ import {
 
 import { useCatalogueStore } from '@/stores/catalogue';
 import { useLoadingStore } from '@/stores/loading';
+import { useMapStore } from '@/stores/map';
+import { useActiveStore } from '@/stores/active';
 
 // TODO: Discard if unused (looks unused)
 // Vue.filter("lessThan", function (value, length) {
@@ -209,13 +211,10 @@ export default {
         });
     },
     map: function () {
-      return this.$root.$refs.app.$refs.map;
+      return useMapStore().component;
     },
-    app: function () {
-      return this.$root.app;
-    },
-    env: function () {
-      return this.$root.env;
+    active() {
+      return useActiveStore().component;
     },
     loading: function () {
       return useLoadingStore();
@@ -266,7 +265,7 @@ export default {
           l.preview = new OverviewMap({
             className: 'ol-overviewmap ol-previewmap',
             layers: [
-              this.$root.map['create' + l.type](
+              this.map['create' + l.type](
                 $.extend({}, l, { refresh: 0, previewLayer: true }),
               ),
             ],
@@ -287,9 +286,7 @@ export default {
           previewMap[0].style.border = '0';
           previewMap[0].style.margin = '0';
         }
-        // console.log("(this.$root.map.olmap)")
-        // console.log(this.$root.map.olmap);
-        l.preview.setMap(this.$root.map.olmap);
+        l.preview.setMap(this.map.olmap);
         var previewEl = $(l.preview.getOverviewMap().getViewport());
         this.layer = l;
         if (!previewEl.find('.layerdetails').length > 0) {
@@ -324,8 +321,8 @@ export default {
       // console.log(layer);
 
       var vm = this;
-      var active = this.$root.active;
-      var map = this.$root.map;
+      var active = this.active;
+      var map = this.map;
       // if layer matches state, return
       if (checked === (map.getMapLayer(layer) !== undefined)) {
         return false;
@@ -474,7 +471,6 @@ export default {
           console.error(msg);
         }
       };
-      // req.open('GET', vm.env.cswService + "?format=json&application__name=" + getAppId(this.app.toLowerCase()))
       req.open('GET', '/api/cataloguev2.json');
 
       req.send();
@@ -489,7 +485,7 @@ export default {
       });
     },
     getMapLayer: function (id) {
-      return this.$root.map.getMapLayer(id);
+      return this.map.getMapLayer(id);
     },
   },
   ready: function () {
@@ -540,7 +536,7 @@ export default {
       catalogueStatus.phaseEnd('gk-init');
 
       catalogueStatus.phaseBegin('initialize', 20, 'Initialize', true, false);
-      $(this.$root.map.olmap.getTargetElement()).on(
+      $(this.map.olmap.getTargetElement()).on(
         'mouseleave',
         '.ol-previewmap',
         function () {
