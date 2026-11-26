@@ -146,6 +146,25 @@ export default {
       return this.hints && this.hints.length > 0;
     },
   },
+  // TODO: Initialise tour once application readiness is available.
+  //
+  // Future:
+  // watch(appReady, (ready) => {
+  //   if (ready) {
+  //     initTour({
+  //       map,
+  //       annotations,
+  //       stateStore,
+  //       toolbox,
+  //       tracking,
+  //       catalogue,
+  //       active,
+  //     });
+  //   }
+  // });
+  //
+  // Currently appReady does not exist because migration away from the
+  // legacy startup lifecycle is still in progress.
   methods: {
     switchMenu: function (menu) {
       if (this.activeMenu === menu || (!this.activeMenu && !menu)) {
