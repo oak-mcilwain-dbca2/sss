@@ -10,13 +10,13 @@ export {
   IGNORED,
   MERGED,
   FAIL_CONFIRMED,
-} from "./featureTasks";
+} from './featureTasks';
 
-export { verifyDate, getDatetimes, getDateRange, nextDate } from "./dates";
+export { verifyDate, getDatetimes, getDateRange, nextDate } from './dates';
 
-export { getDateFormatPrecision } from "./dates";
+export { getDateFormatPrecision } from './dates';
 
-export { proxy } from "./proxy";
+export { proxy } from './proxy';
 
 export {
   editResource,
@@ -24,7 +24,8 @@ export {
   getHeight,
   checkPermission,
   submitForm,
-} from "./browser";
+  getWindowTarget,
+} from './browser';
 
 export {
   isKbLayer,
@@ -32,4 +33,4 @@ export {
   getLayerUrl,
   getIndependentLayerId,
   getDetailLayerId,
-} from "./layers";
+} from './layers';
