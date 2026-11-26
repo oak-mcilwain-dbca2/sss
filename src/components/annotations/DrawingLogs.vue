@@ -37,6 +37,8 @@ const geojson = new GeoJSON();
 
 import { useStateStore } from '@/stores/state';
 import { useLoadingStore } from '@/stores/loading';
+import { useAnnotationsStore } from '@/stores/annotations';
+import { useSystemSettingStore } from '@/stores/systemSetting';
 
 export default {
   store: ['redoPointer', 'settings'],
@@ -47,13 +49,13 @@ export default {
   },
   computed: {
     annotations: function () {
-      return this.$root.annotations;
+      return useAnnotationsStore().component;
     },
     loading: function () {
       return useLoadingStore();
     },
     systemsetting: function () {
-      return this.$root.systemsetting;
+      return useSystemSettingStore().component;
     },
     drawingLogs() {
       return useStateStore().drawingLogs;
@@ -237,7 +239,7 @@ export default {
             return !stopEvent;
           },
         });
-      vm.$root.map.olmap.addInteraction(vm._keyboardInter);
+      vm.map.olmap.addInteraction(vm._keyboardInter);
 
       vm.settings.undoLimit = limit;
     },
@@ -292,7 +294,7 @@ export default {
       }
 
       if (vm._keyboardInter) {
-        vm.$root.map.olmap.removeInteraction(vm._keyboardInter);
+        vm.map.olmap.removeInteraction(vm._keyboardInter);
       }
 
       vm.drawingLogs.splice(0, vm.drawingLogs.length);

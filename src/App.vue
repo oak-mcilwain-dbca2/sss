@@ -166,24 +166,27 @@ export default {
   // Currently appReady does not exist because migration away from the
   // legacy startup lifecycle is still in progress.
   methods: {
-    switchMenu: function (menu) {
-      if (this.activeMenu === menu || (!this.activeMenu && !menu)) {
-        //new active menu is equal to current active menu, do nothing
+    getMenuComponent(menu) {
+      return this.$refs[menu];
+    },
+    switchMenu(menu) {
+      const state = useStateStore();
+
+      if (state.activeMenu === menu || (!state.activeMenu && !menu)) {
         return;
       }
-      if (this.activeMenu && this.$root[this.activeMenu].teardown) {
-        this.$root[this.activeMenu].teardown();
-      }
-      this.activeMenu = menu || null;
-      this.activeSubmenu = null;
 
-      if (this.activeMenu && this.$root[this.activeMenu].setup) {
-        this.$root[this.activeMenu].setup();
-      }
-      if (['layers', 'settings'].indexOf(menu) < 0) {
-        this.activeSubmenu = null;
-      }
-      this.$root.menuChanged();
+      const currentComponent = this.getMenuComponent(state.activeMenu);
+      currentComponent?.teardown?.();
+
+      state.activeMenu = menu || null;
+      state.activeSubmenu = null;
+
+      const nextComponent = this.getMenuComponent(menu);
+      nextComponent?.setup?.();
+
+      // TODO layout migration
+      // menuChanged() previously recalculated layout
     },
   },
   mounted() {

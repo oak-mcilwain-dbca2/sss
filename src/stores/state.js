@@ -2,11 +2,22 @@
 
 import { defineStore } from 'pinia';
 
+import env from '@/config/env';
+
 export const useStateStore = defineStore('state', {
   state: () => ({
     tourVersion: null,
     touring: false,
 
+    view: {
+      center: [123.75, -24.966],
+      scale: 4026092,
+    },
+
+    activeLayers: [
+      [env.resourceTrackingLiveLayer, {}],
+      [env.stateMapLayer, {}],
+    ],
     fixedLayers: [],
     drawingLogs: [],
     redoPointer: 0,

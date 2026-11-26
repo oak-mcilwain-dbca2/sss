@@ -551,7 +551,7 @@ export default {
     resetSettings: function () {
       if (
         window.confirm(
-          'This will clear all customized settings and reset to system default settings. Are you sure?',
+          'This will clear all customised settings and reset to system default settings. Are you sure?',
         )
       ) {
         this.settings.resetSettings();

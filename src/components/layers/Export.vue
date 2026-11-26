@@ -403,6 +403,7 @@ import { eventBus } from '@/services/gokart';
 import { useMapStore } from '@/stores/map';
 import { useAnnotationsStore } from '@/stores/annotations.js';
 import { useStateStore } from '@/stores/state.js';
+import { useActiveStore } from '@/stores/active.js';
 
 export default {
   store: {
@@ -462,6 +463,9 @@ export default {
     },
     settings() {
       return useSettingsStore().settings;
+    },
+    active() {
+      return useActiveStore().component;
     },
     annotations: function () {
       return useAnnotationsStore().component;
@@ -1530,7 +1534,7 @@ export default {
       if (Number.isFinite(nextScale) && nextScale > 0) {
         store.view.scale = Math.round(nextScale * 1000);
       }
-      var activeLayers = vm.$root.active.activeLayers();
+      var activeLayers = vm.active.activeLayers();
       if (activeLayers === false) {
         return;
       }

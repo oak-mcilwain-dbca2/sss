@@ -1354,7 +1354,7 @@ export default {
           vm.setUrlTimestamp(tileLayer.getSource(), moment.utc().unix());
           // empty the tile cache so other zoom levels are also reloaded
           tileLayer.getSource().tileCache.clear();
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
         };
       }
       tileLayer.getSource().load();
@@ -1640,7 +1640,7 @@ export default {
       tileLayer.refresh = function () {
         if (!this.refreshTimeline) {
           this.set('updated', moment().toLocaleString());
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
         }
       };
 
@@ -1665,7 +1665,7 @@ export default {
 
         if (options.refresh) {
           this.set('updated', moment().toLocaleString());
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
         }
         this.startAutoRefresh();
       };
@@ -1769,7 +1769,7 @@ export default {
           } else if (options.params.cql_filter) {
             delete options.params.cql_filter;
           }
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
           vector.progress = 'loading';
           if (options.hotspotFilter) {
             options.params.cql_filter = options.hotspotFilter;
@@ -1789,7 +1789,7 @@ export default {
                 defaultOnload(loadType, vectorSource, features);
               }
 
-              vm.$root.active.refreshRevision += 1;
+              vm.active.refreshRevision += 1;
               vector.progress = 'idle';
               if (options.getUpdatedTime) {
                 var time = options.getUpdatedTime(features);
@@ -1807,7 +1807,7 @@ export default {
               }
             },
             error: function (jqXHR, status, message) {
-              vm.$root.active.refreshRevision += 1;
+              vm.active.refreshRevision += 1;
               vector.progress = 'error';
               if (options.onerror) {
                 options.onerror(status, message);
@@ -1955,11 +1955,11 @@ export default {
         imgLayer.name = layerName;
         vm.olmap.getLayers().insertAt(mosaicPosition, imgLayer);
 
-        const layerAlreadyExists = vm.$root.catalogue.getLayer(layerId)
+        const layerAlreadyExists = vm.catalogue.getLayer(layerId)
           ? true
           : false;
         if (imgLayer != undefined && !layerAlreadyExists) {
-          vm.$root.catalogue.catalogue.push(imgLayer);
+          vm.catalogue.catalogue.push(imgLayer);
         }
         //vm.olmap.getLayers().insertAt(1, imgLayer)
       });
@@ -1995,11 +1995,9 @@ export default {
       imgLayer.name = layerName;
       vm.olmap.getLayers().insertAt(position, imgLayer);
 
-      const layerAlreadyExists = vm.$root.catalogue.getLayer(layerId)
-        ? true
-        : false;
+      const layerAlreadyExists = vm.catalogue.getLayer(layerId) ? true : false;
       if (imgLayer != undefined && !layerAlreadyExists) {
-        vm.$root.catalogue.catalogue.push(imgLayer);
+        vm.catalogue.catalogue.push(imgLayer);
       }
       //vm.olmap.getLayers().insertAt(1, imgLayer)
     },
@@ -2276,7 +2274,7 @@ export default {
         this.startAutoRefresh();
         if (options.refresh) {
           tileLayer.set('updated', moment().toLocaleString());
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
         }
       };
 
@@ -2291,7 +2289,7 @@ export default {
       tileLayer.refresh = function () {
         if (!this.refreshTimeline) {
           this.set('updated', moment().toLocaleString());
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
         }
         vm.refreshLayerTile(this);
       };
@@ -2524,7 +2522,7 @@ export default {
         this.startAutoRefresh();
         if (options.refresh) {
           tileLayer.set('updated', moment().toLocaleString());
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
         }
       };
 
@@ -2539,7 +2537,7 @@ export default {
       tileLayer.refresh = function () {
         if (!this.refreshTimeline) {
           this.set('updated', moment().toLocaleString());
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
         }
         vm.refreshLayerTile(this);
       };
@@ -2723,7 +2721,7 @@ export default {
         this.startAutoRefresh();
         if (options.refresh) {
           tileLayer.set('updated', moment().toLocaleString());
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
         }
       };
 
@@ -2738,7 +2736,7 @@ export default {
       tileLayer.refresh = function () {
         if (!this.refreshTimeline) {
           this.set('updated', moment().toLocaleString());
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
         }
         vm.refreshLayerTile(this);
       };
@@ -2822,7 +2820,7 @@ export default {
       imgLayer.refresh = function () {
         if (options.refresh) {
           imgLayer.set('updated', moment().toLocaleString());
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
         }
         var params = imgSource.getParams();
         params['timestamp'] = moment.utc().unix();
@@ -2853,7 +2851,7 @@ export default {
         this.startAutoRefresh();
         if (options.refresh) {
           imgLayer.set('updated', moment().toLocaleString());
-          vm.$root.active.refreshRevision += 1;
+          vm.active.refreshRevision += 1;
         }
       };
 
@@ -3062,7 +3060,7 @@ export default {
           if (position >= 0) {
             $.each(ev.element.layer.dependentLayers, function (index, l) {
               if (!l.map_server_url) {
-                const catalogue_layer = vm.$root.catalogue.getLayer(
+                const catalogue_layer = vm.catalogue.getLayer(
                   ev.element.layer.id,
                 );
 
@@ -3152,7 +3150,7 @@ export default {
       var vm = this;
       //add fixed layers to category
       $.each(fixedLayers, function (index, fixedLayer) {
-        var catLayer = vm.$root.catalogue.getLayer(
+        var catLayer = vm.catalogue.getLayer(
           fixedLayer.mapLayerId || fixedLayer.id,
         );
         if (catLayer) {
@@ -3169,16 +3167,16 @@ export default {
           }
         } else {
           //fixed layer not exist, add it
-          vm.$root.catalogue.catalogue.push(fixedLayer);
+          vm.catalogue.catalogue.push(fixedLayer);
         }
       });
       vm._overviewLayer =
         vm._overviewLayer ||
-        $.extend({}, vm.$root.catalogue.getLayer(vm.env.overviewLayer));
+        $.extend({}, vm.catalogue.getLayer(vm.env.overviewLayer));
 
       //ignore the active layers which does not exist in the catalogue layers.
       activeLayers = activeLayers.filter(function (activeLayer) {
-        return vm.$root.catalogue.getLayer(activeLayer[0]) && true;
+        return vm.catalogue.getLayer(activeLayer[0]) && true;
       });
 
       /*// Filter out any thermal imaging layers
@@ -3188,10 +3186,7 @@ export default {
 
       //merge custom options of active layer to catalogue layer
       var initialLayers = activeLayers.reverse().map(function (activeLayer) {
-        return $.extend(
-          vm.$root.catalogue.getLayer(activeLayer[0]),
-          activeLayer[1],
-        );
+        return $.extend(vm.catalogue.getLayer(activeLayer[0]), activeLayer[1]);
       });
       //add active layers into map
       $.each(initialLayers, function (index, layer) {

@@ -26,6 +26,8 @@
 <script>
 import gkSystemsetting from '@/components/settings/SystemSetting.vue';
 import gkWeatheroutlook from '@/components/weather/WeatherOutlook.vue';
+import { useAnnotationsStore } from '@/stores/annotations';
+import { useInfoStore } from '@/stores/info';
 
 export default {
   store: {
@@ -40,12 +42,15 @@ export default {
   components: { gkSystemsetting, gkWeatheroutlook },
   computed: {
     info: function () {
-      return this.$root.info;
+      return useInfoStore().component;
+    },
+    annotations() {
+      return useAnnotationsStore().component;
     },
   },
   methods: {
     setup: function () {
-      this.$root.annotations.setTool();
+      this.annotations.setTool();
       this.switchMenu(this.menu);
     },
     teardown: function () {

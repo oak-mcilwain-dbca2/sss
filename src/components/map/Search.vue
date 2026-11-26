@@ -56,6 +56,9 @@ import { containsCoordinate } from 'ol/extent';
 import { getLayerUrl } from '@/utils';
 
 import { useMapStore } from '@/stores/map';
+import { useAnnotationsStore } from '@/stores/annotations';
+import { useWeatherOutlookStore } from '@/stores/weatherOutlook';
+import { useWeatherForecastStore } from '@/stores/weatherForecast';
 
 export default {
   store: ['resolutions'],
@@ -63,9 +66,6 @@ export default {
     return {};
   },
   computed: {
-    env: function () {
-      return this.$root.env;
-    },
     mapReady() {
       return useMapStore().ready;
     },
@@ -73,7 +73,13 @@ export default {
       return useMapStore()?.component;
     },
     annotations: function () {
-      return this.$root.annotations;
+      return useAnnotationsStore().component;
+    },
+    weatherOutlook() {
+      return useWeatherOutlookStore().component;
+    },
+    weatherForecast() {
+      return useWeatherForecastStore().component;
     },
   },
   watch: {
@@ -118,7 +124,7 @@ export default {
     },
     runSearch: function () {
       var vm = this;
-      var map = this.$root.map;
+      var map = this.map;
       $('#map-search, #map-search-button').removeClass('alert success');
       var query = $('#map-search').get(0).value;
       if (!query) {
@@ -137,19 +143,19 @@ export default {
           $('#map-search').val(update_name);
         }
         if (
-          vm.$root.weatheroutlook &&
+          vm.weatherOutlook &&
           vm.annotations.tool &&
           vm.annotations.toname === 'WeatherOutlook'
         ) {
           //weather outlook tool is activated.
-          vm.$root.weatheroutlook.setPosition(coords);
+          vm.weatherOutlook.setPosition(coords);
         } else if (
-          vm.$root.weatherforecast &&
+          vm.weatherForecast &&
           vm.annotations.tool &&
           vm.annotations.toname === 'WeatherForecast'
         ) {
           //weather forecast tool is activated.
-          vm.$root.weatherforecast.setPosition(coords);
+          vm.weatherForecast.setPosition(coords);
         } else if (
           !vm._setSearchPointFunc ||
           !vm._setSearchPointFunc(searchMethod, coords, name)
@@ -262,7 +268,7 @@ export default {
     },
     queryGeocode: function (geoStr, victory, failure) {
       var vm = this;
-      var center = this.$root.map.getCenter();
+      var center = this.map.getCenter();
       if (!containsCoordinate(this._wa_bbox, center)) {
         center = this._wa_perth;
       }

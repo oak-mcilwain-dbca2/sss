@@ -26,6 +26,12 @@ const icons = import.meta.glob('@/assets/images/*.svg', {
 });
 
 import { useLoadingStore } from '@/stores/loading';
+import { useAnnotationsStore } from '@/stores/annotations';
+import { useCatalogueStore } from '@/stores/catalogue';
+import { useWeatherOutlookStore } from '@/stores/weatherOutlook';
+import { useActiveStore } from '@/stores/active';
+import { useMapStore } from '@/stores/map';
+import { useDialogueStore } from '@/stores/dialogue';
 
 export default {
   setup() {
@@ -48,25 +54,22 @@ export default {
       return useLoadingStore();
     },
     annotations: function () {
-      return this.$root.annotations;
+      return useAnnotationsStore().component;
     },
     catalogue: function () {
-      return this.$root.catalogue;
+      return useCatalogueStore().component;
     },
     weatheroutlook: function () {
-      return this.$root.weatheroutlook;
+      return useWeatherOutlookStore().component;
     },
     active: function () {
-      return this.$root.active;
+      return useActiveStore().component;
     },
     dialog: function () {
-      return this.$root.dialog;
+      return useDialogueStore().component;
     },
     map: function () {
-      return this.$root.map;
-    },
-    env: function () {
-      return this.$root.env;
+      return useMapStore().component;
     },
     enabled: function () {
       return this.layers.length > 0;

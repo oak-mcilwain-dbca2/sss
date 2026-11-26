@@ -106,6 +106,9 @@ import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 
 import Foundation from 'foundation-sites';
+import { useCatalogueStore } from '@/stores/catalogue';
+import { useActiveStore } from '@/stores/active';
+import { useExportStore } from '@/stores/export';
 
 export default {
   store: ['dpmm'],
@@ -118,6 +121,15 @@ export default {
     };
   },
   computed: {
+    catalogue() {
+      return useCatalogueStore().component;
+    },
+    active() {
+      return useActiveStore().component;
+    },
+    export() {
+      return useExportStore().component;
+    },
     displayLegendLayers: function () {
       return this.filteredLegendLayers || this.legendLayers;
     },
@@ -184,9 +196,9 @@ export default {
     //return true if changed, otherwise return false
     syncLegendLayers: function () {
       var vm = this;
-      var catalogue = vm.$root.catalogue;
+      var catalogue = vm.catalogue;
       var results = [];
-      vm.$root.active.olLayers.every(function (layer) {
+      vm.active.olLayers.every(function (layer) {
         var catLayer = catalogue.getLayer(layer);
         if (catLayer) {
           if (
@@ -240,12 +252,9 @@ export default {
       }
       if (!vm.unwatchActiveLayers) {
         this.syncLegendLayers();
-        vm.unwatchActiveLayers = this.$root.active.$watch(
-          'olLayers',
-          function () {
-            vm.syncLegendLayers();
-          },
-        );
+        vm.unwatchActiveLayers = this.active.$watch('olLayers', function () {
+          vm.syncLegendLayers();
+        });
       }
       vm.legendsPanel.open();
     },
@@ -282,8 +291,7 @@ export default {
     printLegends: function () {
       var vm = this;
       this.getLegendBlob(false, false, function (blobData) {
-        var filename =
-          vm.$root.export.finalTitle.replace(' ', '_') + '.legend.pdf';
+        var filename = vm.export.finalTitle.replace(' ', '_') + '.legend.pdf';
         saveAs(blobData, filename);
       });
     },
@@ -314,7 +322,7 @@ export default {
             callback(null);
             return;
           }
-          var paperSize = vm.$root.export.paperSizes['A4'];
+          var paperSize = vm.export.paperSizes['A4'];
           var style = {
             top: 20,
             bottom: 20,

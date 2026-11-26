@@ -732,6 +732,7 @@ import { useSettingsStore } from '@/stores/settings';
 import { useMeasureStore } from '@/stores/measure';
 import { useInfoStore } from '@/stores/info';
 import { useCatalogueStore } from '@/stores/catalogue';
+import { useDialogueStore } from '@/stores/dialogue';
 
 export default {
   store: {
@@ -865,7 +866,7 @@ export default {
       return this.setting?.settings.bfrs.viewportOnly;
     },
     dialog: function () {
-      return this.$root.dialog;
+      return useDialogueStore().component;
     },
     activeReady() {
       return useActiveStore().ready;
