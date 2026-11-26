@@ -1,4 +1,4 @@
-// stores/settings.js
+// stores/state.js
 
 import { defineStore } from 'pinia';
 
@@ -8,11 +8,16 @@ export const useStateStore = defineStore('state', {
     drawingLogs: [],
     redoPointer: 0,
     drawingSequence: 0,
+
     annotations: {
       type: 'FeatureCollection',
       features: [],
     },
+
     hints: [],
     showHints: false,
+
+    activeMenu: null,
+    activeSubmenu: null,
   }),
 });

@@ -32,6 +32,10 @@ import gkActive from '@/components/layers/Active.vue';
 import gkCatalogue from '@/components/layers/Catalogue.vue';
 import gkExport from '@/components/layers/Export.vue';
 
+import { useAnnotationsStore } from '@/stores/annotations';
+import { useStateStore } from '@/stores/state';
+import { useInfoStore } from '@/stores/info';
+
 export default {
   store: {
     activeMenu: 'activeMenu',
@@ -40,37 +44,89 @@ export default {
   data: function () {
     return {
       menu: null,
+      layersInitialised: false,
     };
   },
   components: { gkActive, gkCatalogue, gkExport },
   computed: {
     info: function () {
-      return this.$root.info;
+      return useInfoStore().component;
+    },
+    state() {
+      return useStateStore();
+    },
+    activeMenu: {
+      get() {
+        return this.state.activeMenu;
+      },
+      set(value) {
+        this.state.activeMenu = value;
+      },
+    },
+    activeSubmenu: {
+      get() {
+        return this.state.activeSubmenu;
+      },
+      set(value) {
+        this.state.activeSubmenu = value;
+      },
+    },
+    annotationsReady() {
+      return useAnnotationsStore().ready;
+    },
+    annotations() {
+      return useAnnotationsStore().component;
+    },
+  },
+  watch: {
+    annotationsReady: {
+      immediate: true,
+      handler(ready) {
+        if (ready) {
+          this.initialiseLayers();
+        }
+      },
     },
   },
   methods: {
-    setup: function () {
-      this.$root.annotations.setTool();
-      this.switchMenu(this.menu);
-    },
-    teardown: function () {
-      if (this.activeSubmenu && this.$root[this.activeSubmenu].teardown) {
-        this.$root[this.activeSubmenu].teardown();
-      }
-    },
-    switchMenu: function (menu) {
-      menu = menu || 'active';
-      if (this.activeSubmenu === menu || (!this.activeSubmenu && !menu)) {
-        //new active submenu is equal to current active submenu, do nothing
+    initialiseLayers: function () {
+      if (this.layersInitialised) {
         return;
       }
-      if (this.activeSubmenu && this.$root[this.activeSubmenu].teardown) {
-        this.$root[this.activeSubmenu].teardown();
+
+      this.layersInitialised = true;
+
+      this.annotations.setTool();
+      this.switchMenu(this.menu);
+    },
+    getSubmenuComponent(menu) {
+      return this.$refs[menu];
+    },
+    teardown: function () {
+      if (this.activeSubmenu) {
+        const component = this.getSubmenuComponent(this.activeSubmenu);
+
+        if (component?.teardown) {
+          component.teardown();
+        }
       }
+    },
+    switchMenu(menu) {
+      menu = menu || 'active';
+
+      if (this.activeSubmenu === menu || (!this.activeSubmenu && !menu)) {
+        return;
+      }
+
+      if (this.activeSubmenu) {
+        const previousComponent = this.getSubmenuComponent(this.activeSubmenu);
+        previousComponent?.teardown?.();
+      }
+
       this.activeSubmenu = menu;
-      if (this.activeSubmenu && this.$root[this.activeSubmenu].setup) {
-        this.$root[this.activeSubmenu].setup();
-      }
+
+      const component = this.getSubmenuComponent(this.activeSubmenu);
+      component?.setup?.();
       this.menu = menu;
     },
   },
@@ -80,7 +136,8 @@ export default {
       var menu = selectedTab.attr('menu');
       vm.info.hoverable.splice(0, vm.info.hoverable.length);
       vm.switchMenu(menu);
-      vm.$root.menuChanged();
+      // TODO replace legacy menuChanged/layout update
+      //   vm.$root.menuChanged();
     });
   },
 };
