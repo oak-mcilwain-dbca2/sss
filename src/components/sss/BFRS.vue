@@ -663,6 +663,11 @@ import { debounce } from 'lodash-es';
 
 import Foundation from 'foundation-sites';
 
+import {
+  importSpatialFileTypes,
+  importSpatialFileTypeDesc,
+} from '@/config/appData';
+
 import { checkPermission } from '@/utils';
 
 import Collection from 'ol/Collection';
@@ -744,6 +749,8 @@ export default {
   data: function () {
     return {
       env,
+      importSpatialFileTypes,
+      importSpatialFileTypeDesc,
       clippedOnly: false,
       search: '',
       statusFilter: 'all_reports',

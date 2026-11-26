@@ -9,36 +9,6 @@
   <gk-weatherforecast ref="weatherforecast"></gk-weatherforecast>
   <gk-toolbox ref="toolbox"></gk-toolbox>
 </template>
-<style>
-.ol-custom-overviewmap,
-.ol-custom-overviewmap.ol-uncollapsible {
-  bottom: 0;
-  left: auto;
-  right: 0;
-  top: auto;
-}
-
-.ol-custom-overviewmap:not(.ol-collapsed) {
-  border: 1px solid black;
-}
-
-.ol-custom-overviewmap .ol-overviewmap-map {
-  border: none;
-  width: 300px;
-  height: 150px;
-}
-
-.ol-custom-overviewmap .ol-overviewmap-box {
-  border: 2px solid red;
-}
-
-.ol-custom-overviewmap:not(.ol-collapsed) button {
-  bottom: auto;
-  left: auto;
-  right: 1px;
-  top: 1px;
-}
-</style>
 
 <script>
 import { isKbLayer, getLayerId, getLayerUrl } from '@/utils';
@@ -108,6 +78,11 @@ import gkWeatherforecast from './WeatherForecast.vue';
 import gkToolbox from './Toolbox.vue';
 
 import { useMapStore } from '@/stores/map';
+import { useLoadingStore } from '@/stores/loading.js';
+import { useCatalogueStore } from '@/stores/catalogue.js';
+import { useAnnotationsStore } from '@/stores/annotations.js';
+import { useActiveStore } from '@/stores/active.js';
+import { useMeasureStore } from '@/stores/measure.js';
 
 export default {
   store: {
@@ -185,22 +160,19 @@ export default {
   // parts of the template to be computed live
   computed: {
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
     catalogue: function () {
-      return this.$root.catalogue;
-    },
-    env: function () {
-      return this.$root.env;
+      return useCatalogueStore();
     },
     annotations: function () {
-      return this.$root.annotations;
+      return useAnnotationsStore();
     },
     active: function () {
-      return this.$root.active;
+      return useActiveStore();
     },
     measure: function () {
-      return this.$root.measure;
+      return useMeasureStore();
     },
     // because the viewport size changes when the tab pane opens, don't cache the map width and height
     width: {
@@ -229,6 +201,118 @@ export default {
   },
   // methods callable from inside the template
   methods: {
+    initialiseMapInternals() {
+      this.mapStatus.phaseBegin('initialize', 20, 'Initialize');
+
+      this.svgBlobs = {};
+      this.svgTemplates = {};
+      this.cachedStyles = {};
+      this.jobs = {};
+
+      this._setRefreshInterval = function (layer, interval) {
+        layer.refresh = interval;
+        if (layer.dependentLayers) {
+          $.each(layer.dependentLayers, function (index, dependentLayer) {
+            if (dependentLayer.inheritRefresh) {
+              dependentLayer['mapLayer'].stopAutoRefresh();
+            }
+          });
+        }
+      };
+      this._stopAutoRefresh = function (olLayer) {
+        if (olLayer.autoRefresh) {
+          clearInterval(olLayer.autoRefresh);
+          delete olLayer.autoRefresh;
+        }
+        if (olLayer.dependentLayers) {
+          $.each(olLayer.dependentLayers, function (index, dependentLayer) {
+            if (dependentLayer['mapLayer']) {
+              dependentLayer['mapLayer'].stopAutoRefresh();
+            }
+          });
+        }
+      };
+
+      this._startAutoRefresh = function (olLayer) {
+        if (olLayer.layer) {
+          if (olLayer.layer.refresh && !olLayer.autoRefresh) {
+            olLayer.autoRefresh = setInterval(function () {
+              olLayer.refresh();
+            }, olLayer.layer.refresh * 1000);
+          }
+        }
+        if (olLayer.dependentLayers) {
+          $.each(olLayer.dependentLayers, function (index, dependentLayer) {
+            if (dependentLayer['mapLayer'] && dependentLayer['mapLayer'].show) {
+              dependentLayer['mapLayer'].startAutoRefresh();
+            }
+          });
+        }
+      };
+
+      this._postRemove = function (olLayer) {
+        this._stopAutoRefresh(olLayer);
+        if (olLayer.autoTimelineRefresh) {
+          clearTimeout(olLayer.autoTimelineRefresh);
+          olLayer.autoTimelineRefresh = null;
+        }
+        if (!olLayer.dependentLayer) {
+          delete olLayer['mapLayer'];
+          delete olLayer['layer'];
+        }
+      };
+
+      // generate matrix IDs from name and level number
+      $.each(this.matrixSets, function (projection, innerMatrixSets) {
+        $.each(innerMatrixSets, function (tileSize, matrixSet) {
+          var matrixIds = new Array(
+            matrixSet.maxLevel - matrixSet.minLevel + 1,
+          );
+          for (var z = matrixSet.minLevel; z <= matrixSet.maxLevel; ++z) {
+            matrixIds[z] = matrixSet.name + ':' + z;
+          }
+          matrixSet.matrixIds = matrixIds;
+        });
+      });
+      this.mapStatus.phaseEnd('initialize');
+
+      this.mapInternalsInitialised = true;
+    },
+    initialiseMapDisplayResolution() {
+      const vm = this;
+      this.mapStatus.phaseBegin(
+        'gk-init',
+        60,
+        "Listen 'gk-init' event",
+        true,
+        true,
+      );
+      this.$on('gk-init', function () {
+        this.mapStatus.phaseEnd('gk-init');
+
+        this.mapStatus.phaseBegin('post-init', 20, 'Post initialize');
+        if ($('#map .ol-viewport canvas').attr('width')) {
+          vm.displayResolution[0] =
+            Math.round(
+              ($('#map .ol-viewport canvas').attr('width') /
+                $('#map .ol-viewport canvas').width()) *
+                100,
+            ) / 100;
+        }
+        if ($('#map .ol-viewport canvas').attr('height')) {
+          vm.displayResolution[1] =
+            Math.round(
+              ($('#map .ol-viewport canvas').attr('height') /
+                $('#map .ol-viewport canvas').height()) *
+                100,
+            ) / 100;
+        }
+        vm.showGraticule(vm.displayGraticule);
+
+        this.mapStatus.phaseEnd('post-init');
+        return true;
+      });
+    },
     createEvent(source, type, options) {
       const event = new Event(type);
 
@@ -3623,104 +3707,39 @@ export default {
     },
   },
   mounted() {
-    var vm = this;
-    var mapStatus = this.loading.register('olmap', 'Open layer map Component');
-    mapStatus.phaseBegin('initialize', 20, 'Initialize');
-    this.svgBlobs = {};
-    this.svgTemplates = {};
-    this.cachedStyles = {};
-    this.jobs = {};
-
-    this._setRefreshInterval = function (layer, interval) {
-      layer.refresh = interval;
-      if (layer.dependentLayers) {
-        $.each(layer.dependentLayers, function (index, dependentLayer) {
-          if (dependentLayer.inheritRefresh) {
-            dependentLayer['mapLayer'].stopAutoRefresh();
-          }
-        });
-      }
-    };
-    this._stopAutoRefresh = function (olLayer) {
-      if (olLayer.autoRefresh) {
-        clearInterval(olLayer.autoRefresh);
-        delete olLayer.autoRefresh;
-      }
-      if (olLayer.dependentLayers) {
-        $.each(olLayer.dependentLayers, function (index, dependentLayer) {
-          if (dependentLayer['mapLayer']) {
-            dependentLayer['mapLayer'].stopAutoRefresh();
-          }
-        });
-      }
-    };
-
-    this._startAutoRefresh = function (olLayer) {
-      if (olLayer.layer) {
-        if (olLayer.layer.refresh && !olLayer.autoRefresh) {
-          olLayer.autoRefresh = setInterval(function () {
-            olLayer.refresh();
-          }, olLayer.layer.refresh * 1000);
-        }
-      }
-      if (olLayer.dependentLayers) {
-        $.each(olLayer.dependentLayers, function (index, dependentLayer) {
-          if (dependentLayer['mapLayer'] && dependentLayer['mapLayer'].show) {
-            dependentLayer['mapLayer'].startAutoRefresh();
-          }
-        });
-      }
-    };
-
-    this._postRemove = function (olLayer) {
-      this._stopAutoRefresh(olLayer);
-      if (olLayer.autoTimelineRefresh) {
-        clearTimeout(olLayer.autoTimelineRefresh);
-        olLayer.autoTimelineRefresh = null;
-      }
-      if (!olLayer.dependentLayer) {
-        delete olLayer['mapLayer'];
-        delete olLayer['layer'];
-      }
-    };
-
-    // generate matrix IDs from name and level number
-    $.each(this.matrixSets, function (projection, innerMatrixSets) {
-      $.each(innerMatrixSets, function (tileSize, matrixSet) {
-        var matrixIds = new Array(matrixSet.maxLevel - matrixSet.minLevel + 1);
-        for (var z = matrixSet.minLevel; z <= matrixSet.maxLevel; ++z) {
-          matrixIds[z] = matrixSet.name + ':' + z;
-        }
-        matrixSet.matrixIds = matrixIds;
-      });
-    });
-    mapStatus.phaseEnd('initialize');
-    mapStatus.phaseBegin('gk-init', 60, "Listen 'gk-init' event", true, true);
-    this.$on('gk-init', function () {
-      mapStatus.phaseEnd('gk-init');
-
-      mapStatus.phaseBegin('post-init', 20, 'Post initialize');
-      if ($('#map .ol-viewport canvas').attr('width')) {
-        vm.displayResolution[0] =
-          Math.round(
-            ($('#map .ol-viewport canvas').attr('width') /
-              $('#map .ol-viewport canvas').width()) *
-              100,
-          ) / 100;
-      }
-      if ($('#map .ol-viewport canvas').attr('height')) {
-        vm.displayResolution[1] =
-          Math.round(
-            ($('#map .ol-viewport canvas').attr('height') /
-              $('#map .ol-viewport canvas').height()) *
-              100,
-          ) / 100;
-      }
-      vm.showGraticule(vm.displayGraticule);
-
-      mapStatus.phaseEnd('post-init');
-      return true;
-    });
+    this.mapStatus = this.loading.register('olmap', 'Open layer map Component');
+    this.initialiseMapInternals();
   },
 };
 </script>
+
+<style>
+.ol-custom-overviewmap,
+.ol-custom-overviewmap.ol-uncollapsible {
+  bottom: 0;
+  left: auto;
+  right: 0;
+  top: auto;
+}
+
+.ol-custom-overviewmap:not(.ol-collapsed) {
+  border: 1px solid black;
+}
+
+.ol-custom-overviewmap .ol-overviewmap-map {
+  border: none;
+  width: 300px;
+  height: 150px;
+}
+
+.ol-custom-overviewmap .ol-overviewmap-box {
+  border: 2px solid red;
+}
+
+.ol-custom-overviewmap:not(.ol-collapsed) button {
+  bottom: auto;
+  left: auto;
+  right: 1px;
+  top: 1px;
+}
+</style>

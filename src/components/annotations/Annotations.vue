@@ -232,6 +232,11 @@
 // It is currently using a mix of ES5 and ES6 syntax, which can lead to confusion and potential bugs.
 import { debounce } from 'lodash-es';
 
+import {
+  importSpatialFileTypes,
+  importSpatialFileTypeDesc,
+} from '@/config/appData';
+
 import EventType from 'ol/events/EventType';
 
 import Collection from 'ol/Collection';
@@ -361,6 +366,8 @@ export default {
   },
   data: function () {
     return {
+      importSpatialFileTypes,
+      importSpatialFileTypeDesc,
       ui: {},
       tool: {},
       tools: [],

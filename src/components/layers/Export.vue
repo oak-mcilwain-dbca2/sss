@@ -368,24 +368,18 @@
     </div>
   </div>
 </template>
-<style>
-.datasource {
-  font-size: 18px;
-  font-weight: bold;
-  font-style: italic;
-  background-color: #266f78;
-}
-.convertbutton {
-  padding-left: 2px;
-  padding-right: 2px;
-}
-</style>
+
 <script>
 import localforage from 'localforage';
 import hash from 'object-hash';
 import kjua from 'kjua';
 import html2canvas from 'html2canvas';
 import { saveAs } from 'file-saver';
+
+import {
+  importSpatialFileTypes,
+  importSpatialFileTypeDesc,
+} from '@/config/appData';
 
 import { getPointResolution } from 'ol/proj';
 
@@ -427,6 +421,8 @@ export default {
   },
   data: function () {
     return {
+      importSpatialFileTypes,
+      importSpatialFileTypeDesc,
       spatialInfo: {},
       minDPI: 150,
       chunkSize: 200,
@@ -1635,3 +1631,16 @@ export default {
   },
 };
 </script>
+
+<style>
+.datasource {
+  font-size: 18px;
+  font-weight: bold;
+  font-style: italic;
+  background-color: #266f78;
+}
+.convertbutton {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+</style>
