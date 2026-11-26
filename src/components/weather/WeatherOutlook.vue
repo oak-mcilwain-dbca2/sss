@@ -512,8 +512,8 @@ import weatherOutlookCustomizedSvg from '@/assets/images/weather-outlook-customi
 import weatherOutlookAmicusSvg from '@/assets/images/weather-outlook-amicus.svg';
 
 import { useAnnotationsStore } from '@/stores/annotations';
-
 import { useSettingsStore } from '@/stores/settings';
+import { useLoadingStore } from '@/stores/loading';
 
 export default {
   store: {
@@ -574,7 +574,7 @@ export default {
   // parts of the template to be computed live
   computed: {
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
     setting: function () {
       return this.$root.setting;

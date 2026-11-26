@@ -165,6 +165,7 @@ import {
 } from '@/utils';
 
 import { useCatalogueStore } from '@/stores/catalogue';
+import { useLoadingStore } from '@/stores/loading';
 
 // TODO: Discard if unused (looks unused)
 // Vue.filter("lessThan", function (value, length) {
@@ -217,7 +218,7 @@ export default {
       return this.$root.env;
     },
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
   },
   watch: {

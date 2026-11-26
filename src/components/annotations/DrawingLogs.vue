@@ -32,6 +32,7 @@ import Collection from 'ol/Collection';
 import EventType from 'ol/events/EventType';
 
 import { useStateStore } from '@/stores/state';
+import { useLoadingStore } from '@/stores/loading';
 
 export default {
   store: ['redoPointer', 'settings'],
@@ -45,7 +46,7 @@ export default {
       return this.$root.annotations;
     },
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
     systemsetting: function () {
       return this.$root.systemsetting;

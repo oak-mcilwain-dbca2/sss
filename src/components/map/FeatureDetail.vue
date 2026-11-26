@@ -25,6 +25,8 @@ const icons = import.meta.glob('@/assets/images/*.svg', {
   import: 'default',
 });
 
+import { useLoadingStore } from '@/stores/loading';
+
 export default {
   setup() {
     return {
@@ -43,7 +45,7 @@ export default {
   // parts of the template to be computed live
   computed: {
     loading: function () {
-      return this.$root.loading;
+      return useLoadingStore();
     },
     annotations: function () {
       return this.$root.annotations;
