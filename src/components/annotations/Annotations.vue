@@ -341,11 +341,13 @@ import boxresizeSvg from '@/assets/images/boxresize.svg';
 import iDSpriteSvg from '@/assets/images/iD-sprite.svg';
 
 import { useLoadingStore } from '@/stores/loading';
+import { useActiveStore } from '@/stores/active';
 import { useAnnotationsStore } from '@/stores/annotations';
 import { useMapStore } from '@/stores/map';
-import { useExportStore } from '@/stores/export.js';
-import { useMeasureStore } from '@/stores/measure.js';
-import { useStateStore } from '@/stores/state.js';
+import { useExportStore } from '@/stores/export';
+import { useMeasureStore } from '@/stores/measure';
+import { useStateStore } from '@/stores/state';
+import { useSearchStore } from '@/stores/search';
 
 export default {
   store: {
