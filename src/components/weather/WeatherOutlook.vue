@@ -449,44 +449,6 @@
   </div>
 </template>
 
-<style>
-#weatheroutlook_control button {
-  width: 48px;
-  height: 48px;
-  margin: 0;
-}
-
-.datasource-desc {
-  font-style: italic;
-  padding-left: 24px;
-  color: #6dd8ef;
-  font-size: 14px;
-}
-
-#weatheroutlook-data-config .accordion {
-  background-color: transparent;
-}
-#weatheroutlook-data-config .accordion-content {
-  background-color: transparent;
-}
-#daily-title.alert {
-  background-color: rgba(171, 116, 107, 0.7);
-}
-.outlook-datasources {
-  font-size: 100%;
-}
-#weatheroutlook_control .selected {
-  background-color: #2199e8;
-}
-#weatheroutlook_control {
-  position: absolute;
-  left: auto;
-  right: 16px;
-  bottom: auto;
-  padding: 0;
-}
-</style>
-
 <script>
 import { saveAs } from 'file-saver';
 
@@ -2196,3 +2158,41 @@ export default {
   },
 };
 </script>
+
+<style>
+#weatheroutlook_control button {
+  width: 48px;
+  height: 48px;
+  margin: 0;
+}
+
+.datasource-desc {
+  font-style: italic;
+  padding-left: 24px;
+  color: #6dd8ef;
+  font-size: 14px;
+}
+
+#weatheroutlook-data-config .accordion {
+  background-color: transparent;
+}
+#weatheroutlook-data-config .accordion-content {
+  background-color: transparent;
+}
+#daily-title.alert {
+  background-color: rgba(171, 116, 107, 0.7);
+}
+.outlook-datasources {
+  font-size: 100%;
+}
+#weatheroutlook_control .selected {
+  background-color: #2199e8;
+}
+#weatheroutlook_control {
+  position: absolute;
+  left: auto;
+  right: 16px;
+  bottom: auto;
+  padding: 0;
+}
+</style>

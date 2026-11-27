@@ -275,12 +275,6 @@
   </div>
 </template>
 
-<style>
-.about-pane {
-  font-size: 12px;
-}
-</style>
-
 <script>
 import { debounce } from 'lodash-es';
 import localforage from 'localforage';
@@ -576,3 +570,9 @@ export default {
   },
 };
 </script>
+
+<style>
+.about-pane {
+  font-size: 12px;
+}
+</style>

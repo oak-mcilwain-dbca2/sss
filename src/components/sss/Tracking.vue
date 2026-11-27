@@ -445,12 +445,6 @@ class="expanded secondary button" :class="{'selected': t.name == annotations.too
     </div>
   </div>
 </template>
-<style>
-#historyFromDate,
-#historyToDate {
-  cursor: pointer;
-}
-</style>
 <script>
 import { debounce } from 'lodash-es';
 
@@ -1845,3 +1839,9 @@ export default {
   },
 };
 </script>
+<style>
+#historyFromDate,
+#historyToDate {
+  cursor: pointer;
+}
+</style>

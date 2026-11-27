@@ -13,28 +13,6 @@
   </div>
 </template>
 
-<style>
-#map-search.alert,
-#map-search-button.alert {
-  background-color: rgba(125, 47, 34, 0.7);
-}
-
-#map-search:hover.alert,
-#map-search-button:hover.alert {
-  background-color: rgba(125, 47, 34, 0.9);
-}
-
-#map-search.success,
-#map-search-button.success {
-  background-color: rgba(53, 94, 26, 0.7);
-}
-
-#map-search:hover.success,
-#map-search-button:hover.success {
-  background-color: rgba(53, 94, 26, 0.9);
-}
-</style>
-
 <script>
 import Feature from 'ol/Feature';
 import Collection from 'ol/Collection';
@@ -349,3 +327,25 @@ export default {
   },
 };
 </script>
+
+<style>
+#map-search.alert,
+#map-search-button.alert {
+  background-color: rgba(125, 47, 34, 0.7);
+}
+
+#map-search:hover.alert,
+#map-search-button:hover.alert {
+  background-color: rgba(125, 47, 34, 0.9);
+}
+
+#map-search.success,
+#map-search-button.success {
+  background-color: rgba(53, 94, 26, 0.7);
+}
+
+#map-search:hover.success,
+#map-search-button:hover.success {
+  background-color: rgba(53, 94, 26, 0.9);
+}
+</style>

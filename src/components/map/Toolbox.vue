@@ -57,30 +57,6 @@
   </div>
 </template>
 
-<style>
-#toolbox_control button {
-  width: 48px;
-  height: 48px;
-  margin: 0;
-}
-
-#toolbox_control .selected {
-  background-color: #2199e8;
-}
-#toolbox_control .warning {
-  background-color: rgba(125, 47, 34, 0.7);
-}
-#toolbox_control {
-  position: absolute;
-  left: auto;
-  right: 16px;
-  bottom: auto;
-  width: 48px;
-  height: 48px;
-  padding: 0;
-}
-</style>
-
 <script>
 import Control from 'ol/control/Control';
 
@@ -324,3 +300,27 @@ export default {
   },
 };
 </script>
+
+<style>
+#toolbox_control button {
+  width: 48px;
+  height: 48px;
+  margin: 0;
+}
+
+#toolbox_control .selected {
+  background-color: #2199e8;
+}
+#toolbox_control .warning {
+  background-color: rgba(125, 47, 34, 0.7);
+}
+#toolbox_control {
+  position: absolute;
+  left: auto;
+  right: 16px;
+  bottom: auto;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+}
+</style>

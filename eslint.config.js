@@ -52,7 +52,6 @@ export default [
       'vue/multi-word-component-names': 'off',
       'vue/html-self-closing': 'off',
       'vue/attributes-order': 'off',
-      'vue/block-order': 'off',
       'vue/order-in-components': 'off',
 
       // Vue 1 legacy patterns

@@ -68,38 +68,6 @@
     </button>
   </div>
 </template>
-<style>
-#active-layer-legends {
-  height: 99%;
-}
-#legend-title {
-  cursor: move;
-}
-#active-layer-legends-list {
-  height: 99%;
-}
-#active-layer-legends .disabled {
-  color: #8a8a8a;
-}
-#active-layer-legends button {
-  color: #2199e8;
-}
-#active-layer-legends .showall-button {
-  right: 4.5rem;
-  font-size: 1.3em;
-  position: absolute;
-  top: 1rem;
-}
-#active-layer-legends .print-button {
-  right: 2.5rem;
-  font-size: 1.3em;
-  position: absolute;
-  top: 1rem;
-}
-.layer-legend-row {
-  padding-bottom: 50px;
-}
-</style>
 <script>
 import { saveAs } from 'file-saver';
 
@@ -554,3 +522,35 @@ export default {
   },
 };
 </script>
+<style>
+#active-layer-legends {
+  height: 99%;
+}
+#legend-title {
+  cursor: move;
+}
+#active-layer-legends-list {
+  height: 99%;
+}
+#active-layer-legends .disabled {
+  color: #8a8a8a;
+}
+#active-layer-legends button {
+  color: #2199e8;
+}
+#active-layer-legends .showall-button {
+  right: 4.5rem;
+  font-size: 1.3em;
+  position: absolute;
+  top: 1rem;
+}
+#active-layer-legends .print-button {
+  right: 2.5rem;
+  font-size: 1.3em;
+  position: absolute;
+  top: 1rem;
+}
+.layer-legend-row {
+  padding-bottom: 50px;
+}
+</style>

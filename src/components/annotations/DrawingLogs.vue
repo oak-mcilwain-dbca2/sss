@@ -18,12 +18,6 @@
     }})</a
   >
 </template>
-<style>
-.drawinglog {
-  padding-left: 5px;
-  padding-right: 5px;
-}
-</style>
 <script>
 import Interaction from 'ol/interaction/Interaction';
 
@@ -41,6 +35,7 @@ import { useAnnotationsStore } from '@/stores/annotations';
 import { useSystemSettingStore } from '@/stores/systemSetting';
 
 export default {
+  name: 'DrawingLogs',
   store: ['redoPointer', 'settings'],
   data: function () {
     return {
@@ -751,3 +746,9 @@ export default {
   },
 };
 </script>
+<style>
+.drawinglog {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+</style>

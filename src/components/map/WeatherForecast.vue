@@ -10,8 +10,6 @@
   </form>
 </template>
 
-<style></style>
-
 <script>
 import Feature from 'ol/Feature';
 import Collection from 'ol/Collection';
@@ -242,3 +240,5 @@ export default {
   },
 };
 </script>
+
+<style></style>
