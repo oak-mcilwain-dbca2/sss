@@ -107,11 +107,7 @@ import { useLayoutStore } from './stores/layout';
 import { useInfoStore } from './stores/info';
 
 export default {
-  store: {
-    activeMenu: 'activeMenu',
-    activeSubmenu: 'activeSubmenu',
-    hints: 'hints',
-  },
+  name: 'App',
   components: {
     gkMap,
     gkLayers,
